@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   Plus, Search, Edit, Trash2, Server, Filter,
   AlertTriangle, Archive, UserX, CalendarClock,
-  ChevronDown, ChevronRight, X, ExternalLink,
+  ChevronRight, X,
   TrendingDown, TrendingUp, Shield, DollarSign,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
@@ -208,7 +208,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
           {system.database && <div className="flex justify-between"><span className="text-muted-foreground">Database</span><span className="font-medium">{system.database}</span></div>}
           {system.sla && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-2.5 w-2.5" />SLA</span><span className="font-medium">{system.sla}</span></div>}
           {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />Annual Cost</span><span className="font-medium text-green-400">${system.costPerYear.toLocaleString()}</span></div>}
+          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />Chi phí / Năm</span><span className="font-medium text-green-400">{system.costPerYear.toLocaleString("vi-VN")} ₫</span></div>}
           {system.contractEndDate && (
             <div className="flex justify-between">
               <span className="text-muted-foreground flex items-center gap-1"><CalendarClock className="h-2.5 w-2.5" />Contract End</span>
@@ -339,7 +339,7 @@ function SystemForm({ initial, onSave, onClose }: {
           </div>
         ))}
         <div className="space-y-1">
-          <Label>Cost/Year (USD)</Label>
+          <Label>Chi phí / Năm (VNĐ)</Label>
           <Input type="number" value={form.costPerYear ?? ""} onChange={(e) => set("costPerYear", e.target.value ? Number(e.target.value) : undefined)} placeholder="0" className="bg-input" />
         </div>
         <div className="space-y-1">

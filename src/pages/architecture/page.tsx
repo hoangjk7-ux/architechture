@@ -34,7 +34,7 @@ import {
   ArrowRight, ArrowLeft, RefreshCw,
   Layers, CheckCircle2, Wrench, CalendarClock, Archive, CircleDot,
   Plus, Edit, Trash2,
-  Map, GitBranch, Activity,
+  Map, GitBranch, Activity, Users,
   CheckCircle, AlertTriangle, XCircle, HelpCircle,
 } from "lucide-react";
 import SystemFlowSVG from "../flow-diagram/_components/SystemFlowSVG.tsx";
@@ -733,7 +733,7 @@ function DetailPanel({
             <div className="space-y-1.5 text-xs">
               {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="font-medium">{system.owner}</span></div>}
               {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Annual Cost</span><span className="font-medium">${system.costPerYear.toLocaleString()}</span></div>}
+              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí / Năm</span><span className="font-medium">{system.costPerYear.toLocaleString("vi-VN")} ₫</span></div>}
               {system.contractEndDate && <div className="flex justify-between"><span className="text-muted-foreground">Contract Ends</span><span className="font-medium">{system.contractEndDate}</span></div>}
               {system.departments.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Departments</span><span className="font-medium text-right max-w-[55%]">{system.departments.join(", ")}</span></div>}
               {system.campuses.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Campuses</span><span className="font-medium text-right max-w-[55%]">{system.campuses.join(", ")}</span></div>}
@@ -769,14 +769,326 @@ function DetailPanel({
   );
 }
 
+// ─── Phòng Ban ───────────────────────────────────────────────────────────────
+type ConfigResult = { department: { name: string; color?: string; order: number }[] } | undefined | null;
+
+function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
+  name: string; color: string; systems: System[]; integrations: Integration[]; onClick: () => void;
+}) {
+  const typeCounts: Record<string, number> = {};
+  systems.forEach((s) => { typeCounts[s.type] = (typeCounts[s.type] ?? 0) + 1; });
+
+  const healthCounts: Record<string, number> = { healthy: 0, degraded: 0, down: 0, unknown: 0 };
+  systems.forEach((s) => { const h = worstHealthFor(s._id, integrations); healthCounts[h] = (healthCounts[h] ?? 0) + 1; });
+
+  const totalCost = systems.reduce((sum, s) => sum + (s.costPerYear ?? 0), 0);
+  const criticalCount = systems.filter((s) => s.criticality === "high").length;
+
+  return (
+    <button
+      onClick={onClick}
+      className="text-left rounded-xl border p-4 hover:bg-muted/20 transition-all cursor-pointer w-full"
+      style={{ borderColor: color + "55", background: color + "08" }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+        <span className="font-semibold text-sm flex-1 truncate">{name}</span>
+        <span className="text-[10px] font-mono text-muted-foreground shrink-0">{systems.length} hệ thống</span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mb-3">
+        {(Object.entries(typeCounts) as [string, number][]).map(([type, count]) => {
+          const m = TYPE_META[type] ?? TYPE_META.core;
+          return (
+            <span key={type} className="text-[9px] px-1.5 py-0.5 rounded font-medium" style={{ background: m.badge + "22", color: m.badge }}>
+              {m.label} {count}
+            </span>
+          );
+        })}
+        {criticalCount > 0 && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-red-500/15 text-red-400">🔴 Critical {criticalCount}</span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 mb-3">
+        {(Object.entries(healthCounts) as [string, number][]).filter(([, c]) => c > 0).map(([h, c]) => {
+          const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
+          return (
+            <div key={h} className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: hm.color }} />
+              <span className="text-[10px]" style={{ color: hm.color }}>{c}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {totalCost > 0 && (
+        <div className="text-[10px] text-green-400 font-mono border-t pt-2" style={{ borderColor: color + "33" }}>
+          {totalCost.toLocaleString("vi-VN")} ₫/năm
+        </div>
+      )}
+    </button>
+  );
+}
+
+function DeptView({ systems, integrations, config }: {
+  systems: System[]; integrations: Integration[]; config: ConfigResult;
+}) {
+  const [selectedDept, setSelectedDept] = useState<string | null>(null);
+
+  const departments = config?.department ?? [];
+
+  const byDept = useMemo(() => {
+    const map: Record<string, System[]> = {};
+    for (const sys of systems) {
+      const depts = sys.departments.length > 0 ? sys.departments : ["__none__"];
+      for (const d of depts) { (map[d] ??= []).push(sys); }
+    }
+    return map;
+  }, [systems]);
+
+  const noDepSystems = byDept["__none__"] ?? [];
+
+  const deptColor = (name: string) =>
+    departments.find((d) => d.name === name)?.color ?? "#6366f1";
+
+  const activeSystems = selectedDept === "__none__"
+    ? noDepSystems
+    : selectedDept
+      ? (byDept[selectedDept] ?? [])
+      : systems;
+
+  // Stats for selected dept
+  const totalCost = activeSystems.reduce((sum, s) => sum + (s.costPerYear ?? 0), 0);
+  const criticalCount = activeSystems.filter((s) => s.criticality === "high").length;
+  const healthCounts = activeSystems.reduce<Record<string, number>>((acc, s) => {
+    const h = worstHealthFor(s._id, integrations);
+    acc[h] = (acc[h] ?? 0) + 1;
+    return acc;
+  }, { healthy: 0, degraded: 0, down: 0, unknown: 0 });
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      {/* ── Sidebar ── */}
+      <div className="w-52 shrink-0 border-r border-border overflow-y-auto py-3 px-2 space-y-0.5 bg-muted/10">
+        <button
+          onClick={() => setSelectedDept(null)}
+          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+            selectedDept === null ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <span>Tất cả phòng ban</span>
+          <span className="font-mono text-[10px]">{systems.length}</span>
+        </button>
+
+        <div className="px-3 pt-2 pb-1">
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Phòng ban</div>
+        </div>
+
+        {departments.map((dept) => {
+          const count = (byDept[dept.name] ?? []).length;
+          const color = dept.color ?? "#6366f1";
+          return (
+            <button
+              key={dept.name}
+              onClick={() => setSelectedDept(dept.name)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+                selectedDept === dept.name ? "font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+              style={selectedDept === dept.name ? { background: color + "18", color } : {}}
+            >
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+              <span className="flex-1 truncate">{dept.name}</span>
+              <span className="font-mono text-[10px] shrink-0">{count}</span>
+            </button>
+          );
+        })}
+
+        {noDepSystems.length > 0 && (
+          <>
+            <div className="px-3 pt-2 pb-1">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Khác</div>
+            </div>
+            <button
+              onClick={() => setSelectedDept("__none__")}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+                selectedDept === "__none__" ? "bg-muted text-foreground font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0" />
+              <span className="flex-1">Chưa phân loại</span>
+              <span className="font-mono text-[10px]">{noDepSystems.length}</span>
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Content ── */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Stats bar */}
+        <div className="shrink-0 px-5 py-2.5 border-b border-border bg-muted/10 flex flex-wrap items-center gap-4 text-[10px]">
+          <span className="font-semibold text-foreground">
+            {selectedDept === null ? "Tất cả phòng ban" : selectedDept === "__none__" ? "Chưa phân loại" : selectedDept}
+          </span>
+          <span className="text-muted-foreground">{activeSystems.length} hệ thống</span>
+          {criticalCount > 0 && <span className="text-red-400 font-medium">🔴 {criticalCount} critical</span>}
+          {(Object.entries(healthCounts) as [string, number][]).filter(([, c]) => c > 0).map(([h, c]) => {
+            const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
+            return (
+              <span key={h} className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: hm.color }} />
+                <span style={{ color: hm.color }}>{hm.label} {c}</span>
+              </span>
+            );
+          })}
+          {totalCost > 0 && (
+            <span className="ml-auto text-green-400 font-mono">{totalCost.toLocaleString("vi-VN")} ₫/năm</span>
+          )}
+        </div>
+
+        {/* Overview grid (all depts) */}
+        {selectedDept === null && (
+          <div className="flex-1 overflow-y-auto p-5">
+            {departments.length === 0 && noDepSystems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                <Users className="h-10 w-10 opacity-20" />
+                <p className="text-sm">Chưa có dữ liệu phòng ban</p>
+                <p className="text-xs">Thêm phòng ban trong trang Cấu hình</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+                {departments.map((dept) => (
+                  <DeptSummaryCard
+                    key={dept.name}
+                    name={dept.name}
+                    color={dept.color ?? "#6366f1"}
+                    systems={byDept[dept.name] ?? []}
+                    integrations={integrations}
+                    onClick={() => setSelectedDept(dept.name)}
+                  />
+                ))}
+                {noDepSystems.length > 0 && (
+                  <DeptSummaryCard
+                    name="Chưa phân loại"
+                    color="#64748b"
+                    systems={noDepSystems}
+                    integrations={integrations}
+                    onClick={() => setSelectedDept("__none__")}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* System list for selected dept */}
+        {selectedDept !== null && (
+          <div className="flex-1 overflow-y-auto">
+            {activeSystems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                <Server className="h-8 w-8 opacity-20" />
+                <p className="text-sm">Không có hệ thống nào trong phòng ban này</p>
+              </div>
+            ) : (
+              <>
+                {/* Table header */}
+                <div className="sticky top-0 z-10 grid grid-cols-[1fr_120px_90px_90px_80px_100px_110px] gap-3 px-5 py-2 border-b border-border bg-muted/30 text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  <span>Hệ thống</span>
+                  <span>Loại · Trạng thái</span>
+                  <span>Sức khỏe</span>
+                  <span>Arch Score</span>
+                  <span className="text-center">Tích hợp</span>
+                  <span className="text-right">Chi phí / Năm</span>
+                  <span>Người quản lý</span>
+                </div>
+                {activeSystems.map((sys) => {
+                  const meta = TYPE_META[sys.type] ?? TYPE_META.core;
+                  const statusMeta = STATUS_META[sys.status] ?? STATUS_META.inactive;
+                  const worst = worstHealthFor(sys._id, integrations);
+                  const hm = HEALTH_META[worst] ?? HEALTH_META.unknown;
+                  const outCount = integrations.filter((i) => i.sourceSystemId === sys._id).length;
+                  const inCount = integrations.filter((i) => i.destinationSystemId === sys._id).length;
+                  return (
+                    <div
+                      key={sys._id}
+                      className="grid grid-cols-[1fr_120px_90px_90px_80px_100px_110px] gap-3 px-5 py-3 border-b border-border hover:bg-muted/20 transition-colors items-center"
+                    >
+                      {/* Name + category */}
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm truncate">{sys.name}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">
+                          {sys.category}{sys.technology ? ` · ${sys.technology}` : ""}
+                        </div>
+                      </div>
+
+                      {/* Type + status */}
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-medium w-fit" style={{ background: meta.badge + "22", color: meta.badge }}>{meta.label}</span>
+                        <span className="flex items-center gap-1 text-[10px]" style={{ color: statusMeta.color }}>
+                          {statusMeta.icon} <span className="capitalize">{sys.status}</span>
+                        </span>
+                      </div>
+
+                      {/* Health */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hm.color }} />
+                        <span className="text-[10px]" style={{ color: hm.color }}>{hm.label}</span>
+                      </div>
+
+                      {/* Arch score */}
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between text-[9px] text-muted-foreground">
+                          <span>Arch</span>
+                          <span style={{ color: sys.architectureScore >= 70 ? "#22c55e" : sys.architectureScore >= 50 ? "#f59e0b" : "#ef4444" }}>
+                            {sys.architectureScore}
+                          </span>
+                        </div>
+                        <ScoreBar value={sys.architectureScore} color={sys.architectureScore >= 70 ? "#22c55e" : sys.architectureScore >= 50 ? "#f59e0b" : "#ef4444"} />
+                        <div className="flex justify-between text-[9px] text-muted-foreground">
+                          <span>Debt</span>
+                          <span style={{ color: sys.technicalDebtScore > 60 ? "#ef4444" : sys.technicalDebtScore > 30 ? "#f59e0b" : "#22c55e" }}>
+                            {sys.technicalDebtScore}
+                          </span>
+                        </div>
+                        <ScoreBar value={sys.technicalDebtScore} color={sys.technicalDebtScore > 60 ? "#ef4444" : sys.technicalDebtScore > 30 ? "#f59e0b" : "#22c55e"} />
+                      </div>
+
+                      {/* Integrations */}
+                      <div className="text-[10px] text-muted-foreground text-center">
+                        <div>↑ {outCount}</div>
+                        <div>↓ {inCount}</div>
+                      </div>
+
+                      {/* Cost */}
+                      <div className="text-[10px] text-green-400 font-mono text-right">
+                        {sys.costPerYear ? `${sys.costPerYear.toLocaleString("vi-VN")} ₫` : "—"}
+                      </div>
+
+                      {/* Owner */}
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {sys.owner ?? "—"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
-type ViewTab = "map" | "flow" | "gantt";
+type ViewTab = "map" | "flow" | "gantt" | "dept";
 
 function ArchitectureContent() {
   const rawSystems      = useQuery(api.software_systems.list);
   const rawIntegrations = useQuery(api.integrations.list);
   const rawModules      = useQuery(api.system_modules.list);
   const roadmapItems    = useQuery(api.roadmap.list) ?? [];
+  const config          = useQuery(api.config.listAll);
   const systems         = rawSystems ?? [];
   const integrations    = rawIntegrations ?? [];
   const allModules      = rawModules ?? [];
@@ -899,6 +1211,15 @@ function ArchitectureContent() {
           >
             <Activity className="h-3.5 w-3.5" />
             Gantt Timeline
+          </button>
+          <button
+            onClick={() => handleSetViewTab("dept")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+              viewTab === "dept" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Phòng Ban
           </button>
         </div>
 
@@ -1211,6 +1532,11 @@ function ArchitectureContent() {
             <GanttChart items={roadmapItems} />
           </div>
         </div>
+      )}
+
+      {/* ── Phòng Ban View ── */}
+      {viewTab === "dept" && (
+        <DeptView systems={systems} integrations={integrations} config={config} />
       )}
     </div>
   );

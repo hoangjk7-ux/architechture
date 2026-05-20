@@ -147,7 +147,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
           {vendor.costPerYear !== undefined && (
             <div className="bg-muted/30 rounded-lg p-2.5">
               <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Annual Cost</div>
-              <div className="text-xs font-semibold text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />${vendor.costPerYear.toLocaleString()}</div>
+              <div className="text-xs font-semibold text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />{vendor.costPerYear.toLocaleString("vi-VN")} ₫</div>
             </div>
           )}
           {vendor.contractEndDate && (
@@ -174,7 +174,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
         <div className="rounded-lg border border-border p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Linked Systems ({linked.length})</div>
-            {totalCost > 0 && <span className="text-[10px] text-green-400 font-mono">Σ ${totalCost.toLocaleString()}/yr</span>}
+            {totalCost > 0 && <span className="text-[10px] text-green-400 font-mono">Σ {totalCost.toLocaleString("vi-VN")} ₫/năm</span>}
           </div>
           {linked.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">No systems linked to this vendor.</p>
@@ -265,7 +265,7 @@ function VendorCard({ vendor, systems, isSelected, onClick, onEdit, onDelete, ca
 
       <div className="flex flex-wrap items-center gap-1.5">
         {vendor.sla && <Badge variant="secondary" className="text-[9px]"><Shield className="h-2.5 w-2.5 mr-1" />{vendor.sla}</Badge>}
-        {vendor.costPerYear !== undefined && <Badge variant="secondary" className="text-[9px] text-green-400"><DollarSign className="h-2.5 w-2.5 mr-0.5" />${(vendor.costPerYear / 1000).toFixed(0)}k/yr</Badge>}
+        {vendor.costPerYear !== undefined && <Badge variant="secondary" className="text-[9px] text-green-400"><DollarSign className="h-2.5 w-2.5 mr-0.5" />{vendor.costPerYear >= 1_000_000 ? `${(vendor.costPerYear / 1_000_000).toFixed(0)}M` : `${(vendor.costPerYear / 1_000).toFixed(0)}K`} ₫/năm</Badge>}
       </div>
 
       {vendor.contractEndDate && (
@@ -344,7 +344,7 @@ function VendorForm({ initial, onSave, onClose }: {
           <Input value={form.sla} onChange={(e) => set("sla", e.target.value)} placeholder="e.g. 99.9%" className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Cost / Year (USD)</Label>
+          <Label>Chi phí / Năm (VNĐ)</Label>
           <Input type="number" value={form.costPerYear ?? ""} onChange={(e) => set("costPerYear", e.target.value ? Number(e.target.value) : undefined)} placeholder="0" className="bg-input" />
         </div>
         <div className="space-y-1">
@@ -449,7 +449,7 @@ function VendorsContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="h-6 w-6 text-primary" />Vendor & Contract Management</h1>
-                <p className="text-muted-foreground text-sm mt-0.5">{vendors.length} vendors · total spend ${stats.totalCost.toLocaleString()}/yr</p>
+                <p className="text-muted-foreground text-sm mt-0.5">{vendors.length} vendors · tổng chi phí {stats.totalCost.toLocaleString("vi-VN")} ₫/năm</p>
               </div>
               {canWrite && (
                 <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">
