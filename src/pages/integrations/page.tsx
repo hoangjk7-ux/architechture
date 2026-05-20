@@ -63,7 +63,11 @@ function IntegrationForm({ initial, onSave, onClose }: {
   onSave: (data: IntegrationFormData) => Promise<void>;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({ ...defaultForm, ...initial });
+  const [form, setForm] = useState(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _creationTime, sourceSystem, destinationSystem, ...rest } = (initial ?? {}) as Record<string, unknown>;
+    return { ...defaultForm, ...rest };
+  });
   const [saving, setSaving] = useState(false);
   const systems = useQuery(api.software_systems.list) ?? [];
 
@@ -75,7 +79,7 @@ function IntegrationForm({ initial, onSave, onClose }: {
       toast.error("Name, source and destination are required"); return;
     }
     setSaving(true);
-    try { await onSave(form); onClose(); } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); } finally { setSaving(false); }
   };
 
   return (

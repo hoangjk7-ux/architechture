@@ -57,8 +57,8 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       await addItem({ type, name: newName.trim() });
       setNewName("");
       toast.success(`Đã thêm ${cfg.label}`);
-    } catch {
-      toast.error("Không thể thêm");
+    } catch (err: unknown) {
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể thêm");
     } finally {
       setAdding(false);
     }
@@ -70,8 +70,8 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       await updateItem({ id, name: editName.trim() });
       setEditingId(null);
       toast.success("Đã cập nhật");
-    } catch {
-      toast.error("Không thể cập nhật");
+    } catch (err: unknown) {
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể cập nhật");
     }
   };
 
@@ -79,8 +79,8 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
     try {
       await removeItem({ id });
       toast.success(`Đã xoá "${name}"`);
-    } catch {
-      toast.error("Không thể xoá");
+    } catch (err: unknown) {
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể xoá");
     }
   };
 

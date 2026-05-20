@@ -295,7 +295,11 @@ function VendorForm({ initial, onSave, onClose }: {
   initial?: Partial<VendorFormData> & { _id?: Id<"vendors"> };
   onSave: (data: VendorFormData) => Promise<void>; onClose: () => void;
 }) {
-  const [form, setForm] = useState<VendorFormData>({ ...defaultForm, ...initial });
+  const [form, setForm] = useState<VendorFormData>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _creationTime, systemCount, ...rest } = (initial ?? {}) as Record<string, unknown>;
+    return { ...defaultForm, ...rest } as VendorFormData;
+  });
   const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof VendorFormData>(k: K, v: VendorFormData[K]) =>
@@ -304,7 +308,7 @@ function VendorForm({ initial, onSave, onClose }: {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
-    try { await onSave(form); onClose(); } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); } finally { setSaving(false); }
   };
 
   return (

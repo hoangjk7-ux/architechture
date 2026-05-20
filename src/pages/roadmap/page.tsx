@@ -67,7 +67,11 @@ function RoadmapForm({ initial, onSave, onClose, items }: {
   onClose: () => void;
   items: RoadmapItem[];
 }) {
-  const [form, setForm] = useState<RoadmapFormData>({ ...defaultForm, ...initial });
+  const [form, setForm] = useState<RoadmapFormData>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _creationTime, ...rest } = (initial ?? {}) as Record<string, unknown>;
+    return { ...defaultForm, ...rest } as RoadmapFormData;
+  });
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof typeof defaultForm>(k: K, v: (typeof defaultForm)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -81,7 +85,7 @@ function RoadmapForm({ initial, onSave, onClose, items }: {
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
     setSaving(true);
-    try { await onSave(form); onClose(); } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); } finally { setSaving(false); }
   };
 
   return (

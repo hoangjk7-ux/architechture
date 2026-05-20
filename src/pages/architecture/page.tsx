@@ -182,7 +182,7 @@ function GlowEdge({
   return (
     <>
       {data?.isHighCritical && (
-        <path d={edgePath} fill="none" stroke={strokeColor} strokeWidth={strokeWidth + 6} opacity={0.12} />
+        <path d={edgePath} fill="none" stroke={strokeColor} strokeWidth={strokeWidth + 6} opacity={edgeOpacity * 0.12} />
       )}
       <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
       {label && (
@@ -248,14 +248,18 @@ function ModuleForm({ initial, onSave, onClose }: {
   onSave: (d: ModuleFormData) => Promise<void>;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<ModuleFormData>({ ...defaultModuleForm, ...initial });
+  const [form, setForm] = useState<ModuleFormData>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _creationTime, ...rest } = (initial ?? {}) as Record<string, unknown>;
+    return { ...defaultModuleForm, ...rest } as ModuleFormData;
+  });
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof ModuleFormData>(k: K, v: ModuleFormData[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
-    try { await onSave(form); onClose(); } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); } finally { setSaving(false); }
   };
 
   return (
@@ -797,6 +801,16 @@ function ArchitectureContent() {
 
   const filteredIds = useMemo(() => new Set(filteredSystems.map((s) => s._id)), [filteredSystems]);
 
+  const connectedNodeIds = useMemo(() => {
+    if (!selectedId) return null;
+    const ids = new Set<string>([selectedId]);
+    integrations.forEach((i) => {
+      if (i.sourceSystemId === selectedId) ids.add(i.destinationSystemId);
+      if (i.destinationSystemId === selectedId) ids.add(i.sourceSystemId);
+    });
+    return ids;
+  }, [selectedId, integrations]);
+
   const nodes: Node<NodeData>[] = useMemo(() => systems.map((s) => ({
     id: s._id,
     type: "system",
@@ -808,8 +822,12 @@ function ArchitectureContent() {
       worstHealth: worstHealthFor(s._id, integrations),
       isSelected: selectedId === s._id,
     },
-    style: { opacity: filteredIds.has(s._id) ? 1 : 0.2 },
-  })), [systems, integrations, positions, selectedId, filteredIds]);
+    style: {
+      opacity: selectedId
+        ? (connectedNodeIds!.has(s._id) ? 1 : 0.2)
+        : (filteredIds.has(s._id) ? 1 : 0.2),
+    },
+  })), [systems, integrations, positions, selectedId, filteredIds, connectedNodeIds]);
 
   const edges: Edge[] = useMemo(() => integrations.map((intg) => {
     const hc = HEALTH_META[intg.healthStatus] ?? HEALTH_META.unknown;

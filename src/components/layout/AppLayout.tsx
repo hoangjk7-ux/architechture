@@ -41,7 +41,7 @@ function AppLayoutInner() {
   const updateCurrentUser = useMutation(api.users.updateCurrentUser);
 
   useEffect(() => {
-    if (user !== undefined && !user?.role) {
+    if (user !== undefined) {
       void updateCurrentUser();
     }
   }, [user, updateCurrentUser]);

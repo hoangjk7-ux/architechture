@@ -21,29 +21,43 @@ export const updateCurrentUser = mutation({
     const user = await ctx.db.get(userId);
     if (!user) return null;
 
-    // If already has a role, nothing to do
-    if (user.role) return userId;
+    // Preserve intentionally assigned non-viewer roles
+    if (user.role && user.role !== "viewer") return userId;
 
-    // Check if this email was pre-configured by a CTO invite
+    // Check if this email was pre-configured by a CTO invite (isManuallyAdded)
     if (user.email) {
-      const preConfigured = await ctx.db
+      const sameEmail = await ctx.db
         .query("users")
         .withIndex("email", (q) => q.eq("email", user.email!))
         .collect();
-      const invite = preConfigured.find((u) => u._id !== userId && u.isManuallyAdded && u.role);
+
+      const invite = sameEmail.find((u) => u._id !== userId && u.isManuallyAdded && u.role);
       if (invite) {
         await ctx.db.patch(userId, { role: invite.role });
         await ctx.db.delete(invite._id);
         return userId;
       }
+
+      // Multi-provider: transfer role from another authenticated account with same email
+      const existingWithRole = sameEmail.find(
+        (u) => u._id !== userId && !u.isManuallyAdded && u.role && u.role !== "viewer"
+      );
+      if (existingWithRole) {
+        await ctx.db.patch(userId, { role: existingWithRole.role });
+        return userId;
+      }
     }
 
-    // Assign cto if no write-capable user exists yet, otherwise viewer
+    // Assign cto if no other authenticated write-capable user exists, otherwise viewer
     const allUsers = await ctx.db.query("users").collect();
-    const hasWriteRole = allUsers.some((u) => u.role === "cto" || u.role === "it_manager");
-    const role = !hasWriteRole ? "cto" : "viewer";
+    const hasOtherWriteRole = allUsers.some(
+      (u) => u._id !== userId && !u.isManuallyAdded && (u.role === "cto" || u.role === "it_manager")
+    );
+    const role = !hasOtherWriteRole ? "cto" : "viewer";
 
-    await ctx.db.patch(userId, { role });
+    if (role !== user.role) {
+      await ctx.db.patch(userId, { role });
+    }
     return userId;
   },
 });

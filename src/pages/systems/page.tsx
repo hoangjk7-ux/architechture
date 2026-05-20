@@ -269,7 +269,11 @@ function SystemForm({ initial, onSave, onClose }: {
   const departments = config?.department.map((d) => d.name) ?? [];
   const campuses = config?.campus.map((c) => c.name) ?? [];
 
-  const [form, setForm] = useState<SystemFormData>({ ...defaultForm, ...initial });
+  const [form, setForm] = useState<SystemFormData>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, _creationTime, vendor, ...rest } = (initial ?? {}) as Record<string, unknown>;
+    return { ...defaultForm, ...rest } as SystemFormData;
+  });
   const [saving, setSaving] = useState(false);
   const vendors = useQuery(api.vendors.list) ?? [];
 
@@ -283,7 +287,7 @@ function SystemForm({ initial, onSave, onClose }: {
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
     try { await onSave(form); onClose(); }
-    catch { toast.error("Failed to save"); }
+    catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); }
     finally { setSaving(false); }
   };
 
