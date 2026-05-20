@@ -255,10 +255,9 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                 key={sys._id}
                 className="sys-node"
                 transform={`translate(${pos.cx - NODE_W / 2},${pos.cy - NODE_H / 2})`}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", opacity: dimmed ? 0.3 : 1, transition: "opacity 0.15s" }}
                 onClick={() => onSelectSystem(isSelected ? null : sys._id)}
                 filter={isSelected ? "url(#selected-glow)" : undefined}
-                opacity={dimmed ? 0.3 : 1}
               >
                 {/* Node background */}
                 <rect
