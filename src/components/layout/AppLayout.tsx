@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { SignInButton } from "@/components/ui/signin.tsx";
@@ -16,7 +16,6 @@ import {
   ChevronRight,
   ShieldCheck,
   Building2,
-  Network,
   LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -27,10 +26,9 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
   { to: "/systems", icon: Server, label: "System Inventory", roles: ["cto", "it_manager", "business_owner", "viewer"] },
   { to: "/vendors", icon: Building2, label: "Vendors", roles: ["cto", "it_manager", "viewer"] },
-  { to: "/architecture", icon: Map, label: "Architecture Map", roles: ["cto", "it_manager", "viewer"] },
+  { to: "/architecture", icon: Map, label: "Architecture Map", roles: ["cto", "it_manager", "business_owner", "viewer"] },
   { to: "/integrations", icon: GitBranch, label: "Integrations", roles: ["cto", "it_manager", "viewer"] },
   { to: "/roadmap", icon: ShieldCheck, label: "Roadmap", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/flow-diagram", icon: Network, label: "Flow Diagram", roles: ["cto", "it_manager", "business_owner", "viewer"] },
   { to: "/users", icon: Users, label: "Users & Roles", roles: ["cto"] },
 ];
 

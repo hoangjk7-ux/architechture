@@ -30,7 +30,11 @@ import {
   ArrowRight, ArrowLeft, RefreshCw,
   Layers, CheckCircle2, Wrench, CalendarClock, Archive, CircleDot,
   Plus, Edit, Trash2,
+  Map, GitBranch, Activity,
+  CheckCircle, AlertTriangle, XCircle, HelpCircle,
 } from "lucide-react";
+import SystemFlowSVG from "../flow-diagram/_components/SystemFlowSVG.tsx";
+import GanttChart from "../flow-diagram/_components/GanttChart.tsx";
 
 type System = Doc<"software_systems">;
 type Integration = Doc<"integrations">;
@@ -58,6 +62,13 @@ const HEALTH_META: Record<string, { color: string; label: string }> = {
   down:     { color: "#ef4444", label: "Down" },
   unknown:  { color: "#6b7280", label: "Unknown" },
 };
+
+const HEALTH_CONFIG = {
+  healthy:  { label: "Healthy",  icon: CheckCircle,    color: "text-green-400",  bg: "bg-green-400/10",  dot: "#22c55e" },
+  degraded: { label: "Degraded", icon: AlertTriangle,  color: "text-yellow-400", bg: "bg-yellow-400/10", dot: "#f59e0b" },
+  down:     { label: "Down",     icon: XCircle,        color: "text-red-400",    bg: "bg-red-400/10",    dot: "#ef4444" },
+  unknown:  { label: "Unknown",  icon: HelpCircle,     color: "text-gray-400",   bg: "bg-gray-400/10",   dot: "#6b7280" },
+} as const;
 
 const METHOD_META: Record<string, { label: string; color: string }> = {
   realtime:     { label: "Realtime", color: "#6366f1" },
@@ -273,7 +284,6 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
       style={{ borderColor: expanded ? lm.color + "55" : "#1e293b", background: expanded ? lm.bg : "#0d1526" }}
       onClick={() => setExpanded((v) => !v)}
     >
-      {/* Collapsed header */}
       <div className="flex items-center gap-2.5 px-3 py-2.5">
         <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: lm.color }} />
         <div className="flex-1 min-w-0">
@@ -284,11 +294,9 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
             )}
           </div>
         </div>
-        {/* Health dot only for in_use/deprecated */}
         {(mod.lifecycle === "in_use" || mod.lifecycle === "deprecated") && (
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hm.color }} />
         )}
-        {/* Planned date for non-in_use */}
         {mod.plannedDate && mod.lifecycle !== "in_use" && (
           <span className="text-[9px] shrink-0" style={{ color: lm.color }}>{mod.plannedDate.slice(0, 7)}</span>
         )}
@@ -305,10 +313,8 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
         <span className="text-muted-foreground text-xs ml-0.5">{expanded ? "▲" : "▼"}</span>
       </div>
 
-      {/* Expanded details */}
       {expanded && (
         <div className="px-3 pb-3 space-y-2 border-t" style={{ borderColor: lm.color + "33" }}>
-          {/* Lifecycle + health badges */}
           <div className="flex flex-wrap gap-1.5 pt-2">
             <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: lm.bg, color: lm.color, border: `1px solid ${lm.color}44` }}>
               <Icon className="h-2.5 w-2.5" />{lm.label}
@@ -391,7 +397,6 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
           <Plus className="h-3.5 w-3.5" />Add Module
         </Button>
       )}
-      {/* Summary chips */}
       <div className="flex flex-wrap gap-1.5">
         <button
           onClick={() => setFilter("all")}
@@ -415,8 +420,6 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
           );
         })}
       </div>
-
-      {/* Module rows grouped by lifecycle */}
       <div className="space-y-1.5">
         {filtered.map((mod) => <ModuleRow key={mod._id} mod={mod} canWrite={canWrite} onEdit={onEdit} onDelete={onDelete} />)}
       </div>
@@ -496,7 +499,6 @@ function DetailPanel({
 
   return (
     <div className="w-[340px] border-l border-border bg-background flex flex-col overflow-hidden shrink-0">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0" style={{ background: meta.bg }}>
         <div className="flex items-center gap-2 min-w-0">
           <Server className="h-4 w-4 shrink-0" style={{ color: meta.badge }} />
@@ -510,7 +512,6 @@ function DetailPanel({
         </button>
       </div>
 
-      {/* Module summary bar */}
       {moduleCount > 0 && (
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-muted/10 shrink-0">
           <span className="text-[10px] text-muted-foreground">{moduleCount} modules</span>
@@ -533,7 +534,6 @@ function DetailPanel({
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex border-b border-border shrink-0 bg-muted/10">
         {TABS.map((tab) => (
           <button
@@ -556,9 +556,7 @@ function DetailPanel({
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-3">
-        {/* ── MODULES TAB ── */}
         {activeTab === "modules" && (
           <ModulesTab
             modules={modules} canWrite={canWrite}
@@ -568,7 +566,6 @@ function DetailPanel({
           />
         )}
 
-        {/* ── INTEGRATIONS TAB ── */}
         {activeTab === "integrations" && (
           <div className="space-y-4">
             {outbound.length > 0 && (
@@ -637,7 +634,6 @@ function DetailPanel({
           </div>
         )}
 
-        {/* ── OVERVIEW TAB ── */}
         {activeTab === "overview" && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
@@ -718,14 +714,18 @@ function DetailPanel({
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
+type ViewTab = "map" | "flow" | "gantt";
+
 function ArchitectureContent() {
   const rawSystems      = useQuery(api.software_systems.list);
   const rawIntegrations = useQuery(api.integrations.list);
   const rawModules      = useQuery(api.system_modules.list);
+  const roadmapItems    = useQuery(api.roadmap.list) ?? [];
   const systems         = rawSystems ?? [];
   const integrations    = rawIntegrations ?? [];
   const allModules      = rawModules ?? [];
 
+  const [viewTab,      setViewTab]      = useState<ViewTab>("map");
   const [selectedId,   setSelectedId]   = useState<Id<"software_systems"> | null>(null);
   const [filterType,   setFilterType]   = useState<string>("all");
   const [filterHealth, setFilterHealth] = useState<string>("all");
@@ -733,6 +733,11 @@ function ArchitectureContent() {
   const selectedSystem  = useMemo(() => systems.find((s) => s._id === selectedId) ?? null, [systems, selectedId]);
   const selectedModules = useMemo(() => allModules.filter((m) => m.systemId === selectedId), [allModules, selectedId]);
   const positions       = useMemo(() => layoutNodes(systems), [systems]);
+
+  const connectedIntegrations = useMemo(() => {
+    if (!selectedId) return [];
+    return integrations.filter((i) => i.sourceSystemId === selectedId || i.destinationSystemId === selectedId);
+  }, [selectedId, integrations]);
 
   const filteredSystems = useMemo(() => systems.filter((s) => {
     if (filterType !== "all" && s.type !== filterType) return false;
@@ -786,6 +791,11 @@ function ArchitectureContent() {
     return c;
   }, [integrations]);
 
+  const handleSetViewTab = (tab: ViewTab) => {
+    setViewTab(tab);
+    setSelectedId(null);
+  };
+
   if (rawSystems === undefined || rawIntegrations === undefined) {
     return <div className="p-6"><Skeleton className="h-[600px] w-full" /></div>;
   }
@@ -794,86 +804,340 @@ function ArchitectureContent() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top bar */}
       <div className="shrink-0 px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold flex items-center gap-2"><Globe className="h-5 w-5 text-primary" />Architecture Map</h1>
-          <p className="text-xs text-muted-foreground">{systems.length} systems · {integrations.length} integrations · {allModules.length} modules · Click a node for details</p>
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          <button
+            onClick={() => handleSetViewTab("map")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+              viewTab === "map" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Map className="h-3.5 w-3.5" />
+            Architecture Map
+          </button>
+          <button
+            onClick={() => handleSetViewTab("flow")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+              viewTab === "flow" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            Integration Flow
+          </button>
+          <button
+            onClick={() => handleSetViewTab("gantt")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+              viewTab === "gantt" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Activity className="h-3.5 w-3.5" />
+            Gantt Timeline
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {(["healthy", "degraded", "down", "unknown"] as const).map((h) => {
-            const hc = HEALTH_META[h];
-            return (
-              <button key={h} onClick={() => setFilterHealth(filterHealth === h ? "all" : h)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all"
-                style={{ background: filterHealth === h ? `${hc.color}22` : "transparent", borderColor: filterHealth === h ? hc.color : "#1e293b", color: hc.color }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: hc.color }} />{hc.label} {healthSummary[h] ?? 0}
+
+        {/* Architecture Map filters */}
+        {viewTab === "map" && (
+          <div className="flex flex-wrap items-center gap-2">
+            {(["healthy", "degraded", "down", "unknown"] as const).map((h) => {
+              const hc = HEALTH_META[h];
+              return (
+                <button key={h} onClick={() => setFilterHealth(filterHealth === h ? "all" : h)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all"
+                  style={{ background: filterHealth === h ? `${hc.color}22` : "transparent", borderColor: filterHealth === h ? hc.color : "#1e293b", color: hc.color }}>
+                  <span className="w-2 h-2 rounded-full" style={{ background: hc.color }} />{hc.label} {healthSummary[h] ?? 0}
+                </button>
+              );
+            })}
+            <div className="w-px h-5 bg-border" />
+            {(["all", "core", "supporting", "legacy", "pilot"] as const).map((t) => (
+              <button key={t} onClick={() => setFilterType(t)} className="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border capitalize transition-all"
+                style={{ background: filterType === t ? "#6366f133" : "transparent", borderColor: filterType === t ? "#6366f1" : "#1e293b", color: filterType === t ? "#c7d2fe" : "#64748b" }}>
+                {t === "all" ? "All Types" : t}
               </button>
-            );
-          })}
-          <div className="w-px h-5 bg-border" />
-          {(["all", "core", "supporting", "legacy", "pilot"] as const).map((t) => (
-            <button key={t} onClick={() => setFilterType(t)} className="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border capitalize transition-all"
-              style={{ background: filterType === t ? "#6366f133" : "transparent", borderColor: filterType === t ? "#6366f1" : "#1e293b", color: filterType === t ? "#c7d2fe" : "#64748b" }}>
-              {t === "all" ? "All Types" : t}
-            </button>
-          ))}
-          {selectedId && (
-            <button onClick={() => setSelectedId(null)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border border-border text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-              <X className="h-3 w-3" /> Clear
-            </button>
-          )}
-        </div>
-      </div>
+            ))}
+            {selectedId && (
+              <button onClick={() => setSelectedId(null)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border border-border text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+                <X className="h-3 w-3" /> Clear
+              </button>
+            )}
+          </div>
+        )}
 
-      {/* Legend */}
-      <div className="shrink-0 px-5 py-1.5 border-b border-border flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground bg-muted/20">
-        <span className="font-semibold text-foreground">Edge:</span>
-        {(Object.entries(HEALTH_META) as [string, { color: string; label: string }][]).map(([, v]) => (
-          <span key={v.label} className="flex items-center gap-1"><span className="inline-block w-5 h-0.5 rounded" style={{ background: v.color }} />{v.label}</span>
-        ))}
-        <span className="flex items-center gap-1"><span className="inline-block w-5 border-t-2 border-dashed border-orange-400" /> Non-compliant</span>
-        <span className="flex items-center gap-1"><RefreshCw className="h-2.5 w-2.5 text-indigo-400" /> Realtime</span>
-        <span className="font-semibold text-foreground ml-2">Module icons:</span>
-        {(Object.entries(LIFECYCLE_META) as [string, (typeof LIFECYCLE_META)[keyof typeof LIFECYCLE_META]][]).map(([, lm]) => {
-          const Icon = lm.Icon;
-          return <span key={lm.label} className="flex items-center gap-1" style={{ color: lm.color }}><Icon className="h-2.5 w-2.5" />{lm.label}</span>;
-        })}
-      </div>
-
-      {/* Canvas + Panel */}
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-hidden" style={{ background: "#060d1f" }}>
-          {systems.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-muted-foreground">
-              <div className="text-center space-y-2"><Server className="h-12 w-12 mx-auto opacity-20" /><p className="font-medium">No systems to display</p></div>
+        {/* Integration Flow stats */}
+        {viewTab === "flow" && (
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(HEALTH_CONFIG) as [string, typeof HEALTH_CONFIG[keyof typeof HEALTH_CONFIG]][]).map(([key, cfg]) => {
+              const Icon = cfg.icon;
+              const count = healthSummary[key] ?? 0;
+              return (
+                <div key={key} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${cfg.bg} text-xs`}>
+                  <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
+                  <span className={cfg.color}>{cfg.label}</span>
+                  <span className="text-muted-foreground font-mono">{count}</span>
+                </div>
+              );
+            })}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-xs text-muted-foreground">
+              <GitBranch className="h-3.5 w-3.5" />
+              {integrations.length} integrations · {systems.length} systems
             </div>
-          ) : (
-            <ReactFlow
-              nodes={nodes} edges={edges} nodeTypes={nodeTypes}
-              fitView fitViewOptions={{ padding: 0.15 }}
-              attributionPosition="bottom-right" proOptions={{ hideAttribution: true }}
-              onNodeClick={(_evt, node) => {
-                setSelectedId(node.id as Id<"software_systems">);
-              }}
-              onPaneClick={() => setSelectedId(null)}
-            >
-              <Background color="#1e293b" gap={28} size={1} />
-              <Controls style={{ background: "#0f172a", border: "1px solid #1e293b" }} />
-              <MiniMap
-                nodeColor={(node) => TYPE_META[systems.find((s) => s._id === node.id)?.type ?? "core"]?.badge ?? "#6366f1"}
-                style={{ background: "#0a1628", border: "1px solid #1e293b" }}
-                maskColor="#06101e99"
-              />
-            </ReactFlow>
-          )}
-        </div>
-        {selectedSystem && (
-          <DetailPanel
-            key={selectedSystem._id}
-            system={selectedSystem} integrations={integrations}
-            systems={systems} modules={selectedModules}
-            onClose={() => setSelectedId(null)}
-          />
+          </div>
         )}
       </div>
+
+      {/* ── Architecture Map View ── */}
+      {viewTab === "map" && (
+        <>
+          <div className="shrink-0 px-5 py-1.5 border-b border-border flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground bg-muted/20">
+            <span className="font-semibold text-foreground">Edge:</span>
+            {(Object.entries(HEALTH_META) as [string, { color: string; label: string }][]).map(([, v]) => (
+              <span key={v.label} className="flex items-center gap-1"><span className="inline-block w-5 h-0.5 rounded" style={{ background: v.color }} />{v.label}</span>
+            ))}
+            <span className="flex items-center gap-1"><span className="inline-block w-5 border-t-2 border-dashed border-orange-400" /> Non-compliant</span>
+            <span className="flex items-center gap-1"><RefreshCw className="h-2.5 w-2.5 text-indigo-400" /> Realtime</span>
+            <span className="font-semibold text-foreground ml-2">Module icons:</span>
+            {(Object.entries(LIFECYCLE_META) as [string, (typeof LIFECYCLE_META)[keyof typeof LIFECYCLE_META]][]).map(([, lm]) => {
+              const Icon = lm.Icon;
+              return <span key={lm.label} className="flex items-center gap-1" style={{ color: lm.color }}><Icon className="h-2.5 w-2.5" />{lm.label}</span>;
+            })}
+          </div>
+
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden" style={{ background: "#060d1f" }}>
+              {systems.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  <div className="text-center space-y-2"><Server className="h-12 w-12 mx-auto opacity-20" /><p className="font-medium">No systems to display</p></div>
+                </div>
+              ) : (
+                <ReactFlow
+                  nodes={nodes} edges={edges} nodeTypes={nodeTypes}
+                  fitView fitViewOptions={{ padding: 0.15 }}
+                  attributionPosition="bottom-right" proOptions={{ hideAttribution: true }}
+                  onNodeClick={(_evt, node) => { setSelectedId(node.id as Id<"software_systems">); }}
+                  onPaneClick={() => setSelectedId(null)}
+                >
+                  <Background color="#1e293b" gap={28} size={1} />
+                  <Controls style={{ background: "#0f172a", border: "1px solid #1e293b" }} />
+                  <MiniMap
+                    nodeColor={(node) => TYPE_META[systems.find((s) => s._id === node.id)?.type ?? "core"]?.badge ?? "#6366f1"}
+                    style={{ background: "#0a1628", border: "1px solid #1e293b" }}
+                    maskColor="#06101e99"
+                  />
+                </ReactFlow>
+              )}
+            </div>
+            {selectedSystem && (
+              <DetailPanel
+                key={selectedSystem._id}
+                system={selectedSystem} integrations={integrations}
+                systems={systems} modules={selectedModules}
+                onClose={() => setSelectedId(null)}
+              />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Integration Flow View ── */}
+      {viewTab === "flow" && (
+        <div className="flex flex-1 overflow-hidden">
+          <div className="flex-1 p-4 overflow-hidden flex flex-col gap-3">
+            {/* Legend */}
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground shrink-0">
+              <span className="font-medium text-foreground">System type:</span>
+              {[
+                { label: "Core", color: "#6366f1" },
+                { label: "Supporting", color: "#22c55e" },
+                { label: "Legacy", color: "#f59e0b" },
+                { label: "Pilot", color: "#3b82f6" },
+              ].map((t) => (
+                <span key={t.label} className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: t.color }} />
+                  {t.label}
+                </span>
+              ))}
+              <span className="border-l border-border pl-4">Edge health:</span>
+              {Object.entries(HEALTH_CONFIG).map(([, cfg]) => (
+                <span key={cfg.label} className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: cfg.dot }} />
+                  {cfg.label}
+                </span>
+              ))}
+              <span className="border-l border-border pl-4">Dashed = non-compliant · Animated = realtime</span>
+            </div>
+
+            {systems.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center bg-[#050d1a] rounded-lg border border-border text-muted-foreground">
+                <div className="text-center space-y-2">
+                  <GitBranch className="h-10 w-10 mx-auto opacity-30" />
+                  <p className="text-sm font-medium">No systems to display</p>
+                  <p className="text-xs">Add systems in System Inventory first</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 min-h-[400px]">
+                <SystemFlowSVG
+                  systems={systems}
+                  integrations={integrations}
+                  selectedId={selectedId}
+                  onSelectSystem={setSelectedId}
+                />
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground text-center shrink-0">
+              Click a system to highlight connections · Scroll to zoom · Drag to pan
+            </p>
+          </div>
+
+          {/* Side panel */}
+          <div
+            className={`shrink-0 border-l border-border overflow-y-auto transition-all duration-300 ${
+              selectedSystem ? "w-72 p-4" : "w-0 p-0 overflow-hidden"
+            }`}
+          >
+            {selectedSystem && (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-bold text-sm">{selectedSystem.name}</h2>
+                    <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                      {selectedSystem.category} · {selectedSystem.type}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedId(null)}
+                    className="text-muted-foreground hover:text-foreground text-lg leading-none cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium capitalize ${
+                    selectedSystem.status === "active" ? "bg-green-500/20 text-green-400" :
+                    selectedSystem.status === "sunset" ? "bg-red-500/20 text-red-400" :
+                    "bg-yellow-500/20 text-yellow-400"
+                  }`}>{selectedSystem.status}</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium capitalize ${
+                    selectedSystem.criticality === "high" ? "bg-red-500/20 text-red-400" :
+                    selectedSystem.criticality === "medium" ? "bg-yellow-500/20 text-yellow-400" :
+                    "bg-gray-500/20 text-gray-400"
+                  }`}>{selectedSystem.criticality} criticality</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    selectedSystem.riskLevel === "high" ? "bg-red-500/20 text-red-400" :
+                    selectedSystem.riskLevel === "medium" ? "bg-yellow-500/20 text-yellow-400" :
+                    "bg-gray-500/20 text-gray-400"
+                  }`}>Risk: {selectedSystem.riskLevel}</span>
+                </div>
+
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">Architecture Score</span>
+                      <span className="font-mono text-green-400">{selectedSystem.architectureScore}</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${selectedSystem.architectureScore}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">Tech Debt</span>
+                      <span className="font-mono text-red-400">{selectedSystem.technicalDebtScore}</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-red-500 rounded-full" style={{ width: `${selectedSystem.technicalDebtScore}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                    Connections ({connectedIntegrations.length})
+                  </h3>
+                  <div className="space-y-1.5">
+                    {connectedIntegrations.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No integrations</p>
+                    ) : (
+                      connectedIntegrations.map((intg) => {
+                        const isSrc = intg.sourceSystemId === selectedId;
+                        const otherId = isSrc ? intg.destinationSystemId : intg.sourceSystemId;
+                        const otherSys = systems.find((s) => s._id === otherId);
+                        const hcfg = HEALTH_CONFIG[intg.healthStatus as keyof typeof HEALTH_CONFIG];
+                        return (
+                          <div key={intg._id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-xs">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hcfg?.dot ?? "#6b7280" }} />
+                            <span className="text-muted-foreground">{isSrc ? "→" : "←"}</span>
+                            <span className="font-medium truncate flex-1">{otherSys?.name ?? "Unknown"}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{intg.protocol}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {selectedSystem.description && (
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Description</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{selectedSystem.description}</p>
+                  </div>
+                )}
+
+                {selectedSystem.technology && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Tech</span>
+                      <p className="font-medium mt-0.5">{selectedSystem.technology}</p>
+                    </div>
+                    {selectedSystem.hosting && (
+                      <div>
+                        <span className="text-muted-foreground">Hosting</span>
+                        <p className="font-medium mt-0.5">{selectedSystem.hosting}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Gantt Timeline View ── */}
+      {viewTab === "gantt" && (
+        <div className="flex-1 overflow-auto p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-sm">Roadmap Timeline</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {roadmapItems.length} items · Gantt view by scheduled dates
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs">
+              {[
+                { label: "Not Started", color: "#334155" },
+                { label: "In Progress", color: "#3b82f6" },
+                { label: "Blocked",     color: "#ef4444" },
+                { label: "Done",        color: "#22c55e" },
+                { label: "Cancelled",   color: "#475569" },
+              ].map((s) => (
+                <span key={s.label} className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="w-3 h-3 rounded-sm inline-block" style={{ background: s.color }} />
+                  {s.label}
+                </span>
+              ))}
+              <span className="flex items-center gap-1 text-yellow-400">
+                <span className="inline-block border-l-2 border-dashed border-yellow-400 h-3" />
+                Today
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border overflow-hidden">
+            <GanttChart items={roadmapItems} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

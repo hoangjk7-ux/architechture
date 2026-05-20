@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import AppLayout from "./components/layout/AppLayout.tsx";
@@ -10,7 +10,6 @@ import ArchitecturePage from "./pages/architecture/page.tsx";
 import IntegrationsPage from "./pages/integrations/page.tsx";
 import RoadmapPage from "./pages/roadmap/page.tsx";
 import UsersPage from "./pages/users/page.tsx";
-import FlowDiagramPage from "./pages/flow-diagram/page.tsx";
 
 export default function App() {
   return (
@@ -26,7 +25,7 @@ export default function App() {
             <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="/roadmap" element={<RoadmapPage />} />
             <Route path="/users" element={<UsersPage />} />
-            <Route path="/flow-diagram" element={<FlowDiagramPage />} />
+            <Route path="/flow-diagram" element={<Navigate to="/architecture" replace />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
