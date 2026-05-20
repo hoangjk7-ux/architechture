@@ -177,7 +177,6 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
             if (!src || !dst) return null;
             const color = HEALTH_COLORS[intg.healthStatus] ?? "#6b7280";
             const strokeW = intg.criticalLevel === "high" ? 2.5 : intg.criticalLevel === "medium" ? 1.8 : 1.2;
-            const isDashed = !intg.isArchitectureCompliant;
             const isAnimated = intg.method === "realtime";
             const path = getCurvedPath(src.cx + NODE_W / 2, src.cy, dst.cx - NODE_W / 2, dst.cy);
 
@@ -191,7 +190,6 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                     stroke={color}
                     strokeWidth={strokeW + 4}
                     opacity={0.15}
-                    strokeDasharray={isDashed ? "6,4" : undefined}
                   />
                 )}
                 <path
@@ -199,7 +197,6 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   fill="none"
                   stroke={color}
                   strokeWidth={strokeW}
-                  strokeDasharray={isDashed ? "6,4" : undefined}
                   markerEnd={`url(#arrow-${intg.healthStatus})`}
                   opacity={selectedId && intg.sourceSystemId !== selectedId && intg.destinationSystemId !== selectedId ? 0.25 : 0.9}
                 >

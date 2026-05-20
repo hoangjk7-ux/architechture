@@ -20,6 +20,7 @@ export default defineSchema({
       v.literal("business_owner"),
       v.literal("viewer")
     )),
+    isManuallyAdded: v.optional(v.boolean()),
   })
     .index("email", ["email"])
     .index("phone", ["phone"])
@@ -118,6 +119,13 @@ export default defineSchema({
   })
     .index("by_system", ["systemId"])
     .index("by_system_lifecycle", ["systemId", "lifecycle"]),
+
+  config_items: defineTable({
+    type: v.union(v.literal("category"), v.literal("department"), v.literal("campus")),
+    name: v.string(),
+    color: v.optional(v.string()),
+    order: v.number(),
+  }).index("by_type", ["type"]),
 
   roadmap_items: defineTable({
     title: v.string(),

@@ -18,6 +18,7 @@ import {
   Building2,
   LogOut,
 } from "lucide-react";
+
 import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/integrations", icon: GitBranch, label: "Integrations", roles: ["cto", "it_manager", "viewer"] },
   { to: "/roadmap", icon: ShieldCheck, label: "Roadmap", roles: ["cto", "it_manager", "business_owner", "viewer"] },
   { to: "/users", icon: Users, label: "Users & Roles", roles: ["cto"] },
+  { to: "/settings", icon: Settings, label: "Cấu hình", roles: ["cto", "it_manager"] },
 ];
 
 function AppLayoutInner() {
