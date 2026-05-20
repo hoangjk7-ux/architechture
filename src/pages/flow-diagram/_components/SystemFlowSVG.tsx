@@ -50,7 +50,6 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
   const lastMouse = useRef<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Compute positions
   const nodePositions: NodePos[] = useMemo(() => {
     return systems.map((s, i) => ({
       id: s._id,
@@ -68,12 +67,22 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
   const totalWidth = PADDING * 2 + COLS * COL_GAP;
   const totalHeight = PADDING * 2 + Math.ceil(systems.length / COLS) * ROW_GAP;
 
-  // Filtered integrations based on selected
   const visibleIntegrations = useMemo(() => {
     if (!selectedId) return integrations;
     return integrations.filter(
       (i) => i.sourceSystemId === selectedId || i.destinationSystemId === selectedId
     );
+  }, [integrations, selectedId]);
+
+  // Pre-compute connected set so dimming is O(1) per node
+  const connectedSet = useMemo(() => {
+    if (!selectedId) return new Set<string>();
+    const s = new Set<string>();
+    integrations.forEach((i) => {
+      if (i.sourceSystemId === selectedId) s.add(i.destinationSystemId);
+      if (i.destinationSystemId === selectedId) s.add(i.sourceSystemId);
+    });
+    return s;
   }, [integrations, selectedId]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -130,29 +139,19 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
         onWheel={handleWheel}
       >
         <defs>
-          {/* Arrow markers for each health color */}
           {Object.entries(HEALTH_COLORS).map(([health, color]) => (
             <marker
               key={health}
               id={`arrow-${health}`}
-              markerWidth="8"
-              markerHeight="8"
-              refX="7"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
               refY="3"
               orient="auto"
             >
-              <path d="M0,0 L0,6 L8,3 z" fill={color} />
+              <path d="M0,0 L0,6 L9,3 z" fill={color} />
             </marker>
           ))}
-          {/* Glow filter */}
-          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          {/* Selected glow */}
           <filter id="selected-glow" x="-40%" y="-40%" width="180%" height="180%">
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
@@ -160,74 +159,42 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          {/* Grid pattern */}
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
           </pattern>
         </defs>
 
         <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
-          {/* Background grid */}
           <rect width={totalWidth} height={totalHeight} fill="url(#grid)" />
 
-          {/* Edges */}
+          {/* Edges — always solid, no dashes */}
           {visibleIntegrations.map((intg) => {
             const src = posMap[intg.sourceSystemId];
             const dst = posMap[intg.destinationSystemId];
             if (!src || !dst) return null;
             const color = HEALTH_COLORS[intg.healthStatus] ?? "#6b7280";
             const strokeW = intg.criticalLevel === "high" ? 2.5 : intg.criticalLevel === "medium" ? 1.8 : 1.2;
-            const isAnimated = intg.method === "realtime";
+            const edgeOpacity = selectedId ? 0.9 : 0.85;
             const path = getCurvedPath(src.cx + NODE_W / 2, src.cy, dst.cx - NODE_W / 2, dst.cy);
+            const mx = (src.cx + NODE_W / 2 + dst.cx - NODE_W / 2) / 2;
+            const my = (src.cy + dst.cy) / 2 - 10;
 
             return (
               <g key={intg._id}>
-                {/* Glow background for important integrations */}
                 {intg.criticalLevel === "high" && (
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth={strokeW + 4}
-                    opacity={0.15}
-                  />
+                  <path d={path} fill="none" stroke={color} strokeWidth={strokeW + 4} opacity={0.12} />
                 )}
                 <path
                   d={path}
                   fill="none"
                   stroke={color}
                   strokeWidth={strokeW}
+                  opacity={edgeOpacity}
                   markerEnd={`url(#arrow-${intg.healthStatus})`}
-                  opacity={selectedId && intg.sourceSystemId !== selectedId && intg.destinationSystemId !== selectedId ? 0.25 : 0.9}
-                >
-                  {isAnimated && (
-                    <animate
-                      attributeName="stroke-dashoffset"
-                      from="0"
-                      to="-20"
-                      dur="0.8s"
-                      repeatCount="indefinite"
-                    />
-                  )}
-                </path>
-
-                {/* Protocol label at midpoint */}
-                {(() => {
-                  const mx = (src.cx + NODE_W / 2 + dst.cx - NODE_W / 2) / 2;
-                  const my = (src.cy + dst.cy) / 2 - 10;
-                  return (
-                    <text
-                      x={mx}
-                      y={my}
-                      textAnchor="middle"
-                      fill={color}
-                      fontSize="9"
-                      opacity={selectedId && intg.sourceSystemId !== selectedId && intg.destinationSystemId !== selectedId ? 0.2 : 0.8}
-                    >
-                      {intg.protocol}
-                    </text>
-                  );
-                })()}
+                />
+                <text x={mx} y={my} textAnchor="middle" fill={color} fontSize="9" opacity={0.75}>
+                  {intg.protocol}
+                </text>
               </g>
             );
           })}
@@ -238,26 +205,20 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
             if (!pos) return null;
             const colors = TYPE_COLORS[sys.type] ?? TYPE_COLORS.core;
             const isSelected = selectedId === sys._id;
-            const isConnected =
-              selectedId &&
-              integrations.some(
-                (i) =>
-                  (i.sourceSystemId === selectedId && i.destinationSystemId === sys._id) ||
-                  (i.destinationSystemId === selectedId && i.sourceSystemId === sys._id)
-              );
-            const dimmed = selectedId && !isSelected && !isConnected;
+            const isDimmed = !!(selectedId && !isSelected && !connectedSet.has(sys._id));
+            const nodeOpacity = isDimmed ? 0.15 : 1;
 
             return (
               <g
                 key={sys._id}
                 className="sys-node"
                 transform={`translate(${pos.cx - NODE_W / 2},${pos.cy - NODE_H / 2})`}
-                style={{ cursor: "pointer", opacity: dimmed ? 0.15 : 1, transition: "opacity 0.2s", pointerEvents: "all" }}
+                opacity={nodeOpacity}
+                cursor="pointer"
+                filter={isSelected ? "url(#selected-glow)" : undefined}
                 onClick={(e) => { e.stopPropagation(); onSelectSystem(isSelected ? null : sys._id); }}
                 onMouseDown={(e) => e.stopPropagation()}
-                filter={isSelected ? "url(#selected-glow)" : undefined}
               >
-                {/* Node background */}
                 <rect
                   width={NODE_W}
                   height={NODE_H}
@@ -266,17 +227,7 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   stroke={isSelected ? "#fff" : colors.stroke}
                   strokeWidth={isSelected ? 2.5 : 1.5}
                 />
-
-                {/* Top accent bar */}
-                <rect
-                  width={NODE_W}
-                  height="4"
-                  rx="8"
-                  fill={colors.stroke}
-                  opacity={0.8}
-                />
-
-                {/* System name */}
+                <rect width={NODE_W} height="4" rx="8" fill={colors.stroke} opacity={0.8} />
                 <text
                   x={NODE_W / 2}
                   y={26}
@@ -287,8 +238,6 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                 >
                   {sys.name.length > 16 ? sys.name.slice(0, 14) + "…" : sys.name}
                 </text>
-
-                {/* Category + type */}
                 <text
                   x={NODE_W / 2}
                   y={41}
@@ -299,21 +248,17 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                 >
                   {sys.category} · {sys.type}
                 </text>
-
-                {/* Health / status indicator */}
                 <circle
                   cx={NODE_W - 10}
                   cy={10}
                   r="4"
                   fill={sys.status === "active" ? "#22c55e" : sys.status === "sunset" ? "#ef4444" : "#f59e0b"}
                 />
-
-                {/* Criticality badge */}
                 {sys.criticality === "high" && (
-                  <rect x={6} y={50} width={34} height={10} rx="3" fill="#ef4444" opacity={0.8} />
-                )}
-                {sys.criticality === "high" && (
-                  <text x={23} y={58} textAnchor="middle" fill="white" fontSize="7" fontWeight="600">CRITICAL</text>
+                  <>
+                    <rect x={6} y={50} width={34} height={10} rx="3" fill="#ef4444" opacity={0.8} />
+                    <text x={23} y={58} textAnchor="middle" fill="white" fontSize="7" fontWeight="600">CRITICAL</text>
+                  </>
                 )}
               </g>
             );

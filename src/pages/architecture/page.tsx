@@ -961,7 +961,7 @@ function ArchitectureContent() {
                   {cfg.label}
                 </span>
               ))}
-              <span className="border-l border-border pl-4">Dashed = non-compliant · Animated = realtime</span>
+              <span className="border-l border-border pl-4">굵기 = mức độ quan trọng · Mũi tên = hướng luồng</span>
             </div>
 
             {systems.length === 0 ? (
