@@ -249,9 +249,11 @@ function ModuleForm({ initial, onSave, onClose }: {
   onClose: () => void;
 }) {
   const [form, setForm] = useState<ModuleFormData>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _creationTime, ...rest } = (initial ?? {}) as Record<string, unknown>;
-    return { ...defaultModuleForm, ...rest } as ModuleFormData;
+    const src = (initial ?? {}) as Record<string, unknown>;
+    return Object.keys(defaultModuleForm).reduce<ModuleFormData>(
+      (acc, k) => ({ ...acc, [k]: k in src ? src[k] : defaultModuleForm[k as keyof ModuleFormData] }),
+      { ...defaultModuleForm }
+    );
   });
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof ModuleFormData>(k: K, v: ModuleFormData[K]) => setForm((f) => ({ ...f, [k]: v }));

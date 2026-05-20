@@ -63,10 +63,12 @@ function IntegrationForm({ initial, onSave, onClose }: {
   onSave: (data: IntegrationFormData) => Promise<void>;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _creationTime, sourceSystem, destinationSystem, ...rest } = (initial ?? {}) as Record<string, unknown>;
-    return { ...defaultForm, ...rest };
+  const [form, setForm] = useState<IntegrationFormData>(() => {
+    const src = (initial ?? {}) as Record<string, unknown>;
+    return Object.keys(defaultForm).reduce<IntegrationFormData>(
+      (acc, k) => ({ ...acc, [k]: k in src ? src[k] : defaultForm[k as keyof IntegrationFormData] }),
+      { ...defaultForm }
+    );
   });
   const [saving, setSaving] = useState(false);
   const systems = useQuery(api.software_systems.list) ?? [];

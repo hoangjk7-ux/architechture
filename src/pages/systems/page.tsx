@@ -270,9 +270,11 @@ function SystemForm({ initial, onSave, onClose }: {
   const campuses = config?.campus.map((c) => c.name) ?? [];
 
   const [form, setForm] = useState<SystemFormData>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _creationTime, vendor, ...rest } = (initial ?? {}) as Record<string, unknown>;
-    return { ...defaultForm, ...rest } as SystemFormData;
+    const src = (initial ?? {}) as Record<string, unknown>;
+    return Object.keys(defaultForm).reduce<SystemFormData>(
+      (acc, k) => ({ ...acc, [k]: k in src ? src[k] : defaultForm[k as keyof SystemFormData] }),
+      { ...defaultForm }
+    );
   });
   const [saving, setSaving] = useState(false);
   const vendors = useQuery(api.vendors.list) ?? [];

@@ -68,9 +68,11 @@ function RoadmapForm({ initial, onSave, onClose, items }: {
   items: RoadmapItem[];
 }) {
   const [form, setForm] = useState<RoadmapFormData>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _creationTime, ...rest } = (initial ?? {}) as Record<string, unknown>;
-    return { ...defaultForm, ...rest } as RoadmapFormData;
+    const src = (initial ?? {}) as Record<string, unknown>;
+    return Object.keys(defaultForm).reduce<RoadmapFormData>(
+      (acc, k) => ({ ...acc, [k]: k in src ? src[k] : defaultForm[k as keyof RoadmapFormData] }),
+      { ...defaultForm }
+    );
   });
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof typeof defaultForm>(k: K, v: (typeof defaultForm)[K]) =>

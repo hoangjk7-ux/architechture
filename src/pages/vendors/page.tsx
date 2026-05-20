@@ -296,9 +296,11 @@ function VendorForm({ initial, onSave, onClose }: {
   onSave: (data: VendorFormData) => Promise<void>; onClose: () => void;
 }) {
   const [form, setForm] = useState<VendorFormData>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _creationTime, systemCount, ...rest } = (initial ?? {}) as Record<string, unknown>;
-    return { ...defaultForm, ...rest } as VendorFormData;
+    const src = (initial ?? {}) as Record<string, unknown>;
+    return Object.keys(defaultForm).reduce<VendorFormData>(
+      (acc, k) => ({ ...acc, [k]: k in src ? src[k] : defaultForm[k as keyof VendorFormData] }),
+      { ...defaultForm }
+    );
   });
   const [saving, setSaving] = useState(false);
 
