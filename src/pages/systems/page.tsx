@@ -24,9 +24,6 @@ import type { Doc } from "@/convex/_generated/dataModel.d.ts";
 
 type SoftwareSystem = Doc<"software_systems">;
 
-const CATEGORIES = ["CRM", "ERP", "SIS", "LMS", "HRM", "BI", "CMS", "Payment", "Communication", "Security", "Infrastructure", "Analytics", "Portal", "Other"];
-const DEPARTMENTS = ["Admissions", "Marketing", "Academic", "Finance", "HR", "IT", "Operations", "Parent Relations", "Student Affairs"];
-const CAMPUSES = ["Campus A", "Campus B", "Campus C", "All Campuses"];
 
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 function RiskBadge({ level }: { level: string }) {
@@ -256,7 +253,7 @@ type SystemFormData = {
 };
 
 const defaultForm: SystemFormData = {
-  name: "", type: "core", category: "CRM", status: "active", criticality: "medium",
+  name: "", type: "core", category: "", status: "active", criticality: "medium",
   owner: "", vendorId: undefined, departments: [], campuses: [], technology: "",
   database: "", hosting: "", sla: "", licenseType: "", costPerYear: undefined,
   contractEndDate: "", riskLevel: "low", technicalDebtScore: 0, architectureScore: 80, description: "",
@@ -267,6 +264,11 @@ function SystemForm({ initial, onSave, onClose }: {
   initial?: Partial<SystemFormData> & { _id?: Id<"software_systems"> };
   onSave: (data: SystemFormData) => Promise<void>; onClose: () => void;
 }) {
+  const config = useQuery(api.config.listAll);
+  const categories = config?.category.map((c) => c.name) ?? [];
+  const departments = config?.department.map((d) => d.name) ?? [];
+  const campuses = config?.campus.map((c) => c.name) ?? [];
+
   const [form, setForm] = useState<SystemFormData>({ ...defaultForm, ...initial });
   const [saving, setSaving] = useState(false);
   const vendors = useQuery(api.vendors.list) ?? [];
@@ -293,7 +295,7 @@ function SystemForm({ initial, onSave, onClose }: {
           <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Student CRM" className="bg-input" />
         </div>
         {([ ["Type", "type", [["core","Core"],["supporting","Supporting"],["legacy","Legacy"],["pilot","Pilot"]]],
-            ["Category", "category", CATEGORIES.map((c) => [c, c])],
+            ["Category", "category", categories.map((c) => [c, c])],
             ["Status", "status", [["active","Active"],["pilot","Pilot"],["sunset","Sunset"],["inactive","Inactive"]]],
             ["Criticality", "criticality", [["high","High"],["medium","Medium"],["low","Low"]]],
         ] as [string, keyof SystemFormData, [string,string][]][]).map(([label, key, opts]) => (
@@ -358,7 +360,7 @@ function SystemForm({ initial, onSave, onClose }: {
       <div className="space-y-2">
         <Label>Departments</Label>
         <div className="flex flex-wrap gap-2">
-          {DEPARTMENTS.map((d) => (
+          {departments.map((d) => (
             <button key={d} type="button" onClick={() => toggleArray("departments", d)}
               className={cn("px-2 py-1 rounded text-xs border cursor-pointer transition-colors",
                 form.departments.includes(d) ? "bg-primary text-primary-foreground border-primary" : "bg-accent text-muted-foreground border-border hover:border-primary"
@@ -370,7 +372,7 @@ function SystemForm({ initial, onSave, onClose }: {
       <div className="space-y-2">
         <Label>Campuses</Label>
         <div className="flex flex-wrap gap-2">
-          {CAMPUSES.map((c) => (
+          {campuses.map((c) => (
             <button key={c} type="button" onClick={() => toggleArray("campuses", c)}
               className={cn("px-2 py-1 rounded text-xs border cursor-pointer transition-colors",
                 form.campuses.includes(c) ? "bg-primary text-primary-foreground border-primary" : "bg-accent text-muted-foreground border-border hover:border-primary"
