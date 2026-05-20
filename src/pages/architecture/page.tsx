@@ -1,8 +1,16 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Authenticated } from "convex/react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { toast } from "sonner";
+import { useCurrentUser } from "@/hooks/use-current-user.ts";
 import ReactFlow, {
   Background,
   Controls,
@@ -21,6 +29,7 @@ import {
   Shield, TrendingUp, TrendingDown,
   ArrowRight, ArrowLeft, RefreshCw,
   Layers, CheckCircle2, Wrench, CalendarClock, Archive, CircleDot,
+  Plus, Edit, Trash2,
 } from "lucide-react";
 
 type System = Doc<"software_systems">;
@@ -163,8 +172,96 @@ function layoutNodes(systems: System[]): Record<string, { x: number; y: number }
   return positions;
 }
 
+// ─── Module Form ─────────────────────────────────────────────────────────────
+type ModuleFormData = {
+  name: string; lifecycle: SystemModule["lifecycle"]; health: SystemModule["health"];
+  version: string; description: string; notes: string; plannedDate: string; usedBy: string;
+};
+const defaultModuleForm: ModuleFormData = {
+  name: "", lifecycle: "in_use", health: "healthy",
+  version: "", description: "", notes: "", plannedDate: "", usedBy: "",
+};
+
+function ModuleForm({ initial, onSave, onClose }: {
+  initial?: Partial<ModuleFormData>;
+  onSave: (d: ModuleFormData) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<ModuleFormData>({ ...defaultModuleForm, ...initial });
+  const [saving, setSaving] = useState(false);
+  const set = <K extends keyof ModuleFormData>(k: K, v: ModuleFormData[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleSave = async () => {
+    if (!form.name.trim()) { toast.error("Name is required"); return; }
+    setSaving(true);
+    try { await onSave(form); onClose(); } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <Label>Name *</Label>
+        <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Student Portal" className="bg-input" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Lifecycle</Label>
+          <Select value={form.lifecycle} onValueChange={(v) => set("lifecycle", v as ModuleFormData["lifecycle"])}>
+            <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(LIFECYCLE_META) as (keyof typeof LIFECYCLE_META)[]).map((lc) => (
+                <SelectItem key={lc} value={lc}>{LIFECYCLE_META[lc].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Health</Label>
+          <Select value={form.health} onValueChange={(v) => set("health", v as ModuleFormData["health"])}>
+            <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(HEALTH_META) as (keyof typeof HEALTH_META)[]).map((h) => (
+                <SelectItem key={h} value={h} className="capitalize">{HEALTH_META[h].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Version</Label>
+          <Input value={form.version} onChange={(e) => set("version", e.target.value)} placeholder="e.g. 2.1.0" className="bg-input" />
+        </div>
+        <div className="space-y-1">
+          <Label>Target Date</Label>
+          <Input type="date" value={form.plannedDate} onChange={(e) => set("plannedDate", e.target.value)} className="bg-input" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Used By <span className="text-muted-foreground text-[10px]">(comma separated)</span></Label>
+        <Input value={form.usedBy} onChange={(e) => set("usedBy", e.target.value)} placeholder="e.g. Admissions, Finance" className="bg-input" />
+      </div>
+      <div className="space-y-1">
+        <Label>Description</Label>
+        <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} className="bg-input" />
+      </div>
+      <div className="space-y-1">
+        <Label>Notes</Label>
+        <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} className="bg-input" />
+      </div>
+      <div className="flex justify-end gap-2 pt-1">
+        <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Module"}</Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Module section ───────────────────────────────────────────────────────────
-function ModuleRow({ mod }: { mod: SystemModule }) {
+function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
+  mod: SystemModule; canWrite: boolean;
+  onEdit: (m: SystemModule) => void; onDelete: (id: SystemModule["_id"]) => void;
+}) {
   const lm = LIFECYCLE_META[mod.lifecycle] ?? LIFECYCLE_META.in_use;
   const hm = HEALTH_META[mod.health] ?? HEALTH_META.unknown;
   const Icon = lm.Icon;
@@ -194,6 +291,16 @@ function ModuleRow({ mod }: { mod: SystemModule }) {
         {/* Planned date for non-in_use */}
         {mod.plannedDate && mod.lifecycle !== "in_use" && (
           <span className="text-[9px] shrink-0" style={{ color: lm.color }}>{mod.plannedDate.slice(0, 7)}</span>
+        )}
+        {canWrite && (
+          <div className="flex gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => onEdit(mod)} className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors cursor-pointer">
+              <Edit className="h-3 w-3" />
+            </button>
+            <button onClick={() => onDelete(mod._id)} className="p-1 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors cursor-pointer">
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
         )}
         <span className="text-muted-foreground text-xs ml-0.5">{expanded ? "▲" : "▼"}</span>
       </div>
@@ -236,7 +343,10 @@ function ModuleRow({ mod }: { mod: SystemModule }) {
   );
 }
 
-function ModulesTab({ modules }: { modules: SystemModule[] }) {
+function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
+  modules: SystemModule[]; canWrite: boolean;
+  onAdd: () => void; onEdit: (m: SystemModule) => void; onDelete: (id: SystemModule["_id"]) => void;
+}) {
   const [filter, setFilter] = useState<string>("all");
 
   const lifecycles = useMemo(() => {
@@ -265,12 +375,22 @@ function ModulesTab({ modules }: { modules: SystemModule[] }) {
       <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
         <Layers className="h-8 w-8 opacity-30" />
         <p className="text-sm">No modules recorded</p>
+        {canWrite && (
+          <Button size="sm" variant="ghost" onClick={onAdd} className="gap-1.5 mt-1">
+            <Plus className="h-3.5 w-3.5" />Add Module
+          </Button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
+      {canWrite && (
+        <Button size="sm" variant="outline" onClick={onAdd} className="gap-1.5 w-full">
+          <Plus className="h-3.5 w-3.5" />Add Module
+        </Button>
+      )}
       {/* Summary chips */}
       <div className="flex flex-wrap gap-1.5">
         <button
@@ -298,7 +418,7 @@ function ModulesTab({ modules }: { modules: SystemModule[] }) {
 
       {/* Module rows grouped by lifecycle */}
       <div className="space-y-1.5">
-        {filtered.map((mod) => <ModuleRow key={mod._id} mod={mod} />)}
+        {filtered.map((mod) => <ModuleRow key={mod._id} mod={mod} canWrite={canWrite} onEdit={onEdit} onDelete={onDelete} />)}
       </div>
     </div>
   );
@@ -313,10 +433,55 @@ function DetailPanel({
   system: System; integrations: Integration[]; systems: System[];
   modules: SystemModule[]; onClose: () => void;
 }) {
+  const { canWrite } = useCurrentUser();
+  const createModule = useMutation(api.system_modules.create);
+  const updateModule = useMutation(api.system_modules.update);
+  const removeModule = useMutation(api.system_modules.remove);
+
+  const [showModuleForm, setShowModuleForm] = useState(false);
+  const [editingModule, setEditingModule] = useState<SystemModule | null>(null);
+
   const meta = TYPE_META[system.type] ?? TYPE_META.core;
   const outbound = integrations.filter((i) => i.sourceSystemId === system._id);
   const inbound = integrations.filter((i) => i.destinationSystemId === system._id);
   const [activeTab, setActiveTab] = useState<PanelTab>("modules");
+
+  const handleCreateModule = async (data: ModuleFormData) => {
+    await createModule({
+      systemId: system._id,
+      name: data.name,
+      lifecycle: data.lifecycle,
+      health: data.health,
+      version: data.version || undefined,
+      description: data.description || undefined,
+      notes: data.notes || undefined,
+      plannedDate: data.plannedDate || undefined,
+      usedBy: data.usedBy ? data.usedBy.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      sortOrder: modules.length,
+    });
+    toast.success("Module added");
+  };
+
+  const handleUpdateModule = async (data: ModuleFormData) => {
+    if (!editingModule) return;
+    await updateModule({
+      id: editingModule._id,
+      name: data.name,
+      lifecycle: data.lifecycle,
+      health: data.health,
+      version: data.version || undefined,
+      description: data.description || undefined,
+      notes: data.notes || undefined,
+      plannedDate: data.plannedDate || undefined,
+      usedBy: data.usedBy ? data.usedBy.split(",").map((s) => s.trim()).filter(Boolean) : [],
+    });
+    toast.success("Module updated");
+  };
+
+  const handleDeleteModule = async (id: SystemModule["_id"]) => {
+    await removeModule({ id });
+    toast.success("Module deleted");
+  };
 
   const moduleCount = modules.length;
   const inUseCnt = modules.filter((m) => m.lifecycle === "in_use").length;
@@ -394,7 +559,14 @@ function DetailPanel({
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-3">
         {/* ── MODULES TAB ── */}
-        {activeTab === "modules" && <ModulesTab modules={modules} />}
+        {activeTab === "modules" && (
+          <ModulesTab
+            modules={modules} canWrite={canWrite}
+            onAdd={() => setShowModuleForm(true)}
+            onEdit={(m) => setEditingModule(m)}
+            onDelete={handleDeleteModule}
+          />
+        )}
 
         {/* ── INTEGRATIONS TAB ── */}
         {activeTab === "integrations" && (
@@ -518,15 +690,41 @@ function DetailPanel({
           </div>
         )}
       </div>
+
+      <Dialog open={showModuleForm} onOpenChange={setShowModuleForm}>
+        <DialogContent><DialogHeader><DialogTitle>Add Module</DialogTitle></DialogHeader>
+          <ModuleForm onSave={handleCreateModule} onClose={() => setShowModuleForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingModule} onOpenChange={(open) => !open && setEditingModule(null)}>
+        <DialogContent><DialogHeader><DialogTitle>Edit Module</DialogTitle></DialogHeader>
+          {editingModule && (
+            <ModuleForm
+              initial={{
+                name: editingModule.name, lifecycle: editingModule.lifecycle, health: editingModule.health,
+                version: editingModule.version ?? "", description: editingModule.description ?? "",
+                notes: editingModule.notes ?? "", plannedDate: editingModule.plannedDate ?? "",
+                usedBy: editingModule.usedBy.join(", "),
+              }}
+              onSave={handleUpdateModule}
+              onClose={() => setEditingModule(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 function ArchitectureContent() {
-  const systems      = useQuery(api.software_systems.list) ?? [];
-  const integrations = useQuery(api.integrations.list) ?? [];
-  const allModules   = useQuery(api.system_modules.list) ?? [];
+  const rawSystems      = useQuery(api.software_systems.list);
+  const rawIntegrations = useQuery(api.integrations.list);
+  const rawModules      = useQuery(api.system_modules.list);
+  const systems         = rawSystems ?? [];
+  const integrations    = rawIntegrations ?? [];
+  const allModules      = rawModules ?? [];
 
   const [selectedId,   setSelectedId]   = useState<Id<"software_systems"> | null>(null);
   const [filterType,   setFilterType]   = useState<string>("all");
@@ -588,7 +786,7 @@ function ArchitectureContent() {
     return c;
   }, [integrations]);
 
-  if (systems === undefined || integrations === undefined) {
+  if (rawSystems === undefined || rawIntegrations === undefined) {
     return <div className="p-6"><Skeleton className="h-[600px] w-full" /></div>;
   }
 
@@ -669,6 +867,7 @@ function ArchitectureContent() {
         </div>
         {selectedSystem && (
           <DetailPanel
+            key={selectedSystem._id}
             system={selectedSystem} integrations={integrations}
             systems={systems} modules={selectedModules}
             onClose={() => setSelectedId(null)}

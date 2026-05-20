@@ -24,10 +24,10 @@ export const updateCurrentUser = mutation({
     // If already has a role, nothing to do
     if (user.role) return userId;
 
-    // Assign cto to the very first user, viewer to everyone else
+    // Assign cto if no write-capable user exists yet, otherwise viewer
     const allUsers = await ctx.db.query("users").collect();
-    const usersWithRole = allUsers.filter((u) => u.role !== undefined);
-    const role = usersWithRole.length === 0 ? "cto" : "viewer";
+    const hasWriteRole = allUsers.some((u) => u.role === "cto" || u.role === "it_manager");
+    const role = !hasWriteRole ? "cto" : "viewer";
 
     await ctx.db.patch(userId, { role });
     return userId;

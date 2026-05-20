@@ -46,9 +46,11 @@ function AppLayoutInner() {
     }
   }, [user, updateCurrentUser]);
 
-  const visibleNav = navItems.filter((item) =>
-    user?.role ? item.roles.includes(user.role) : false
-  );
+  const visibleNav = user === undefined
+    ? navItems
+    : navItems.filter((item) =>
+        user?.role ? item.roles.includes(user.role) : false
+      );
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">

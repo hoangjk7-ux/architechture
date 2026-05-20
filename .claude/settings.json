@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://moonlit-warthog-945.convex.site/api/auth/signin/google\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://moonlit-warthog-945.convex.site/api/auth/callback/google\")",
+      "Bash(curl -s \"https://moonlit-warthog-945.convex.site/api/auth/signin/google\")",
+      "Bash(CONVEX_DEPLOY_KEY=\"dev:moonlit-warthog-945|eyJ2MiI6IjJhNGYxN2Y0ZWRiZTRmNGRhMjkzMTMzMWQzM2Q2MzNiIn0=\" npx convex env get JWT_PRIVATE_KEY)"
+    ]
+  }
+}
