@@ -15,8 +15,12 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
   type Node,
   type Edge,
+  type EdgeProps,
   type NodeProps,
   MarkerType,
   Handle,
@@ -160,6 +164,52 @@ function SystemNode({ data }: NodeProps<NodeData>) {
   );
 }
 const nodeTypes = { system: SystemNode };
+
+// ─── Glow Edge ────────────────────────────────────────────────────────────────
+function GlowEdge({
+  id, sourceX, sourceY, targetX, targetY,
+  sourcePosition, targetPosition,
+  style, markerEnd, label, data,
+}: EdgeProps) {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX, sourceY, sourcePosition,
+    targetX, targetY, targetPosition,
+  });
+  const strokeColor = (style?.stroke as string) ?? "#6b7280";
+  const strokeWidth = Number(style?.strokeWidth ?? 1.5);
+  const edgeOpacity = Number(style?.opacity ?? 1);
+
+  return (
+    <>
+      {data?.isHighCritical && (
+        <path d={edgePath} fill="none" stroke={strokeColor} strokeWidth={strokeWidth + 6} opacity={0.12} />
+      )}
+      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            className="nodrag nopan"
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              background: "#0f172a",
+              color: strokeColor,
+              fontSize: 8,
+              fontWeight: 500,
+              borderRadius: 4,
+              padding: "2px 5px",
+              opacity: edgeOpacity > 0.5 ? 0.85 : 0.25,
+              pointerEvents: "none",
+            }}
+          >
+            {label as string}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+const edgeTypes = { glow: GlowEdge };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function healthPriority(h: string) { return h === "down" ? 3 : h === "degraded" ? 2 : h === "unknown" ? 1 : 0; }
@@ -769,11 +819,9 @@ function ArchitectureContent() {
       id: intg._id,
       source: intg.sourceSystemId,
       target: intg.destinationSystemId,
+      type: "glow",
       label: `${intg.protocol} · ${METHOD_META[intg.method]?.label ?? intg.method}${intg.errorRate ? ` · ${intg.errorRate}% err` : ""}`,
-      labelStyle: { fill: hc.color, fontSize: 8, fontWeight: 500 },
-      labelBgStyle: { fill: "#0f172a", fillOpacity: 0.85 },
-      labelBgPadding: [4, 3] as [number, number],
-      labelBgBorderRadius: 4,
+      data: { isHighCritical: intg.criticalLevel === "high" },
       style: {
         stroke: hc.color,
         strokeWidth: intg.criticalLevel === "high" ? 2.5 : intg.criticalLevel === "medium" ? 1.8 : 1.2,
@@ -908,7 +956,7 @@ function ArchitectureContent() {
                 </div>
               ) : (
                 <ReactFlow
-                  nodes={nodes} edges={edges} nodeTypes={nodeTypes}
+                  nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
                   fitView fitViewOptions={{ padding: 0.15 }}
                   attributionPosition="bottom-right" proOptions={{ hideAttribution: true }}
                   onNodeClick={(_evt, node) => { setSelectedId(node.id as Id<"software_systems">); }}
@@ -924,14 +972,20 @@ function ArchitectureContent() {
                 </ReactFlow>
               )}
             </div>
-            {selectedSystem && (
-              <DetailPanel
-                key={selectedSystem._id}
-                system={selectedSystem} integrations={integrations}
-                systems={systems} modules={selectedModules}
-                onClose={() => setSelectedId(null)}
-              />
-            )}
+            <div
+              className={`shrink-0 transition-all duration-300 overflow-hidden ${
+                selectedSystem ? "w-[340px]" : "w-0"
+              }`}
+            >
+              {selectedSystem && (
+                <DetailPanel
+                  key={selectedSystem._id}
+                  system={selectedSystem} integrations={integrations}
+                  systems={systems} modules={selectedModules}
+                  onClose={() => setSelectedId(null)}
+                />
+              )}
+            </div>
           </div>
         </>
       )}
