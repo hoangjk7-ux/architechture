@@ -255,8 +255,9 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                 key={sys._id}
                 className="sys-node"
                 transform={`translate(${pos.cx - NODE_W / 2},${pos.cy - NODE_H / 2})`}
-                style={{ cursor: "pointer", opacity: dimmed ? 0.3 : 1, transition: "opacity 0.15s" }}
-                onClick={() => onSelectSystem(isSelected ? null : sys._id)}
+                style={{ cursor: "pointer", opacity: dimmed ? 0.15 : 1, transition: "opacity 0.2s", pointerEvents: "all" }}
+                onClick={(e) => { e.stopPropagation(); onSelectSystem(isSelected ? null : sys._id); }}
+                onMouseDown={(e) => e.stopPropagation()}
                 filter={isSelected ? "url(#selected-glow)" : undefined}
               >
                 {/* Node background */}
