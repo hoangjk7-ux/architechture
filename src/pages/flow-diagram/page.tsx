@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
-import { Authenticated } from "convex/react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
 import SystemFlowSVG from "./_components/SystemFlowSVG.tsx";
@@ -319,5 +318,5 @@ function FlowDiagramContent() {
 }
 
 export default function FlowDiagramPage() {
-  return <Authenticated><FlowDiagramContent /></Authenticated>;
+  return <FlowDiagramContent />;
 }

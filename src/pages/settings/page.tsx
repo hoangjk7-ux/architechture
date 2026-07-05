@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
-import { Authenticated } from "convex/react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -202,5 +201,5 @@ function SettingsContent() {
 }
 
 export default function SettingsPage() {
-  return <Authenticated><SettingsContent /></Authenticated>;
+  return <SettingsContent />;
 }

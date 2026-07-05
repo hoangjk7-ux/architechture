@@ -1,138 +1,68 @@
-import { forwardRef, useCallback, useEffect } from "react";
-import { type VariantProps } from "class-variance-authority";
-import { Loader2, LogIn, LogOut } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@usehercules/auth/react";
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
+import { useState } from "react";
+import { Loader2, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
+import { cn } from "@/lib/utils.ts";
 
-export interface SignInButtonProps
-  extends
-    Omit<React.ComponentProps<"button">, "onClick">,
-    VariantProps<typeof buttonVariants> {
-  /**
-   * Custom onClick handler that runs before authentication action
-   */
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  /**
-   * Whether to show icons in the button
-   * @default true
-   */
-  showIcon?: boolean;
-  /**
-   * Custom text for sign in state
-   * @default "Sign In"
-   */
+export interface SignInButtonProps extends React.ComponentProps<"form"> {
+  className?: string;
   signInText?: string;
-  /**
-   * Custom text for sign out state
-   * @default "Sign Out"
-   */
-  signOutText?: string;
-  /**
-   * Custom text for loading state
-   * @default "Signing In..." or "Signing Out..."
-   */
-  loadingText?: string;
-  /**
-   * Whether to use the asChild pattern
-   * @default false
-   */
-  asChild?: boolean;
 }
 
-/**
- * A button component that handles authentication sign in/out with proper loading states
- * and accessibility features.
- */
-export const SignInButton = forwardRef<HTMLButtonElement, SignInButtonProps>(
-  (
-    {
-      onClick,
-      disabled,
-      showIcon = true,
-      signInText = "Sign In",
-      signOutText = "Sign Out",
-      loadingText,
-      className,
-      variant,
-      size,
-      asChild = false,
-      ...props
-    },
-    ref,
-  ) => {
-    const { isAuthenticated, signin, signout, isLoading, error } = useAuth();
+export function SignInButton({ className, signInText = "Đăng nhập", ...props }: SignInButtonProps) {
+  const { signIn, isLoading, error } = useSimpleAuth();
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("123456789");
+  const [formError, setFormError] = useState<string | null>(null);
 
-    useEffect(() => {
-      if (error) {
-        toast.error("Login error", {
-          description: error.message,
-        });
-        console.error("Login error", error);
-      }
-    }, [error]);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError(null);
 
-    const handleClick = useCallback(
-      async (event: React.MouseEvent<HTMLButtonElement>) => {
-        // Run custom onClick first
-        onClick?.(event);
+    try {
+      await signIn(username, password);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+    }
+  };
 
-        try {
-          if (isAuthenticated) {
-            await signout();
-          } else {
-            await signin();
-          }
-        } catch (err) {
-          console.error("Authentication error:", err);
-          // Don't prevent the default here as the auth library handles errors
-        }
-      },
-      [isAuthenticated, signout, signin, onClick],
-    );
+  return (
+    <form onSubmit={handleSubmit} className={cn("w-full max-w-sm space-y-4", className)} {...props}>
+      <div className="space-y-2">
+        <Label htmlFor="username">Tài khoản</Label>
+        <Input
+          id="username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          autoComplete="username"
+          placeholder="admin"
+        />
+      </div>
 
-    const isDisabled = disabled || isLoading;
-    const defaultLoadingText = isAuthenticated
-      ? "Signing Out..."
-      : "Signing In...";
-    const currentLoadingText = loadingText || defaultLoadingText;
+      <div className="space-y-2">
+        <Label htmlFor="password">Mật khẩu</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          placeholder="123456789"
+        />
+      </div>
 
-    const buttonText = isLoading
-      ? currentLoadingText
-      : isAuthenticated
-        ? signOutText
-        : signInText;
+      {(error || formError) && (
+        <p className="text-sm text-destructive">{formError ?? error}</p>
+      )}
 
-    const icon = isLoading ? (
-      <Loader2 className="size-4 animate-spin" />
-    ) : isAuthenticated ? (
-      <LogOut className="size-4" />
-    ) : (
-      <LogIn className="size-4" />
-    );
+      <p className="text-sm text-muted-foreground">Sử dụng tài khoản admin / 123456789</p>
 
-    return (
-      <Button
-        ref={ref}
-        onClick={handleClick}
-        disabled={isDisabled}
-        variant={variant}
-        size={size}
-        className={className}
-        asChild={asChild}
-        aria-label={
-          isAuthenticated
-            ? "Sign out of your account"
-            : "Sign in to your account"
-        }
-        aria-describedby={error ? "auth-error" : undefined}
-        {...props}
-      >
-        {showIcon && icon}
-        {buttonText}
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+        {signInText}
       </Button>
-    );
-  },
-);
-
-SignInButton.displayName = "SignInButton";
+    </form>
+  );
+}

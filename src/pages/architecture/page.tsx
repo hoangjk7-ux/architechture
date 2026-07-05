@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
-import { Authenticated } from "convex/react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -1543,5 +1542,5 @@ function ArchitectureContent() {
 }
 
 export default function ArchitecturePage() {
-  return <Authenticated><ArchitectureContent /></Authenticated>;
+  return <ArchitectureContent />;
 }

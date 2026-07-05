@@ -1,13 +1,11 @@
 import { mutation, query } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser as getCurrentUserRecord } from "./helpers";
 
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
-    return await ctx.db.get(userId);
+    return await getCurrentUserRecord(ctx);
   },
 });
 
@@ -15,11 +13,10 @@ export const getCurrentUser = query({
 export const updateCurrentUser = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
-
-    const user = await ctx.db.get(userId);
+    const user = await getCurrentUserRecord(ctx);
     if (!user) return null;
+
+    const userId = user._id;
 
     // Preserve intentionally assigned non-viewer roles
     if (user.role && user.role !== "viewer") return userId;
@@ -65,10 +62,7 @@ export const updateCurrentUser = mutation({
 export const listUsers = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-
-    const me = await ctx.db.get(userId);
+    const me = await getCurrentUserRecord(ctx);
     if (!me || (me.role !== "cto" && me.role !== "it_manager")) {
       throw new ConvexError({ message: "Insufficient permissions", code: "FORBIDDEN" });
     }
@@ -88,9 +82,7 @@ export const inviteUser = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const callerId = await getAuthUserId(ctx);
-    if (!callerId) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const me = await ctx.db.get(callerId);
+    const me = await getCurrentUserRecord(ctx);
     if (!me || me.role !== "cto") {
       throw new ConvexError({ message: "Only CTO can invite users", code: "FORBIDDEN" });
     }
@@ -116,13 +108,11 @@ export const inviteUser = mutation({
 export const removeUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const callerId = await getAuthUserId(ctx);
-    if (!callerId) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-    const me = await ctx.db.get(callerId);
+    const me = await getCurrentUserRecord(ctx);
     if (!me || me.role !== "cto") {
       throw new ConvexError({ message: "Only CTO can remove users", code: "FORBIDDEN" });
     }
-    if (args.userId === callerId) {
+    if (args.userId === me._id) {
       throw new ConvexError({ message: "Cannot remove yourself", code: "FORBIDDEN" });
     }
     await ctx.db.delete(args.userId);
@@ -140,10 +130,7 @@ export const updateUserRole = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const callerId = await getAuthUserId(ctx);
-    if (!callerId) throw new ConvexError({ message: "Not authenticated", code: "UNAUTHENTICATED" });
-
-    const me = await ctx.db.get(callerId);
+    const me = await getCurrentUserRecord(ctx);
     if (!me || me.role !== "cto") {
       throw new ConvexError({ message: "Only CTO can update roles", code: "FORBIDDEN" });
     }

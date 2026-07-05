@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
-import { Authenticated } from "convex/react";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -237,5 +236,5 @@ function UsersContent() {
 }
 
 export default function UsersPage() {
-  return <Authenticated><UsersContent /></Authenticated>;
+  return <UsersContent />;
 }

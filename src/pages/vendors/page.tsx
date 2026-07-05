@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
-import { Authenticated } from "convex/react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -557,5 +556,5 @@ function VendorsContent() {
 }
 
 export default function VendorsPage() {
-  return <Authenticated><VendorsContent /></Authenticated>;
+  return <VendorsContent />;
 }

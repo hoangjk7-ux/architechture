@@ -1,8 +1,7 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
 import { cn } from "@/lib/utils.ts";
 import {
@@ -19,9 +18,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api.js";
+import { useState } from "react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
@@ -36,17 +33,11 @@ const navItems = [
 
 function AppLayoutInner() {
   const { user } = useCurrentUser();
-  const { signOut } = useAuthActions();
+  const { signOut } = useSimpleAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const updateCurrentUser = useMutation(api.users.updateCurrentUser);
 
-  useEffect(() => {
-    if (user !== undefined) {
-      void updateCurrentUser();
-    }
-  }, [user, updateCurrentUser]);
-
-  const visibleNav = user === undefined
+  const isAuthenticated = Boolean(user);
+  const visibleNav = !isAuthenticated
     ? navItems
     : navItems.filter((item) =>
         user?.role ? item.roles.includes(user.role) : false
@@ -156,25 +147,27 @@ function AppLayoutInner() {
 }
 
 export default function AppLayout() {
-  return (
-    <>
-      <AuthLoading>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Skeleton className="h-8 w-48" />
+  const { isAuthenticated, isLoading } = useSimpleAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Skeleton className="h-8 w-48" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-8 p-4">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-foreground">TechGov Platform</h1>
+          <p className="text-muted-foreground text-sm">Technology Governance for International School CTO</p>
         </div>
-      </AuthLoading>
-      <Unauthenticated>
-        <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-8 p-4">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">TechGov Platform</h1>
-            <p className="text-muted-foreground text-sm">Technology Governance for International School CTO</p>
-          </div>
-          <SignInButton />
-        </div>
-      </Unauthenticated>
-      <Authenticated>
-        <AppLayoutInner />
-      </Authenticated>
-    </>
-  );
+        <SignInButton />
+      </div>
+    );
+  }
+
+  return <AppLayoutInner />;
 }
