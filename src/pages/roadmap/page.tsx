@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -171,7 +171,8 @@ function RoadmapForm({ initial, onSave, onClose, items }: {
 function RoadmapContent() {
   const { canWrite } = useCurrentUser();
   const items = useQuery(api.roadmap.list) ?? [];
-  const stats = useQuery(api.roadmap.getStats);
+  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
+  const stats = useQuery(api.roadmap.getStats, !isConvexAuthenticated ? "skip" : undefined);
   const createItem = useMutation(api.roadmap.create);
   const updateItem = useMutation(api.roadmap.update);
   const removeItem = useMutation(api.roadmap.remove);

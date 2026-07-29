@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -203,7 +203,8 @@ function IntegrationForm({ initial, onSave, onClose }: {
 function IntegrationsContent() {
   const { canWrite } = useCurrentUser();
   const integrations = useQuery(api.integrations.list) ?? [];
-  const stats = useQuery(api.integrations.getStats);
+  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
+  const stats = useQuery(api.integrations.getStats, !isConvexAuthenticated ? "skip" : undefined);
   const createIntegration = useMutation(api.integrations.create);
   const updateIntegration = useMutation(api.integrations.update);
   const removeIntegration = useMutation(api.integrations.remove);

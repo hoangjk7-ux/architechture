@@ -55,11 +55,9 @@ function StatCard({
 export default function Index() {
   const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
 
-  const systemStats = useQuery(api.software_systems.getStats, undefined, {
-    skip: !isConvexAuthenticated,
-  });
-  const integrationStats = useQuery(api.integrations.getStats, undefined, { skip: !isConvexAuthenticated });
-  const roadmapStats = useQuery(api.roadmap.getStats, undefined, { skip: !isConvexAuthenticated });
+  const systemStats = useQuery(api.software_systems.getStats, !isConvexAuthenticated ? "skip" : undefined);
+  const integrationStats = useQuery(api.integrations.getStats, !isConvexAuthenticated ? "skip" : undefined);
+  const roadmapStats = useQuery(api.roadmap.getStats, !isConvexAuthenticated ? "skip" : undefined);
   const vendors = useQuery(api.vendors.list);
 
   const highRiskVendors = vendors?.filter((v) => v.riskScore >= 70).length;
