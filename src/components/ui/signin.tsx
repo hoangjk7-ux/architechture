@@ -39,16 +39,18 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
 
     function handleCredentialResponse(response: any) {
       const idToken = response.credential;
-      // Verify token with Google's tokeninfo endpoint
-      fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
+      // Send idToken to Convex HTTP action to upsert/verify user
+      const base = import.meta.env.VITE_CONVEX_URL ?? "";
+      fetch(`${base.replace(/\/$/, "")}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      })
         .then((r) => r.json())
         .then((data) => {
-          if (!data || data.error_description) throw new Error(data.error_description || "Invalid token");
-          const email = data.email as string | undefined;
-          const emailVerified = data.email_verified === "true" || data.email_verified === true;
-          if (!email || !emailVerified) throw new Error("Email not verified");
-
-          const nextUser = { username: email.split("@")[0], role: email === "hoangjk7@gmail.com" ? "cto" : "viewer" };
+          if (data?.error) throw new Error(data.error);
+          const user = data.user;
+          const nextUser = { username: (user.email || "").split("@")[0], role: user.role };
           window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
           window.location.href = "/";
         })
