@@ -14,7 +14,17 @@ type CurrentUser = {
 };
 
 export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<CurrentUser | null> {
-  const userId = await getAuthUserId(ctx);
+  let userId: string | null = null;
+  try {
+    userId = await getAuthUserId(ctx);
+  } catch (error: unknown) {
+    const maybeAuthError = error as { data?: { code?: string } };
+    if (maybeAuthError?.data?.code === "UNAUTHENTICATED") {
+      userId = null;
+    } else {
+      throw error;
+    }
+  }
 
   if (!userId) {
     return {
@@ -26,7 +36,7 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<Curre
     };
   }
 
-  const user = await ctx.db.get(userId);
+  const user = await ctx.db.get(userId as Id<"users">);
   if (!user) {
     return null;
   }
