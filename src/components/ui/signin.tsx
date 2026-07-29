@@ -63,6 +63,25 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
         {signInText}
       </Button>
+
+      <div className="flex items-center gap-2">
+        <span className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground">or</span>
+        <span className="flex-1 h-px bg-border" />
+      </div>
+
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => {
+          const base = import.meta.env.VITE_CONVEX_URL ?? "";
+          // Redirect to Convex auth Google sign-in endpoint
+          window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
+        }}
+      >
+        <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
+        Đăng nhập bằng Google
+      </Button>
     </form>
   );
 }
