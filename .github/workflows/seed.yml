@@ -1,0 +1,35 @@
+name: Seed Convex DB
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: 'Convex deployment ref (e.g. dev:moonlit-warthog-945)'
+        required: true
+        default: 'dev'
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Convex seed
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CONVEX_DEPLOYMENT: ${{ inputs.deployment }}
+        run: pnpm run seed
