@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,9 +53,13 @@ function StatCard({
 }
 
 export default function Index() {
-  const systemStats = useQuery(api.software_systems.getStats);
-  const integrationStats = useQuery(api.integrations.getStats);
-  const roadmapStats = useQuery(api.roadmap.getStats);
+  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
+
+  const systemStats = useQuery(api.software_systems.getStats, undefined, {
+    skip: !isConvexAuthenticated,
+  });
+  const integrationStats = useQuery(api.integrations.getStats, undefined, { skip: !isConvexAuthenticated });
+  const roadmapStats = useQuery(api.roadmap.getStats, undefined, { skip: !isConvexAuthenticated });
   const vendors = useQuery(api.vendors.list);
 
   const highRiskVendors = vendors?.filter((v) => v.riskScore >= 70).length;
