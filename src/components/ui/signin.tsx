@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -27,6 +27,45 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
       setFormError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     }
   };
+
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const AUTH_STORAGE_KEY = "techgov-simple-auth";
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!googleClientId) return;
+    const win = window as any;
+    if (!win.google || !win.google.accounts) return;
+
+    function handleCredentialResponse(response: any) {
+      const idToken = response.credential;
+      // Verify token with Google's tokeninfo endpoint
+      fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data || data.error_description) throw new Error(data.error_description || "Invalid token");
+          const email = data.email as string | undefined;
+          const emailVerified = data.email_verified === "true" || data.email_verified === true;
+          if (!email || !emailVerified) throw new Error("Email not verified");
+
+          const nextUser = { username: email.split("@")[0], role: email === "hoangjk7@gmail.com" ? "cto" : "viewer" };
+          window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
+          window.location.href = "/";
+        })
+        .catch(() => {
+          // ignore
+        });
+    }
+
+    try {
+      win.google.accounts.id.initialize({ client_id: googleClientId, callback: handleCredentialResponse });
+      if (googleButtonRef.current) {
+        win.google.accounts.id.renderButton(googleButtonRef.current, { theme: "outline", size: "large" });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [googleClientId]);
 
   return (
     <form onSubmit={handleSubmit} className={cn("w-full max-w-sm space-y-4", className)} {...props}>
@@ -70,18 +109,22 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
         <span className="flex-1 h-px bg-border" />
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => {
-          const base = import.meta.env.VITE_CONVEX_URL ?? "";
-          // Redirect to Convex auth Google sign-in endpoint
-          window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
-        }}
-      >
-        <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
-        Đăng nhập bằng Google
-      </Button>
+      {googleClientId ? (
+        <div ref={googleButtonRef} />
+      ) : (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            const base = import.meta.env.VITE_CONVEX_URL ?? "";
+            // Redirect to Convex auth Google sign-in endpoint as fallback
+            window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
+          }}
+        >
+          <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
+          Đăng nhập bằng Google
+        </Button>
+      )}
     </form>
   );
 }
