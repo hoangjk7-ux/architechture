@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       deployment:
-        description: 'Convex deployment ref (e.g. dev:moonlit-warthog-945)'
+        description: 'Convex deployment ref (e.g. prod:quiet-impala-764)'
         required: true
-        default: 'dev'
+        default: 'prod:quiet-impala-764'
 
 jobs:
   seed:
