@@ -733,7 +733,7 @@ function DetailPanel({
             <div className="space-y-1.5 text-xs">
               {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="font-medium">{system.owner}</span></div>}
               {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí / Năm</span><span className="font-medium">{formatVnd(system.costPerYear)}</span></div>}
+              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí/năm</span><span className="font-medium">{formatVnd(system.costPerYear)}</span></div>}
               {system.contractEndDate && <div className="flex justify-between"><span className="text-muted-foreground">Contract Ends</span><span className="font-medium">{system.contractEndDate}</span></div>}
               {system.departments.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Departments</span><span className="font-medium text-right max-w-[55%]">{system.departments.join(", ")}</span></div>}
               {system.campuses.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Campuses</span><span className="font-medium text-right max-w-[55%]">{system.campuses.join(", ")}</span></div>}

@@ -208,7 +208,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
           {system.database && <div className="flex justify-between"><span className="text-muted-foreground">Database</span><span className="font-medium">{system.database}</span></div>}
           {system.sla && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-2.5 w-2.5" />SLA</span><span className="font-medium">{system.sla}</span></div>}
           {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />Chi phí / Năm</span><span className="font-medium text-green-400">{formatVnd(system.costPerYear)}</span></div>}
+          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />Chi phí/năm</span><span className="font-medium text-green-400">{formatVnd(system.costPerYear)}</span></div>}
           {system.contractEndDate && (
             <div className="flex justify-between">
               <span className="text-muted-foreground flex items-center gap-1"><CalendarClock className="h-2.5 w-2.5" />Contract End</span>
