@@ -16,9 +16,9 @@ import type { Id } from "@/convex/_generated/dataModel.d.ts";
 
 const roleConfig = {
   cto:            { label: "CTO",            color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  it_manager:     { label: "IT Manager",     color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  business_owner: { label: "Business Owner", color: "bg-green-500/20 text-green-400 border-green-500/30" },
-  viewer:         { label: "Viewer",         color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
+  it_manager:     { label: "IT MANAGER",     color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  business_owner: { label: "BUSINESS OWNER", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+  viewer:         { label: "VIEWER",         color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
 } as const;
 
 const roleDesc: Record<keyof typeof roleConfig, string> = {
@@ -67,7 +67,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
             <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@school.edu.vn" type="email" className="bg-input" />
           </div>
           <div className="space-y-1.5">
-            <Label>Phân quyền</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wide">Phân quyền</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
               <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -150,7 +150,7 @@ function UsersContent() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {(Object.entries(roleConfig) as [Role, typeof roleConfig[Role]][]).map(([role, cfg]) => (
           <div key={role} className="bg-card border border-border rounded-lg p-3 space-y-1.5">
-            <Badge className={cn("text-[10px]", cfg.color)}>{cfg.label}</Badge>
+            <Badge className={cn("text-[10px] uppercase tracking-wide", cfg.color)}>{cfg.label}</Badge>
             <p className="text-xs text-muted-foreground">{roleDesc[role]}</p>
           </div>
         ))}
@@ -170,8 +170,8 @@ function UsersContent() {
               <tr className="border-b border-border bg-accent/50">
                 <th className="text-left p-3 font-medium text-muted-foreground">Người dùng</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Email</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Quyền hiện tại</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Cập nhật quyền</th>
+                <th className="text-left p-3 font-medium text-muted-foreground uppercase tracking-wide">Quyền hiện tại</th>
+                <th className="text-left p-3 font-medium text-muted-foreground uppercase tracking-wide">Cập nhật quyền</th>
                 <th className="p-3 font-medium text-muted-foreground w-12"></th>
               </tr>
             </thead>
@@ -197,7 +197,7 @@ function UsersContent() {
                     </td>
                     <td className="p-3 text-muted-foreground text-xs">{u.email ?? "—"}</td>
                     <td className="p-3">
-                      <Badge className={cn("text-[10px]", cfg.color)}>{cfg.label}</Badge>
+                      <Badge className={cn("text-[10px] uppercase tracking-wide", cfg.color)}>{cfg.label}</Badge>
                     </td>
                     <td className="p-3">
                       {!isMe && (
