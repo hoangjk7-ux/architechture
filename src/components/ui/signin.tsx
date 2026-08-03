@@ -7,20 +7,21 @@ import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { resolveGoogleClientId } from "@/lib/google-auth.ts";
 
-function resolveConvexApiUrl(path: string) {
+function buildAuthUrlCandidates(path: string) {
+  const candidates: string[] = [];
+
   const convexUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, "");
-  if (!convexUrl) return path;
+  const convexSite = import.meta.env.VITE_CONVEX_SITE_URL?.replace(/\/$/, "");
 
-  try {
-    const convexOrigin = new URL(convexUrl).origin;
-    if (typeof window !== "undefined" && window.location.origin === convexOrigin) {
-      return path;
-    }
-  } catch {
-    return path;
-  }
+  // Prefer explicit VITE_CONVEX_URL when present
+  if (convexUrl) candidates.push(`${convexUrl}${path}`);
+  // Fallback to a site URL if provided (useful for Convex hosted endpoint)
+  if (convexSite) candidates.push(`${convexSite}${path}`);
 
-  return `${convexUrl}${path}`;
+  // Always include a relative path as last resort (same origin)
+  candidates.push(path);
+
+  return candidates;
 }
 
 export interface SignInButtonProps extends React.ComponentProps<"div"> {
@@ -44,22 +45,26 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
     const win = window as any;
     if (!win.google || !win.google.accounts) return;
 
-    function handleCredentialResponse(response: any) {
+    async function handleCredentialResponse(response: any) {
       const idToken = response.credential;
       if (!idToken) {
         console.error("Google login callback did not include an idToken", response);
         return;
       }
 
-      const url = resolveConvexApiUrl("/api/auth/google");
-      console.log("Google login received idToken, sending auth request to", url);
+      const candidates = buildAuthUrlCandidates("/api/auth/google");
+      console.log("Google login received idToken, trying auth endpoints", candidates);
 
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      })
-        .then(async (r) => {
+      let lastError: any = null;
+      for (const candidate of candidates) {
+        try {
+          console.log("Attempting auth POST to", candidate);
+          const r = await fetch(candidate, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken }),
+          });
+
           const text = await r.text();
           let body: any = null;
           if (text) {
@@ -71,14 +76,18 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
           }
 
           if (!r.ok) {
-            throw new Error(body?.error || `Auth request failed with status ${r.status}: ${r.statusText} ${text}`);
+            // If not found, try next candidate; otherwise surface error
+            const err = new Error(body?.error || `Auth request failed with status ${r.status}: ${r.statusText} ${text}`);
+            if (r.status === 404) {
+              console.warn("Auth endpoint returned 404, trying next candidate", candidate);
+              lastError = err;
+              continue;
+            }
+            throw err;
           }
 
-          return { status: r.status, body };
-        })
-        .then(({ status, body }) => {
           if (!body || body.error) {
-            throw new Error(body?.error || `Unexpected auth response (status ${status})`);
+            throw new Error(body?.error || `Unexpected auth response (status ${r.status})`);
           }
 
           const user = body.user;
@@ -90,10 +99,15 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
           console.log("Google login succeeded, setting authenticated user", nextUser);
           login(nextUser);
           navigate("/", { replace: true });
-        })
-        .catch((error) => {
-          console.error("Google login failed", error);
-        });
+          return;
+        } catch (err) {
+          console.error("Auth attempt failed for", candidate, err);
+          lastError = err;
+          // try next candidate
+        }
+      }
+
+      console.error("Google login failed — all auth endpoints exhausted", lastError);
     }
 
     try {
