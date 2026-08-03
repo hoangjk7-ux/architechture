@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
 import { cn } from "@/lib/utils.ts";
+import { formatVnd } from "@/lib/format.ts";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
 import type { Doc } from "@/convex/_generated/dataModel.d.ts";
 
@@ -146,7 +147,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
           {vendor.costPerYear !== undefined && (
             <div className="bg-muted/30 rounded-lg p-2.5">
               <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Annual Cost</div>
-              <div className="text-xs font-semibold text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />{vendor.costPerYear.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-xs font-semibold text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />{formatVnd(vendor.costPerYear)}</div>
             </div>
           )}
           {vendor.contractEndDate && (
@@ -173,7 +174,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
         <div className="rounded-lg border border-border p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Linked Systems ({linked.length})</div>
-            {totalCost > 0 && <span className="text-[10px] text-green-400 font-mono">Σ {totalCost.toLocaleString("vi-VN")} ₫/năm</span>}
+            {totalCost > 0 && <span className="text-[10px] text-green-400 font-mono">Σ {formatVnd(totalCost)}/năm</span>}
           </div>
           {linked.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">No systems linked to this vendor.</p>
@@ -448,7 +449,7 @@ function VendorsContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="h-6 w-6 text-primary" />Vendor & Contract Management</h1>
-                <p className="text-muted-foreground text-sm mt-0.5">{vendors.length} vendors · tổng chi phí {stats.totalCost.toLocaleString("vi-VN")} ₫/năm</p>
+                <p className="text-muted-foreground text-sm mt-0.5">{vendors.length} vendors · tổng chi phí {formatVnd(stats.totalCost)}/năm</p>
               </div>
               {canWrite && (
                 <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">

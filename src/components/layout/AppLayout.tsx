@@ -92,6 +92,16 @@ function AppLayoutInner() {
 
         {/* User + Collapse */}
         <div className="p-2 border-t border-sidebar-border space-y-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+            className="w-full justify-start gap-2"
+          >
+            <Languages className="h-4 w-4" />
+            {!collapsed && <span>{language === "vi" ? "English" : "Tiếng Việt"}</span>}
+          </Button>
           {!collapsed && user && (
             <div className="px-3 py-2">
               <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name ?? user.email}</div>
@@ -119,7 +129,18 @@ function AppLayoutInner() {
         {/* Mobile topbar */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-sidebar">
           <span className="font-bold text-sm">TechGov</span>
-          <Settings className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+              className="h-8 px-2"
+            >
+              {language === "vi" ? "EN" : "VI"}
+            </Button>
+            <Settings className="h-5 w-5 text-muted-foreground" />
+          </div>
         </div>
 
         <div className="flex-1 overflow-auto">

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import SystemFlowSVG from "../flow-diagram/_components/SystemFlowSVG.tsx";
 import GanttChart from "../flow-diagram/_components/GanttChart.tsx";
+import { formatVnd } from "@/lib/format.ts";
 
 type System = Doc<"software_systems">;
 type Integration = Doc<"integrations">;
@@ -732,7 +733,7 @@ function DetailPanel({
             <div className="space-y-1.5 text-xs">
               {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="font-medium">{system.owner}</span></div>}
               {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí / Năm</span><span className="font-medium">{system.costPerYear.toLocaleString("vi-VN")} ₫</span></div>}
+              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí / Năm</span><span className="font-medium">{formatVnd(system.costPerYear)}</span></div>}
               {system.contractEndDate && <div className="flex justify-between"><span className="text-muted-foreground">Contract Ends</span><span className="font-medium">{system.contractEndDate}</span></div>}
               {system.departments.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Departments</span><span className="font-medium text-right max-w-[55%]">{system.departments.join(", ")}</span></div>}
               {system.campuses.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Campuses</span><span className="font-medium text-right max-w-[55%]">{system.campuses.join(", ")}</span></div>}
@@ -823,7 +824,7 @@ function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
 
       {totalCost > 0 && (
         <div className="text-[10px] text-green-400 font-mono border-t pt-2" style={{ borderColor: color + "33" }}>
-          {totalCost.toLocaleString("vi-VN")} ₫/năm
+          {formatVnd(totalCost)}/năm
         </div>
       )}
     </button>
@@ -941,7 +942,7 @@ function DeptView({ systems, integrations, config }: {
             );
           })}
           {totalCost > 0 && (
-            <span className="ml-auto text-green-400 font-mono">{totalCost.toLocaleString("vi-VN")} ₫/năm</span>
+            <span className="ml-auto text-green-400 font-mono">{formatVnd(totalCost)}/năm</span>
           )}
         </div>
 
@@ -1060,7 +1061,7 @@ function DeptView({ systems, integrations, config }: {
 
                       {/* Cost */}
                       <div className="text-[10px] text-green-400 font-mono text-right">
-                        {sys.costPerYear ? `${sys.costPerYear.toLocaleString("vi-VN")} ₫` : "—"}
+                        {sys.costPerYear ? formatVnd(sys.costPerYear) : "—"}
                       </div>
 
                       {/* Owner */}
