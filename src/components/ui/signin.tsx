@@ -95,21 +95,23 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
       </div>
 
       {googleClientId ? (
-        <div ref={googleButtonRef} className="w-full min-h-[44px] flex justify-center" />
+        <div className="rounded-xl border border-border/70 bg-background/80 p-2 shadow-sm">
+          <div ref={googleButtonRef} className="w-full min-h-[44px] flex justify-center" />
+        </div>
       ) : (
         <div className="space-y-2">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-11 rounded-xl border-border/70 bg-background/80 shadow-sm hover:bg-accent/70"
             onClick={() => {
               const base = import.meta.env.VITE_CONVEX_URL ?? "";
               window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
             }}
           >
-            <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
+            <img src="/google-logo.svg" alt="Google" className="mr-2 h-4 w-4" />
             {t("auth.google")}
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-center text-xs text-muted-foreground">
             Google login needs a configured client ID in the environment.
           </p>
         </div>
