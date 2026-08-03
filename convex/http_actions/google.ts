@@ -1,16 +1,30 @@
 import { httpAction } from "../_generated/server";
 
+declare const process: {
+  env: {
+    CONVEX_ALLOWED_ORIGIN?: string;
+    CONVEX_SITE_URL?: string;
+  };
+};
+
+function getAllowedOrigin(request?: Request) {
+  const originHeader = request?.headers.get("origin") ?? undefined;
+  return originHeader || process.env.CONVEX_ALLOWED_ORIGIN || process.env.CONVEX_SITE_URL;
+}
+
 function jsonResponse(obj: any, status = 200, request?: Request) {
-  const originHeader = request?.headers.get("Origin") ?? undefined;
-  const allowedOrigin = originHeader || process.env.CONVEX_ALLOWED_ORIGIN || process.env.VITE_CONVEX_URL || process.env.CONVEX_SITE_URL || "*";
+  const allowedOrigin = getAllowedOrigin(request);
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Credentials": "true",
+  };
+  if (allowedOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
+  }
 
   return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": allowedOrigin,
-      "Access-Control-Allow-Credentials": "true",
-    },
+    headers,
   });
 }
 

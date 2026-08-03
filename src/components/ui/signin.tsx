@@ -46,20 +46,19 @@ export interface SignInButtonProps extends React.ComponentProps<"div"> {
   signInText?: string;
 }
 
-export function SignInButt, signIn } = useSimpleAuth();
+export function SignInButton({ className, signInText, ...props }: SignInButtonProps) {
+  const { isLoading, login, signIn } = useSimpleAuth();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false
-  const { language, setLanguage, t } = useLanguage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resolvedSignInText = signInText ?? t("auth.signIn");
 
   const googleClientId = resolveGoogleClientId(import.meta.env as Record<string, string | undefined>);
-  const AUTH_STORAGE_KEY = "techgov-simple-auth";
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -98,7 +97,6 @@ export function SignInButt, signIn } = useSimpleAuth();
           }
 
           if (!r.ok) {
-            // If not found, try next candidate; otherwise surface error
             const err = new Error(body?.error || `Auth request failed with status ${r.status}: ${r.statusText} ${text}`);
             if (r.status === 404) {
               console.warn("Auth endpoint returned 404, trying next candidate", candidate);
@@ -130,7 +128,6 @@ export function SignInButt, signIn } = useSimpleAuth();
         } catch (err) {
           console.error("Auth attempt failed for", candidate, err);
           lastError = err;
-          // try next candidate
         }
       }
 
@@ -149,6 +146,12 @@ export function SignInButt, signIn } = useSimpleAuth();
           width: "100%",
           text: "signin_with",
         });
+      }
+    } catch (e) {
+      console.error("Failed to initialize Google login button", e);
+    }
+  }, [googleClientId, login, navigate]);
+
   const handlePasswordSignIn = async () => {
     setError(null);
     setIsSubmitting(true);
@@ -162,12 +165,6 @@ export function SignInButt, signIn } = useSimpleAuth();
     }
   };
 
-      }
-    } catch (e) {
-      console.error("Failed to initialize Google login button", e);
-    }
-  }, [googleClientId, login, navigate]);
- hoặc tài khoản local" : "Sign in with your Google account or local
   return (
     <div className={cn("w-full max-w-sm space-y-4", className)} {...props}>
       <div className="flex justify-end">
@@ -186,7 +183,7 @@ export function SignInButt, signIn } = useSimpleAuth();
       <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-center">
         <p className="text-sm font-medium text-foreground">{resolvedSignInText}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          {language === "vi" ? "Đăng nhập bằng tài khoản Google của bạn" : "Sign in with your Google account"}
+          {language === "vi" ? "Đăng nhập bằng tài khoản Google của bạn hoặc tài khoản local" : "Sign in with your Google account or local account"}
         </p>
       </div>
 
@@ -262,3 +259,4 @@ export function SignInButt, signIn } = useSimpleAuth();
     </div>
   );
 }
+
