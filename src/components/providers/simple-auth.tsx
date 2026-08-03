@@ -10,7 +10,7 @@ import {
 
 type SimpleAuthUser = {
   username: string;
-  role: "admin";
+  role: "admin" | "cto" | "it_manager" | "business_owner" | "viewer";
 };
 
 type SimpleAuthContextValue = {
@@ -19,6 +19,7 @@ type SimpleAuthContextValue = {
   user: SimpleAuthUser | null;
   error: string | null;
   signIn: (username: string, password: string) => Promise<void>;
+  login: (user: SimpleAuthUser) => void;
   signOut: () => void;
 };
 
@@ -72,6 +73,16 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     throw new Error(message);
   }, []);
 
+  const login = useCallback((nextUser: SimpleAuthUser) => {
+    setUser(nextUser);
+    setIsAuthenticated(true);
+    setError(null);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
+    }
+  }, []);
+
   const signOut = useCallback(() => {
     setUser(null);
     setIsAuthenticated(false);
@@ -89,6 +100,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       user,
       error,
       signIn,
+      login,
       signOut,
     }),
     [error, isAuthenticated, isLoading, signIn, signOut, user],

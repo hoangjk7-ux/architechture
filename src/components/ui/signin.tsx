@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
@@ -12,7 +13,8 @@ export interface SignInButtonProps extends React.ComponentProps<"div"> {
 }
 
 export function SignInButton({ className, signInText, ...props }: SignInButtonProps) {
-  const { isLoading } = useSimpleAuth();
+  const { isLoading, login } = useSimpleAuth();
+  const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
 
   const resolvedSignInText = signInText ?? t("auth.signIn");
@@ -28,23 +30,38 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
 
     function handleCredentialResponse(response: any) {
       const idToken = response.credential;
-      // Send idToken to Convex HTTP action to upsert/verify user
+      if (!idToken) {
+        console.error("Google login callback did not include an idToken", response);
+        return;
+      }
+
       const base = import.meta.env.VITE_CONVEX_URL ?? "";
-      fetch(`${base.replace(/\/$/, "")}/api/auth/google`, {
+      const url = `${base.replace(/\/$/, "")}/api/auth/google`;
+      console.log("Google login received idToken, sending auth request to", url);
+
+      fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data?.error) throw new Error(data.error);
-          const user = data.user;
+        .then((r) => r.json().then((data) => ({ status: r.status, body: data })))
+        .then(({ status, body }) => {
+          if (!body || body.error) {
+            throw new Error(body?.error || `Unexpected auth response (status ${status})`);
+          }
+
+          const user = body.user;
+          if (!user || !user.email || !user.role) {
+            throw new Error(`Invalid user data returned from auth endpoint: ${JSON.stringify(body)}`);
+          }
+
           const nextUser = { username: (user.email || "").split("@")[0], role: user.role };
-          window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
-          window.location.href = "/";
+          console.log("Google login succeeded, setting authenticated user", nextUser);
+          login(nextUser);
+          navigate("/", { replace: true });
         })
-        .catch(() => {
-          // ignore
+        .catch((error) => {
+          console.error("Google login failed", error);
         });
     }
 
@@ -62,9 +79,9 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
         });
       }
     } catch (e) {
-      // ignore
+      console.error("Failed to initialize Google login button", e);
     }
-  }, [googleClientId]);
+  }, [googleClientId, login, navigate]);
 
   return (
     <div className={cn("w-full max-w-sm space-y-4", className)} {...props}>
