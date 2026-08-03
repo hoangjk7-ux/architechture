@@ -16,24 +16,28 @@ import {
   ShieldCheck,
   Building2,
   LogOut,
+  Languages,
 } from "lucide-react";
+import { Button } from "@/components/ui/button.tsx";
 
 import { useState } from "react";
+import { useLanguage } from "@/components/providers/language.tsx";
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/systems", icon: Server, label: "System Inventory", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/vendors", icon: Building2, label: "Vendors", roles: ["cto", "it_manager", "viewer"] },
-  { to: "/architecture", icon: Map, label: "Architecture Map", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/integrations", icon: GitBranch, label: "Integrations", roles: ["cto", "it_manager", "viewer"] },
-  { to: "/roadmap", icon: ShieldCheck, label: "Roadmap", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/users", icon: Users, label: "Users & Roles", roles: ["cto"] },
-  { to: "/settings", icon: Settings, label: "Cấu hình", roles: ["cto", "it_manager"] },
+  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
+  { to: "/systems", icon: Server, labelKey: "nav.systems", roles: ["cto", "it_manager", "business_owner", "viewer"] },
+  { to: "/vendors", icon: Building2, labelKey: "nav.vendors", roles: ["cto", "it_manager", "viewer"] },
+  { to: "/architecture", icon: Map, labelKey: "nav.architecture", roles: ["cto", "it_manager", "business_owner", "viewer"] },
+  { to: "/integrations", icon: GitBranch, labelKey: "nav.integrations", roles: ["cto", "it_manager", "viewer"] },
+  { to: "/roadmap", icon: ShieldCheck, labelKey: "nav.roadmap", roles: ["cto", "it_manager", "business_owner", "viewer"] },
+  { to: "/users", icon: Users, labelKey: "nav.users", roles: ["cto"] },
+  { to: "/settings", icon: Settings, labelKey: "nav.settings", roles: ["cto", "it_manager"] },
 ];
 
 function AppLayoutInner() {
   const { user } = useCurrentUser();
   const { signOut } = useSimpleAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
 
   const isAuthenticated = Boolean(user);
@@ -81,7 +85,7 @@ function AppLayoutInner() {
               }
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span>{t(item.labelKey as any)}</span>}
             </NavLink>
           ))}
         </nav>
@@ -99,7 +103,7 @@ function AppLayoutInner() {
             className="w-full flex items-center justify-center gap-2 p-2 rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
-            {!collapsed && <span className="text-xs">Sign out</span>}
+            {!collapsed && <span className="text-xs">{t("auth.signOut")}</span>}
           </button>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -138,7 +142,7 @@ function AppLayoutInner() {
             }
           >
             <item.icon className="h-5 w-5" />
-            <span className="truncate max-w-[60px] text-center">{item.label.split(" ")[0]}</span>
+            <span className="truncate max-w-[60px] text-center">{t(item.labelKey as any).split(" ")[0]}</span>
           </NavLink>
         ))}
       </nav>
@@ -148,6 +152,7 @@ function AppLayoutInner() {
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useSimpleAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -161,8 +166,14 @@ export default function AppLayout() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-8 p-4">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">TechGov Platform</h1>
-          <p className="text-muted-foreground text-sm">Technology Governance for International School CTO</p>
+          <div className="flex justify-center">
+            <Button type="button" variant="outline" size="sm" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} className="gap-2">
+              <Languages className="h-4 w-4" />
+              {language === "vi" ? "English" : "Tiếng Việt"}
+            </Button>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground">{t("app.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("app.subtitle")}</p>
         </div>
         <SignInButton />
       </div>

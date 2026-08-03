@@ -1,21 +1,26 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
+import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
+import { resolveGoogleClientId } from "@/lib/google-auth.ts";
 
 export interface SignInButtonProps extends React.ComponentProps<"form"> {
   className?: string;
   signInText?: string;
 }
 
-export function SignInButton({ className, signInText = "Đăng nhập", ...props }: SignInButtonProps) {
+export function SignInButton({ className, signInText, ...props }: SignInButtonProps) {
   const { signIn, isLoading, error } = useSimpleAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("123456789");
   const [formError, setFormError] = useState<string | null>(null);
+
+  const resolvedSignInText = signInText ?? t("auth.signIn");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -24,11 +29,11 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
     try {
       await signIn(username, password);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+      setFormError(err instanceof Error ? err.message : language === "vi" ? "Đăng nhập thất bại" : "Sign-in failed");
     }
   };
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const googleClientId = resolveGoogleClientId(import.meta.env as Record<string, string | undefined>);
   const AUTH_STORAGE_KEY = "techgov-simple-auth";
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
@@ -71,8 +76,21 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
 
   return (
     <form onSubmit={handleSubmit} className={cn("w-full max-w-sm space-y-4", className)} {...props}>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+          className="gap-2"
+        >
+          <Languages className="h-4 w-4" />
+          {language === "vi" ? "English" : "Tiếng Việt"}
+        </Button>
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="username">Tài khoản</Label>
+        <Label htmlFor="username">{t("auth.username")}</Label>
         <Input
           id="username"
           value={username}
@@ -83,7 +101,7 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Mật khẩu</Label>
+        <Label htmlFor="password">{t("auth.password")}</Label>
         <Input
           id="password"
           type="password"
@@ -98,34 +116,38 @@ export function SignInButton({ className, signInText = "Đăng nhập", ...props
         <p className="text-sm text-destructive">{formError ?? error}</p>
       )}
 
-      <p className="text-sm text-muted-foreground">Sử dụng tài khoản admin / 123456789</p>
+      <p className="text-sm text-muted-foreground">{t("auth.adminHint")}</p>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-        {signInText}
+        {resolvedSignInText}
       </Button>
 
       <div className="flex items-center gap-2">
         <span className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
+        <span className="text-xs text-muted-foreground">{t("auth.or")}</span>
         <span className="flex-1 h-px bg-border" />
       </div>
 
       {googleClientId ? (
         <div ref={googleButtonRef} />
       ) : (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => {
-            const base = import.meta.env.VITE_CONVEX_URL ?? "";
-            // Redirect to Convex auth Google sign-in endpoint as fallback
-            window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
-          }}
-        >
-          <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
-          Đăng nhập bằng Google
-        </Button>
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              const base = import.meta.env.VITE_CONVEX_URL ?? "";
+              window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
+            }}
+          >
+            <img src="/google-logo.svg" alt="Google" className="h-4 w-4 mr-2" />
+            {t("auth.google")}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Google login needs a configured client ID in the environment.
+          </p>
+        </div>
       )}
     </form>
   );
