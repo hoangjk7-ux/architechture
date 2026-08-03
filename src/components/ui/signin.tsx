@@ -18,8 +18,10 @@ function buildAuthUrlCandidates(path: string) {
   // Fallback to a site URL if provided (useful for Convex hosted endpoint)
   if (convexSite) candidates.push(`${convexSite}${path}`);
 
-  // Always include a relative path as last resort (same origin)
-  candidates.push(path);
+  // Only use a relative path when no Convex endpoint is configured.
+  if (candidates.length === 0) {
+    candidates.push(path);
+  }
 
   return candidates;
 }
