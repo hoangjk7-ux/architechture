@@ -40,6 +40,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const stored = window.localStorage.getItem(AUTH_STORAGE_KEY);
+      console.debug("SimpleAuth: loaded from storage", stored);
       if (stored) {
         const parsed = JSON.parse(stored) as { user?: SimpleAuthUser };
         if (parsed.user) {
@@ -47,10 +48,12 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
           setIsAuthenticated(true);
         }
       }
-    } catch {
+    } catch (e) {
+      console.debug("SimpleAuth: failed to parse stored auth, clearing", e);
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
     } finally {
       setIsLoading(false);
+      console.debug("SimpleAuth: init complete", { isAuthenticated: isAuthenticated });
     }
   }, []);
 
@@ -65,6 +68,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
       }
+      console.debug("SimpleAuth: signIn success", nextUser);
       return;
     }
 
@@ -81,6 +85,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: nextUser }));
     }
+    console.debug("SimpleAuth: login", nextUser);
   }, []);
 
   const signOut = useCallback(() => {
@@ -91,6 +96,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
     }
+    console.debug("SimpleAuth: signOut");
   }, []);
 
   const value = useMemo<SimpleAuthContextValue>(
