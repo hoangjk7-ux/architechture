@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button.tsx";
 
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/language.tsx";
+import { formatRole } from "@/lib/roles.ts";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
@@ -33,6 +34,8 @@ const navItems = [
   { to: "/users", icon: Users, labelKey: "nav.users", roles: ["cto"] },
   { to: "/settings", icon: Settings, labelKey: "nav.settings", roles: ["cto", "it_manager"] },
 ];
+
+
 
 function AppLayoutInner() {
   const { user } = useCurrentUser();
@@ -46,6 +49,7 @@ function AppLayoutInner() {
     : navItems.filter((item) =>
         user?.role ? item.roles.includes(user.role) : false
       );
+  
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -102,10 +106,19 @@ function AppLayoutInner() {
             <Languages className="h-4 w-4" />
             {!collapsed && <span>{language === "vi" ? "English" : "Tiếng Việt"}</span>}
           </Button>
-          {!collapsed && user && (
-            <div className="px-3 py-2">
-              <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name ?? user.email}</div>
-              <div className="text-[10px] text-muted-foreground capitalize">{user.role?.replace("_", " ")}</div>
+          {user && (
+            <div className={cn("rounded-lg border border-border/60 bg-muted/20 p-2.5", collapsed ? "flex justify-center" : "flex items-center gap-2.5")}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold uppercase text-primary">
+                {(user.name ?? user.email ?? "U").charAt(0)}
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-semibold text-sidebar-foreground">{user.name ?? user.email}</div>
+                    <div className="mt-0.5 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                      {formatRole(user.role)}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <button
