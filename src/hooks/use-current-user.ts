@@ -7,8 +7,8 @@ export function useCurrentUser() {
   const currentUser = isAuthenticated && user
     ? {
         _id: "local-admin" as Id<"users">,
-        name: user.username,
-        email: `${user.username}@local`,
+        name: user.name ?? user.username,
+        email: user.email ?? `${user.username}@local`,
         role: user.role === "admin" ? "cto" : user.role,
       }
     : null;

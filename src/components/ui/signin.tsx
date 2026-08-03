@@ -112,7 +112,12 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
             throw new Error(`Invalid user data returned from auth endpoint: ${JSON.stringify(body)}`);
           }
 
-          const nextUser = { username: (user.email || "").split("@")[0], role: user.role };
+          const nextUser = {
+            username: (user.email || "").split("@")[0],
+            role: user.role,
+            name: user.name ?? user.email,
+            email: user.email,
+          };
           console.log("Google login succeeded, setting authenticated user", nextUser);
           login(nextUser);
           navigate("/", { replace: true });

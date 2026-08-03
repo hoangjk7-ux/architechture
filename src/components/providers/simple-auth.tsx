@@ -11,6 +11,8 @@ import {
 type SimpleAuthUser = {
   username: string;
   role: "admin" | "cto" | "it_manager" | "business_owner" | "viewer";
+  name?: string;
+  email?: string;
 };
 
 type SimpleAuthContextValue = {
