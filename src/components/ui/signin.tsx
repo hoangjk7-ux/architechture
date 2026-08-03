@@ -24,6 +24,23 @@ function buildAuthUrlCandidates(path: string) {
   return candidates;
 }
 
+function chooseAuthUrlForNavigation(path: string) {
+  const candidates = buildAuthUrlCandidates(path);
+  if (typeof window === "undefined") return candidates[0];
+
+  for (const c of candidates) {
+    if (c.startsWith("/")) return c; // relative paths are same-origin
+    try {
+      const u = new URL(c);
+      if (u.origin === window.location.origin) return c;
+    } catch {
+      // ignore
+    }
+  }
+
+  return candidates[0];
+}
+
 export interface SignInButtonProps extends React.ComponentProps<"div"> {
   className?: string;
   signInText?: string;
@@ -166,7 +183,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
             variant="outline"
             className="w-full h-11 rounded-xl border-border/70 bg-background/80 shadow-sm hover:bg-accent/70"
             onClick={() => {
-              const url = resolveConvexApiUrl("/api/auth/signin/google");
+              const url = chooseAuthUrlForNavigation("/api/auth/signin/google");
               window.location.href = url;
             }}
           >
