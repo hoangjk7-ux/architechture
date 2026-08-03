@@ -1,37 +1,21 @@
-import { useState, useEffect, useRef } from "react";
-import { Loader2, LogIn, Languages } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
 import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { resolveGoogleClientId } from "@/lib/google-auth.ts";
 
-export interface SignInButtonProps extends React.ComponentProps<"form"> {
+export interface SignInButtonProps extends React.ComponentProps<"div"> {
   className?: string;
   signInText?: string;
 }
 
 export function SignInButton({ className, signInText, ...props }: SignInButtonProps) {
-  const { signIn, isLoading, error } = useSimpleAuth();
+  const { isLoading } = useSimpleAuth();
   const { language, setLanguage, t } = useLanguage();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("123456789");
-  const [formError, setFormError] = useState<string | null>(null);
 
   const resolvedSignInText = signInText ?? t("auth.signIn");
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setFormError(null);
-
-    try {
-      await signIn(username, password);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : language === "vi" ? "Đăng nhập thất bại" : "Sign-in failed");
-    }
-  };
 
   const googleClientId = resolveGoogleClientId(import.meta.env as Record<string, string | undefined>);
   const AUTH_STORAGE_KEY = "techgov-simple-auth";
@@ -65,9 +49,17 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
     }
 
     try {
+      if (googleButtonRef.current) {
+        googleButtonRef.current.innerHTML = "";
+      }
       win.google.accounts.id.initialize({ client_id: googleClientId, callback: handleCredentialResponse });
       if (googleButtonRef.current) {
-        win.google.accounts.id.renderButton(googleButtonRef.current, { theme: "outline", size: "large" });
+        win.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          width: "100%",
+          text: "signin_with",
+        });
       }
     } catch (e) {
       // ignore
@@ -75,7 +67,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
   }, [googleClientId]);
 
   return (
-    <form onSubmit={handleSubmit} className={cn("w-full max-w-sm space-y-4", className)} {...props}>
+    <div className={cn("w-full max-w-sm space-y-4", className)} {...props}>
       <div className="flex justify-end">
         <Button
           type="button"
@@ -89,39 +81,12 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
         </Button>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="username">{t("auth.username")}</Label>
-        <Input
-          id="username"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
-          placeholder="admin"
-        />
+      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-center">
+        <p className="text-sm font-medium text-foreground">{resolvedSignInText}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {language === "vi" ? "Đăng nhập bằng tài khoản Google của bạn" : "Sign in with your Google account"}
+        </p>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password">{t("auth.password")}</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
-          placeholder="123456789"
-        />
-      </div>
-
-      {(error || formError) && (
-        <p className="text-sm text-destructive">{formError ?? error}</p>
-      )}
-
-      <p className="text-sm text-muted-foreground">{t("auth.adminHint")}</p>
-
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-        {resolvedSignInText}
-      </Button>
 
       <div className="flex items-center gap-2">
         <span className="flex-1 h-px bg-border" />
@@ -130,7 +95,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
       </div>
 
       {googleClientId ? (
-        <div ref={googleButtonRef} />
+        <div ref={googleButtonRef} className="w-full min-h-[44px] flex justify-center" />
       ) : (
         <div className="space-y-2">
           <Button
@@ -149,6 +114,6 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
           </p>
         </div>
       )}
-    </form>
+    </div>
   );
 }
