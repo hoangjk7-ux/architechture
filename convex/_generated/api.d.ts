@@ -14,6 +14,7 @@ import type * as config from "../config.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as http_actions_google from "../http_actions/google.js";
+import type * as http_actions_options from "../http_actions/options.js";
 import type * as integrations from "../integrations.js";
 import type * as roadmap from "../roadmap.js";
 import type * as seed from "../seed.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   helpers: typeof helpers;
   http: typeof http;
   "http_actions/google": typeof http_actions_google;
+  "http_actions/options": typeof http_actions_options;
   integrations: typeof integrations;
   roadmap: typeof roadmap;
   seed: typeof seed;
