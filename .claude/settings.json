@@ -3,8 +3,7 @@
     "allow": [
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://quiet-impala-764.convex.site/api/auth/signin/google\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://quiet-impala-764.convex.site/api/auth/callback/google\")",
-      "Bash(curl -s \"https://quiet-impala-764.convex.site/api/auth/signin/google\")",
-      "Bash(CONVEX_DEPLOY_KEY=\"prod:quiet-impala-764|eyJ2MiI6IjY1MmRhNzU0YzVlMjRjZjZhOGU1ODNlOWMzMjM1Y2EzIn0=\" npx convex env get JWT_PRIVATE_KEY)"
+      "Bash(curl -s \"https://quiet-impala-764.convex.site/api/auth/signin/google\")"
     ]
   }
 }

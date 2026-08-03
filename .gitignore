@@ -29,3 +29,6 @@ tsconfig.tsbuildinfo
 # Environment variables
 .env*
 .vercel
+
+# Accidentally-nested unrelated repo
+/OpenHands/
