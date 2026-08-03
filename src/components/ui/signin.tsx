@@ -11,15 +11,12 @@ function buildAuthUrlCandidates(path: string) {
   const candidates: string[] = [];
 
   const convexUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, "");
-  const convexSite = import.meta.env.VITE_CONVEX_SITE_URL?.replace(/\/$/, "");
 
-  // Prefer explicit VITE_CONVEX_URL when present
-  if (convexUrl) candidates.push(`${convexUrl}${path}`);
-  // Fallback to a site URL if provided (useful for Convex hosted endpoint)
-  if (convexSite) candidates.push(`${convexSite}${path}`);
-
-  // Only use a relative path when no Convex endpoint is configured.
-  if (candidates.length === 0) {
+  // Only use the primary Convex deployment URL for auth requests.
+  if (convexUrl) {
+    candidates.push(`${convexUrl}${path}`);
+  } else {
+    // If no external Convex URL is configured, use same-origin route.
     candidates.push(path);
   }
 
