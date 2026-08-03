@@ -7,6 +7,22 @@ import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { resolveGoogleClientId } from "@/lib/google-auth.ts";
 
+function resolveConvexApiUrl(path: string) {
+  const convexUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, "");
+  if (!convexUrl) return path;
+
+  try {
+    const convexOrigin = new URL(convexUrl).origin;
+    if (typeof window !== "undefined" && window.location.origin === convexOrigin) {
+      return path;
+    }
+  } catch {
+    return path;
+  }
+
+  return `${convexUrl}${path}`;
+}
+
 export interface SignInButtonProps extends React.ComponentProps<"div"> {
   className?: string;
   signInText?: string;
@@ -35,8 +51,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
         return;
       }
 
-      const base = import.meta.env.VITE_CONVEX_URL ?? "";
-      const url = `${base.replace(/\/$/, "")}/api/auth/google`;
+      const url = resolveConvexApiUrl("/api/auth/google");
       console.log("Google login received idToken, sending auth request to", url);
 
       fetch(url, {
@@ -44,7 +59,23 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       })
-        .then((r) => r.json().then((data) => ({ status: r.status, body: data })))
+        .then(async (r) => {
+          const text = await r.text();
+          let body: any = null;
+          if (text) {
+            try {
+              body = JSON.parse(text);
+            } catch (parseError) {
+              throw new Error(`Invalid JSON response from auth endpoint: ${text}`);
+            }
+          }
+
+          if (!r.ok) {
+            throw new Error(body?.error || `Auth request failed with status ${r.status}: ${r.statusText} ${text}`);
+          }
+
+          return { status: r.status, body };
+        })
         .then(({ status, body }) => {
           if (!body || body.error) {
             throw new Error(body?.error || `Unexpected auth response (status ${status})`);
@@ -121,8 +152,8 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
             variant="outline"
             className="w-full h-11 rounded-xl border-border/70 bg-background/80 shadow-sm hover:bg-accent/70"
             onClick={() => {
-              const base = import.meta.env.VITE_CONVEX_URL ?? "";
-              window.location.href = `${base.replace(/\/$/, "")}/api/auth/signin/google`;
+              const url = resolveConvexApiUrl("/api/auth/signin/google");
+              window.location.href = url;
             }}
           >
             <img src="/google-logo.svg" alt="Google" className="mr-2 h-4 w-4" />
