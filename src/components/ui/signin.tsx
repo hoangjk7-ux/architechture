@@ -8,14 +8,27 @@ import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { resolveGoogleClientId } from "@/lib/google-auth.ts";
 
+function getConvexSiteUrl() {
+  // Convex HTTP Actions are served from the `.convex.site` domain, not
+  // `.convex.cloud` (which is the client/query API domain).
+  const explicit = import.meta.env.VITE_CONVEX_SITE_URL?.replace(/\/$/, "");
+  if (explicit && explicit.includes(".convex.site")) return explicit;
+
+  const convexUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, "");
+  if (convexUrl?.includes(".convex.cloud")) {
+    return convexUrl.replace(".convex.cloud", ".convex.site");
+  }
+  return convexUrl;
+}
+
 function buildAuthUrlCandidates(path: string) {
   const candidates: string[] = [];
 
-  const convexUrl = import.meta.env.VITE_CONVEX_URL?.replace(/\/$/, "");
+  const convexSiteUrl = getConvexSiteUrl();
 
   // Only use the primary Convex deployment URL for auth requests.
-  if (convexUrl) {
-    candidates.push(`${convexUrl}${path}`);
+  if (convexSiteUrl) {
+    candidates.push(`${convexSiteUrl}${path}`);
   } else {
     // If no external Convex URL is configured, use same-origin route.
     candidates.push(path);
