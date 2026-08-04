@@ -9,7 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as auth_with_google from "../auth_with_google.js";
 import type * as config from "../config.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
@@ -31,7 +30,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  auth_with_google: typeof auth_with_google;
   config: typeof config;
   helpers: typeof helpers;
   http: typeof http;

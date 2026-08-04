@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { getCurrentUser as getCurrentUserRecord } from "./helpers";
 
@@ -116,6 +116,37 @@ export const removeUser = mutation({
       throw new ConvexError({ message: "Cannot remove yourself", code: "FORBIDDEN" });
     }
     await ctx.db.delete(args.userId);
+  },
+});
+
+// Called from the googleAuth httpAction (convex/http_actions/google.ts), which
+// runs outside a transaction and has no ctx.db — it must go through runMutation.
+export const upsertGoogleUser = internalMutation({
+  args: {
+    email: v.string(),
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { name: args.name, image: args.image });
+      return { _id: existing._id, email: args.email, role: existing.role, name: args.name, image: args.image };
+    }
+
+    const role = args.email === "hoangjk7@gmail.com" ? "cto" : "viewer";
+    const id = await ctx.db.insert("users", {
+      email: args.email,
+      name: args.name,
+      image: args.image,
+      role,
+      isManuallyAdded: false,
+    });
+    return { _id: id, email: args.email, role, name: args.name, image: args.image };
   },
 });
 
