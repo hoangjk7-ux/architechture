@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 
 const roadmapArgs = {
   title: v.string(),
@@ -22,7 +22,7 @@ const roadmapArgs = {
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     return await ctx.db.query("roadmap_items").collect();
   },
 });
@@ -55,7 +55,7 @@ export const remove = mutation({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const items = await ctx.db.query("roadmap_items").collect();
     const projects = items.filter((i) => i.level === "project");
     const now = new Date().toISOString().split("T")[0];

@@ -1,10 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel.d.ts";
+import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 
 export const listBySystem = query({
   args: { systemId: v.id("software_systems") },
   handler: async (ctx, args) => {
+    await requireReadAccess(ctx);
     return await ctx.db
       .query("system_modules")
       .withIndex("by_system", (q) => q.eq("systemId", args.systemId))
@@ -15,6 +17,7 @@ export const listBySystem = query({
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    await requireReadAccess(ctx);
     return await ctx.db.query("system_modules").collect();
   },
 });
@@ -44,6 +47,7 @@ export const create = mutation({
     sortOrder: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireWriteAccess(ctx);
     return await ctx.db.insert("system_modules", args);
   },
 });
@@ -72,6 +76,7 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireWriteAccess(ctx);
     const { id, ...patch } = args;
     await ctx.db.patch(id, patch);
   },
@@ -80,6 +85,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("system_modules") },
   handler: async (ctx, args) => {
+    await requireWriteAccess(ctx);
     await ctx.db.delete(args.id);
   },
 });

@@ -249,6 +249,7 @@ function ModuleForm({ initial, onSave, onClose }: {
   onSave: (d: ModuleFormData) => Promise<void>;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState<ModuleFormData>(() => {
     const src = (initial ?? {}) as Record<string, unknown>;
     return Object.keys(defaultModuleForm).reduce<ModuleFormData>(
@@ -260,36 +261,36 @@ function ModuleForm({ initial, onSave, onClose }: {
   const set = <K extends keyof ModuleFormData>(k: K, v: ModuleFormData[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error("Name is required"); return; }
+    if (!form.name.trim()) { toast.error(t("common.nameRequired")); return; }
     setSaving(true);
-    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); } finally { setSaving(false); }
+    try { await onSave(form); onClose(); } catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : t("common.saveFailed"))); } finally { setSaving(false); }
   };
 
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label>Name *</Label>
-        <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Student Portal" className="bg-input" />
+        <Label>{t("module.name")}</Label>
+        <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("module.namePlaceholder")} className="bg-input" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Lifecycle</Label>
+          <Label>{t("module.lifecycle")}</Label>
           <Select value={form.lifecycle} onValueChange={(v) => set("lifecycle", v as ModuleFormData["lifecycle"])}>
             <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(LIFECYCLE_META) as (keyof typeof LIFECYCLE_META)[]).map((lc) => (
-                <SelectItem key={lc} value={lc}>{LIFECYCLE_META[lc].label}</SelectItem>
+                <SelectItem key={lc} value={lc}>{t(`lifecycle.${lc}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>Health</Label>
+          <Label>{t("module.health")}</Label>
           <Select value={form.health} onValueChange={(v) => set("health", v as ModuleFormData["health"])}>
             <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(HEALTH_META) as (keyof typeof HEALTH_META)[]).map((h) => (
-                <SelectItem key={h} value={h} className="capitalize">{HEALTH_META[h].label}</SelectItem>
+                <SelectItem key={h} value={h}>{t(`health.${h}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -297,29 +298,29 @@ function ModuleForm({ initial, onSave, onClose }: {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Version</Label>
-          <Input value={form.version} onChange={(e) => set("version", e.target.value)} placeholder="e.g. 2.1.0" className="bg-input" />
+          <Label>{t("module.version")}</Label>
+          <Input value={form.version} onChange={(e) => set("version", e.target.value)} placeholder={t("module.versionPlaceholder")} className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Target Date</Label>
+          <Label>{t("module.targetDate")}</Label>
           <Input type="date" value={form.plannedDate} onChange={(e) => set("plannedDate", e.target.value)} className="bg-input" />
         </div>
       </div>
       <div className="space-y-1">
-        <Label>Used By <span className="text-muted-foreground text-[10px]">(comma separated)</span></Label>
-        <Input value={form.usedBy} onChange={(e) => set("usedBy", e.target.value)} placeholder="e.g. Admissions, Finance" className="bg-input" />
+        <Label>{t("module.usedBy")} <span className="text-muted-foreground text-[10px]">{t("module.usedByHint")}</span></Label>
+        <Input value={form.usedBy} onChange={(e) => set("usedBy", e.target.value)} placeholder={t("module.usedByPlaceholder")} className="bg-input" />
       </div>
       <div className="space-y-1">
-        <Label>Description</Label>
+        <Label>{t("common.description")}</Label>
         <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} className="bg-input" />
       </div>
       <div className="space-y-1">
-        <Label>Notes</Label>
+        <Label>{t("common.notes")}</Label>
         <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} className="bg-input" />
       </div>
       <div className="flex justify-end gap-2 pt-1">
-        <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Module"}</Button>
+        <Button variant="ghost" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
+        <Button onClick={handleSave} disabled={saving}>{saving ? t("common.saving") : t("module.saveModule")}</Button>
       </div>
     </div>
   );
@@ -330,6 +331,7 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
   mod: SystemModule; canWrite: boolean;
   onEdit: (m: SystemModule) => void; onDelete: (id: SystemModule["_id"]) => void;
 }) {
+  const { t } = useLanguage();
   const lm = LIFECYCLE_META[mod.lifecycle] ?? LIFECYCLE_META.in_use;
   const hm = HEALTH_META[mod.health] ?? HEALTH_META.unknown;
   const Icon = lm.Icon;
@@ -374,11 +376,11 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
         <div className="px-3 pb-3 space-y-2 border-t" style={{ borderColor: lm.color + "33" }}>
           <div className="flex flex-wrap gap-1.5 pt-2">
             <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: lm.bg, color: lm.color, border: `1px solid ${lm.color}44` }}>
-              <Icon className="h-2.5 w-2.5" />{lm.label}
+              <Icon className="h-2.5 w-2.5" />{t(`lifecycle.${mod.lifecycle}`)}
             </span>
             {(mod.lifecycle === "in_use" || mod.lifecycle === "deprecated") && (
               <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: hm.color + "22", color: hm.color, border: `1px solid ${hm.color}44` }}>
-                {hm.label}
+                {t(`health.${mod.health}`)}
               </span>
             )}
           </div>
@@ -397,7 +399,7 @@ function ModuleRow({ mod, canWrite, onEdit, onDelete }: {
           )}
           {mod.plannedDate && (
             <div className="text-[10px] text-muted-foreground">
-              Target: <span className="font-medium" style={{ color: lm.color }}>{mod.plannedDate}</span>
+              {t("module.target")} <span className="font-medium" style={{ color: lm.color }}>{mod.plannedDate}</span>
             </div>
           )}
         </div>
@@ -410,6 +412,7 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
   modules: SystemModule[]; canWrite: boolean;
   onAdd: () => void; onEdit: (m: SystemModule) => void; onDelete: (id: SystemModule["_id"]) => void;
 }) {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<string>("all");
 
   const lifecycles = useMemo(() => {
@@ -437,10 +440,10 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
         <Layers className="h-8 w-8 opacity-30" />
-        <p className="text-sm">No modules recorded</p>
+        <p className="text-sm">{t("module.noModules")}</p>
         {canWrite && (
           <Button size="sm" variant="ghost" onClick={onAdd} className="gap-1.5 mt-1">
-            <Plus className="h-3.5 w-3.5" />Add Module
+            <Plus className="h-3.5 w-3.5" />{t("module.addModule")}
           </Button>
         )}
       </div>
@@ -451,7 +454,7 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
     <div className="space-y-3">
       {canWrite && (
         <Button size="sm" variant="outline" onClick={onAdd} className="gap-1.5 w-full">
-          <Plus className="h-3.5 w-3.5" />Add Module
+          <Plus className="h-3.5 w-3.5" />{t("module.addModule")}
         </Button>
       )}
       <div className="flex flex-wrap gap-1.5">
@@ -460,7 +463,7 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
           className="text-[10px] px-2.5 py-1 rounded-full font-medium cursor-pointer transition-all border"
           style={{ background: filter === "all" ? "#ffffff22" : "transparent", borderColor: filter === "all" ? "#ffffff44" : "#1e293b", color: filter === "all" ? "#fff" : "#64748b" }}
         >
-          All {modules.length}
+          {t("module.all")} {modules.length}
         </button>
         {lifecycles.map((lc) => {
           const lm = LIFECYCLE_META[lc];
@@ -472,7 +475,7 @@ function ModulesTab({ modules, canWrite, onAdd, onEdit, onDelete }: {
               className="flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full font-medium cursor-pointer transition-all border"
               style={{ background: filter === lc ? lm.bg : "transparent", borderColor: filter === lc ? lm.color + "88" : "#1e293b", color: filter === lc ? lm.color : "#64748b" }}
             >
-              <Icon className="h-2.5 w-2.5" />{lm.label} {counts[lc] ?? 0}
+              <Icon className="h-2.5 w-2.5" />{t(`lifecycle.${lc}`)} {counts[lc] ?? 0}
             </button>
           );
         })}
@@ -562,7 +565,7 @@ function DetailPanel({
           <Server className="h-4 w-4 shrink-0" style={{ color: meta.badge }} />
           <div className="min-w-0">
             <div className="font-bold text-sm truncate" style={{ color: meta.text }}>{system.name}</div>
-            <div className="text-[10px] opacity-60" style={{ color: meta.text }}>{system.category} · {meta.label}</div>
+            <div className="text-[10px] opacity-60" style={{ color: meta.text }}>{system.category} · {t(`systemType.${system.type}`)}</div>
           </div>
         </div>
         <button onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-2">
@@ -640,12 +643,12 @@ function DetailPanel({
                       <div key={intg._id} className="bg-muted/30 rounded-lg p-2.5 space-y-1.5 border" style={{ borderColor: hc.color + "33" }}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold truncate">{dest?.name ?? t("detail.unknown")}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{hc.label}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{t(`health.${intg.healthStatus}`)}</span>
                         </div>
                         <div className="text-[10px] text-muted-foreground">{intg.name}</div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-mono">{intg.protocol}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{mc.label}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{t(`method.${intg.method}`)}</span>
                           {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">{t("detail.nonCompliant")}</span>}
                           {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">{t("detail.error")} {intg.errorRate}%</span>}
                         </div>
@@ -670,12 +673,12 @@ function DetailPanel({
                       <div key={intg._id} className="bg-muted/30 rounded-lg p-2.5 space-y-1.5 border" style={{ borderColor: hc.color + "33" }}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-semibold truncate">{src?.name ?? t("detail.unknown")}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{hc.label}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{t(`health.${intg.healthStatus}`)}</span>
                         </div>
                         <div className="text-[10px] text-muted-foreground">{intg.name}</div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-mono">{intg.protocol}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{mc.label}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{t(`method.${intg.method}`)}</span>
                           {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">{t("detail.nonCompliant")}</span>}
                           {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">{t("detail.error")} {intg.errorRate}%</span>}
                         </div>
@@ -777,6 +780,7 @@ type ConfigResult = { department: { name: string; color?: string; order: number 
 function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
   name: string; color: string; systems: System[]; integrations: Integration[]; onClick: () => void;
 }) {
+  const { t } = useLanguage();
   const typeCounts: Record<string, number> = {};
   systems.forEach((s) => { typeCounts[s.type] = (typeCounts[s.type] ?? 0) + 1; });
 
@@ -795,7 +799,7 @@ function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
       <div className="flex items-center gap-2 mb-3">
         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
         <span className="font-semibold text-sm flex-1 truncate">{name}</span>
-        <span className="text-[10px] font-mono text-muted-foreground shrink-0">{systems.length} hệ thống</span>
+        <span className="text-[10px] font-mono text-muted-foreground shrink-0">{systems.length} {t("arch.systemsWord")}</span>
       </div>
 
       <div className="flex flex-wrap gap-1 mb-3">
@@ -803,12 +807,12 @@ function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
           const m = TYPE_META[type] ?? TYPE_META.core;
           return (
             <span key={type} className="text-[9px] px-1.5 py-0.5 rounded font-medium" style={{ background: m.badge + "22", color: m.badge }}>
-              {m.label} {count}
+              {t(`systemType.${type}`)} {count}
             </span>
           );
         })}
         {criticalCount > 0 && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-red-500/15 text-red-400">🔴 Critical {criticalCount}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-red-500/15 text-red-400">🔴 {t("systems.badge.critical")} {criticalCount}</span>
         )}
       </div>
 
@@ -826,7 +830,7 @@ function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
 
       {totalCost > 0 && (
         <div className="text-[10px] text-green-400 font-mono border-t pt-2" style={{ borderColor: color + "33" }}>
-          {formatVnd(totalCost)}/năm
+          {formatVnd(totalCost)}{t("vendors.perYear")}
         </div>
       )}
     </button>
@@ -836,6 +840,7 @@ function DeptSummaryCard({ name, color, systems, integrations, onClick }: {
 function DeptView({ systems, integrations, config }: {
   systems: System[]; integrations: Integration[]; config: ConfigResult;
 }) {
+  const { t } = useLanguage();
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
 
   const departments = config?.department ?? [];
@@ -879,12 +884,12 @@ function DeptView({ systems, integrations, config }: {
             selectedDept === null ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
         >
-          <span>Tất cả phòng ban</span>
+          <span>{t("dept.all")}</span>
           <span className="font-mono text-[10px]">{systems.length}</span>
         </button>
 
         <div className="px-3 pt-2 pb-1">
-          <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Phòng ban</div>
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{t("dept.departments")}</div>
         </div>
 
         {departments.map((dept) => {
@@ -909,7 +914,7 @@ function DeptView({ systems, integrations, config }: {
         {noDepSystems.length > 0 && (
           <>
             <div className="px-3 pt-2 pb-1">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Khác</div>
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{t("dept.other")}</div>
             </div>
             <button
               onClick={() => setSelectedDept("__none__")}
@@ -918,7 +923,7 @@ function DeptView({ systems, integrations, config }: {
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0" />
-              <span className="flex-1">Chưa phân loại</span>
+              <span className="flex-1">{t("dept.uncategorized")}</span>
               <span className="font-mono text-[10px]">{noDepSystems.length}</span>
             </button>
           </>
@@ -930,21 +935,21 @@ function DeptView({ systems, integrations, config }: {
         {/* Stats bar */}
         <div className="shrink-0 px-5 py-2.5 border-b border-border bg-muted/10 flex flex-wrap items-center gap-4 text-[10px]">
           <span className="font-semibold text-foreground">
-            {selectedDept === null ? "Tất cả phòng ban" : selectedDept === "__none__" ? "Chưa phân loại" : selectedDept}
+            {selectedDept === null ? t("dept.all") : selectedDept === "__none__" ? t("dept.uncategorized") : selectedDept}
           </span>
-          <span className="text-muted-foreground">{activeSystems.length} hệ thống</span>
-          {criticalCount > 0 && <span className="text-red-400 font-medium">🔴 {criticalCount} critical</span>}
+          <span className="text-muted-foreground">{activeSystems.length} {t("arch.systemsWord")}</span>
+          {criticalCount > 0 && <span className="text-red-400 font-medium">🔴 {criticalCount} {t("dept.critical")}</span>}
           {(Object.entries(healthCounts) as [string, number][]).filter(([, c]) => c > 0).map(([h, c]) => {
             const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
             return (
               <span key={h} className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: hm.color }} />
-                <span style={{ color: hm.color }}>{hm.label} {c}</span>
+                <span style={{ color: hm.color }}>{t(`health.${h}`)} {c}</span>
               </span>
             );
           })}
           {totalCost > 0 && (
-            <span className="ml-auto text-green-400 font-mono">{formatVnd(totalCost)}/năm</span>
+            <span className="ml-auto text-green-400 font-mono">{formatVnd(totalCost)}{t("vendors.perYear")}</span>
           )}
         </div>
 
@@ -954,8 +959,8 @@ function DeptView({ systems, integrations, config }: {
             {departments.length === 0 && noDepSystems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                 <Users className="h-10 w-10 opacity-20" />
-                <p className="text-sm">Chưa có dữ liệu phòng ban</p>
-                <p className="text-xs">Thêm phòng ban trong trang Cấu hình</p>
+                <p className="text-sm">{t("dept.noDataTitle")}</p>
+                <p className="text-xs">{t("dept.noDataHint")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
@@ -971,7 +976,7 @@ function DeptView({ systems, integrations, config }: {
                 ))}
                 {noDepSystems.length > 0 && (
                   <DeptSummaryCard
-                    name="Chưa phân loại"
+                    name={t("dept.uncategorized")}
                     color="#64748b"
                     systems={noDepSystems}
                     integrations={integrations}
@@ -989,19 +994,19 @@ function DeptView({ systems, integrations, config }: {
             {activeSystems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                 <Server className="h-8 w-8 opacity-20" />
-                <p className="text-sm">Không có hệ thống nào trong phòng ban này</p>
+                <p className="text-sm">{t("dept.noSystemsInDept")}</p>
               </div>
             ) : (
               <>
                 {/* Table header */}
                 <div className="sticky top-0 z-10 grid grid-cols-[1fr_120px_90px_90px_80px_100px_110px] gap-3 px-5 py-2 border-b border-border bg-muted/30 text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
-                  <span>Hệ thống</span>
-                  <span>Loại · Trạng thái</span>
-                  <span>Sức khỏe</span>
-                  <span>Arch Score</span>
-                  <span className="text-center">Tích hợp</span>
-                  <span className="text-right">Chi phí / Năm</span>
-                  <span>Người quản lý</span>
+                  <span>{t("dept.col.system")}</span>
+                  <span>{t("dept.col.typeStatus")}</span>
+                  <span>{t("dept.col.health")}</span>
+                  <span>{t("dept.col.archScore")}</span>
+                  <span className="text-center">{t("dept.col.integrations")}</span>
+                  <span className="text-right">{t("dept.col.costPerYear")}</span>
+                  <span>{t("dept.col.owner")}</span>
                 </div>
                 {activeSystems.map((sys) => {
                   const meta = TYPE_META[sys.type] ?? TYPE_META.core;
@@ -1025,7 +1030,7 @@ function DeptView({ systems, integrations, config }: {
 
                       {/* Type + status */}
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-medium w-fit" style={{ background: meta.badge + "22", color: meta.badge }}>{meta.label}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-medium w-fit" style={{ background: meta.badge + "22", color: meta.badge }}>{t(`systemType.${sys.type}`)}</span>
                         <span className="flex items-center gap-1 text-[10px]" style={{ color: statusMeta.color }}>
                           {statusMeta.icon} <span className="capitalize">{sys.status}</span>
                         </span>
@@ -1034,7 +1039,7 @@ function DeptView({ systems, integrations, config }: {
                       {/* Health */}
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hm.color }} />
-                        <span className="text-[10px]" style={{ color: hm.color }}>{hm.label}</span>
+                        <span className="text-[10px]" style={{ color: hm.color }}>{t(`health.${worst}`)}</span>
                       </div>
 
                       {/* Arch score */}
@@ -1086,6 +1091,7 @@ function DeptView({ systems, integrations, config }: {
 type ViewTab = "map" | "flow" | "gantt" | "dept";
 
 function ArchitectureContent() {
+  const { t } = useLanguage();
   const rawSystems      = useQuery(api.software_systems.list);
   const rawIntegrations = useQuery(api.integrations.list);
   const rawModules      = useQuery(api.system_modules.list);
@@ -1194,7 +1200,7 @@ function ArchitectureContent() {
             }`}
           >
             <Map className="h-3.5 w-3.5" />
-            Architecture Map
+            {t("arch.tab.map")}
           </button>
           <button
             onClick={() => handleSetViewTab("flow")}
@@ -1203,7 +1209,7 @@ function ArchitectureContent() {
             }`}
           >
             <GitBranch className="h-3.5 w-3.5" />
-            Integration Flow
+            {t("arch.tab.flow")}
           </button>
           <button
             onClick={() => handleSetViewTab("gantt")}
@@ -1212,7 +1218,7 @@ function ArchitectureContent() {
             }`}
           >
             <Activity className="h-3.5 w-3.5" />
-            Gantt Timeline
+            {t("arch.tab.gantt")}
           </button>
           <button
             onClick={() => handleSetViewTab("dept")}
@@ -1221,7 +1227,7 @@ function ArchitectureContent() {
             }`}
           >
             <Users className="h-3.5 w-3.5" />
-            Phòng Ban
+            {t("arch.tab.dept")}
           </button>
         </div>
 
@@ -1233,20 +1239,20 @@ function ArchitectureContent() {
               return (
                 <button key={h} onClick={() => setFilterHealth(filterHealth === h ? "all" : h)} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all"
                   style={{ background: filterHealth === h ? `${hc.color}22` : "transparent", borderColor: filterHealth === h ? hc.color : "#1e293b", color: hc.color }}>
-                  <span className="w-2 h-2 rounded-full" style={{ background: hc.color }} />{hc.label} {healthSummary[h] ?? 0}
+                  <span className="w-2 h-2 rounded-full" style={{ background: hc.color }} />{t(`health.${h}`)} {healthSummary[h] ?? 0}
                 </button>
               );
             })}
             <div className="w-px h-5 bg-border" />
-            {(["all", "core", "supporting", "legacy", "pilot"] as const).map((t) => (
-              <button key={t} onClick={() => setFilterType(t)} className="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border capitalize transition-all"
-                style={{ background: filterType === t ? "#6366f133" : "transparent", borderColor: filterType === t ? "#6366f1" : "#1e293b", color: filterType === t ? "#c7d2fe" : "#64748b" }}>
-                {t === "all" ? "All Types" : t}
+            {(["all", "core", "supporting", "legacy", "pilot"] as const).map((ft) => (
+              <button key={ft} onClick={() => setFilterType(ft)} className="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all"
+                style={{ background: filterType === ft ? "#6366f133" : "transparent", borderColor: filterType === ft ? "#6366f1" : "#1e293b", color: filterType === ft ? "#c7d2fe" : "#64748b" }}>
+                {ft === "all" ? t("systemType.allTypes") : t(`systemType.${ft}`)}
               </button>
             ))}
             {selectedId && (
               <button onClick={() => setSelectedId(null)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border border-border text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-                <X className="h-3 w-3" /> Clear
+                <X className="h-3 w-3" /> {t("common.clear")}
               </button>
             )}
           </div>
@@ -1261,14 +1267,14 @@ function ArchitectureContent() {
               return (
                 <div key={key} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${cfg.bg} text-xs`}>
                   <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
-                  <span className={cfg.color}>{cfg.label}</span>
+                  <span className={cfg.color}>{t(`health.${key}`)}</span>
                   <span className="text-muted-foreground font-mono">{count}</span>
                 </div>
               );
             })}
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-xs text-muted-foreground">
               <GitBranch className="h-3.5 w-3.5" />
-              {integrations.length} integrations · {systems.length} systems
+              {integrations.length} {t("arch.integrationsWord")} · {systems.length} {t("arch.systemsWord")}
             </div>
           </div>
         )}
@@ -1278,16 +1284,17 @@ function ArchitectureContent() {
       {viewTab === "map" && (
         <>
           <div className="shrink-0 px-5 py-1.5 border-b border-border flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground bg-muted/20">
-            <span className="font-semibold text-foreground">Edge:</span>
-            {(Object.entries(HEALTH_META) as [string, { color: string; label: string }][]).map(([, v]) => (
-              <span key={v.label} className="flex items-center gap-1"><span className="inline-block w-5 h-0.5 rounded" style={{ background: v.color }} />{v.label}</span>
+            <span className="font-semibold text-foreground">{t("arch.legend.edge")}</span>
+            {(Object.keys(HEALTH_META) as (keyof typeof HEALTH_META)[]).map((hk) => (
+              <span key={hk} className="flex items-center gap-1"><span className="inline-block w-5 h-0.5 rounded" style={{ background: HEALTH_META[hk].color }} />{t(`health.${hk}`)}</span>
             ))}
-            <span className="flex items-center gap-1"><span className="inline-block w-5 border-t-2 border-dashed border-orange-400" /> Non-compliant</span>
-            <span className="flex items-center gap-1"><RefreshCw className="h-2.5 w-2.5 text-indigo-400" /> Realtime</span>
-            <span className="font-semibold text-foreground ml-2">Module icons:</span>
-            {(Object.entries(LIFECYCLE_META) as [string, (typeof LIFECYCLE_META)[keyof typeof LIFECYCLE_META]][]).map(([, lm]) => {
+            <span className="flex items-center gap-1"><span className="inline-block w-5 border-t-2 border-dashed border-orange-400" /> {t("detail.nonCompliant")}</span>
+            <span className="flex items-center gap-1"><RefreshCw className="h-2.5 w-2.5 text-indigo-400" /> {t("method.realtime")}</span>
+            <span className="font-semibold text-foreground ml-2">{t("arch.legend.moduleIcons")}</span>
+            {(Object.keys(LIFECYCLE_META) as (keyof typeof LIFECYCLE_META)[]).map((lk) => {
+              const lm = LIFECYCLE_META[lk];
               const Icon = lm.Icon;
-              return <span key={lm.label} className="flex items-center gap-1" style={{ color: lm.color }}><Icon className="h-2.5 w-2.5" />{lm.label}</span>;
+              return <span key={lk} className="flex items-center gap-1" style={{ color: lm.color }}><Icon className="h-2.5 w-2.5" />{t(`lifecycle.${lk}`)}</span>;
             })}
           </div>
 
@@ -1295,7 +1302,7 @@ function ArchitectureContent() {
             <div className="flex-1 overflow-hidden" style={{ background: "#060d1f" }}>
               {systems.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <div className="text-center space-y-2"><Server className="h-12 w-12 mx-auto opacity-20" /><p className="font-medium">No systems to display</p></div>
+                  <div className="text-center space-y-2"><Server className="h-12 w-12 mx-auto opacity-20" /><p className="font-medium">{t("arch.noSystemsToDisplay")}</p></div>
                 </div>
               ) : (
                 <ReactFlow
@@ -1339,34 +1346,34 @@ function ArchitectureContent() {
           <div className="flex-1 p-4 overflow-hidden flex flex-col gap-3">
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground shrink-0">
-              <span className="font-medium text-foreground">System type:</span>
+              <span className="font-medium text-foreground">{t("arch.flow.systemType")}</span>
               {[
-                { label: "Core", color: "#6366f1" },
-                { label: "Supporting", color: "#22c55e" },
-                { label: "Legacy", color: "#f59e0b" },
-                { label: "Pilot", color: "#3b82f6" },
-              ].map((t) => (
-                <span key={t.label} className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: t.color }} />
-                  {t.label}
+                { key: "core", color: "#6366f1" },
+                { key: "supporting", color: "#22c55e" },
+                { key: "legacy", color: "#f59e0b" },
+                { key: "pilot", color: "#3b82f6" },
+              ].map((st) => (
+                <span key={st.key} className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: st.color }} />
+                  {t(`systemType.${st.key}`)}
                 </span>
               ))}
-              <span className="border-l border-border pl-4">Edge health:</span>
-              {Object.entries(HEALTH_CONFIG).map(([, cfg]) => (
-                <span key={cfg.label} className="flex items-center gap-1">
+              <span className="border-l border-border pl-4">{t("arch.flow.edgeHealth")}</span>
+              {Object.entries(HEALTH_CONFIG).map(([key, cfg]) => (
+                <span key={key} className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full inline-block" style={{ background: cfg.dot }} />
-                  {cfg.label}
+                  {t(`health.${key}`)}
                 </span>
               ))}
-              <span className="border-l border-border pl-4">굵기 = mức độ quan trọng · Mũi tên = hướng luồng</span>
+              <span className="border-l border-border pl-4">{t("arch.flow.legendNote")}</span>
             </div>
 
             {systems.length === 0 ? (
               <div className="flex-1 flex items-center justify-center bg-[#050d1a] rounded-lg border border-border text-muted-foreground">
                 <div className="text-center space-y-2">
                   <GitBranch className="h-10 w-10 mx-auto opacity-30" />
-                  <p className="text-sm font-medium">No systems to display</p>
-                  <p className="text-xs">Add systems in System Inventory first</p>
+                  <p className="text-sm font-medium">{t("arch.noSystemsToDisplay")}</p>
+                  <p className="text-xs">{t("arch.addSystemsFirst")}</p>
                 </div>
               </div>
             ) : (
@@ -1381,7 +1388,7 @@ function ArchitectureContent() {
             )}
 
             <p className="text-xs text-muted-foreground text-center shrink-0">
-              Click a system to highlight connections · Scroll to zoom · Drag to pan
+              {t("arch.flow.hint")}
             </p>
           </div>
 
@@ -1418,18 +1425,18 @@ function ArchitectureContent() {
                     selectedSystem.criticality === "high" ? "bg-red-500/20 text-red-400" :
                     selectedSystem.criticality === "medium" ? "bg-yellow-500/20 text-yellow-400" :
                     "bg-gray-500/20 text-gray-400"
-                  }`}>{selectedSystem.criticality} criticality</span>
+                  }`}>{selectedSystem.criticality} {t("arch.flow.criticalitySuffix")}</span>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                     selectedSystem.riskLevel === "high" ? "bg-red-500/20 text-red-400" :
                     selectedSystem.riskLevel === "medium" ? "bg-yellow-500/20 text-yellow-400" :
                     "bg-gray-500/20 text-gray-400"
-                  }`}>Risk: {selectedSystem.riskLevel}</span>
+                  }`}>{t("arch.flow.riskPrefix")} {selectedSystem.riskLevel}</span>
                 </div>
 
                 <div className="space-y-2">
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Architecture Score</span>
+                      <span className="text-muted-foreground">{t("detail.architectureScore")}</span>
                       <span className="font-mono text-green-400">{selectedSystem.architectureScore}</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -1438,7 +1445,7 @@ function ArchitectureContent() {
                   </div>
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Tech Debt</span>
+                      <span className="text-muted-foreground">{t("detail.technicalDebt")}</span>
                       <span className="font-mono text-red-400">{selectedSystem.technicalDebtScore}</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -1449,11 +1456,11 @@ function ArchitectureContent() {
 
                 <div>
                   <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                    Connections ({connectedIntegrations.length})
+                    {t("arch.flow.connections")} ({connectedIntegrations.length})
                   </h3>
                   <div className="space-y-1.5">
                     {connectedIntegrations.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No integrations</p>
+                      <p className="text-xs text-muted-foreground">{t("arch.flow.noIntegrations")}</p>
                     ) : (
                       connectedIntegrations.map((intg) => {
                         const isSrc = intg.sourceSystemId === selectedId;
@@ -1464,7 +1471,7 @@ function ArchitectureContent() {
                           <div key={intg._id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-xs">
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hcfg?.dot ?? "#6b7280" }} />
                             <span className="text-muted-foreground">{isSrc ? "→" : "←"}</span>
-                            <span className="font-medium truncate flex-1">{otherSys?.name ?? "Unknown"}</span>
+                            <span className="font-medium truncate flex-1">{otherSys?.name ?? t("detail.unknown")}</span>
                             <span className="text-[10px] text-muted-foreground font-mono shrink-0">{intg.protocol}</span>
                           </div>
                         );
@@ -1475,7 +1482,7 @@ function ArchitectureContent() {
 
                 {selectedSystem.description && (
                   <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Description</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">{t("common.description")}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{selectedSystem.description}</p>
                   </div>
                 )}
@@ -1483,12 +1490,12 @@ function ArchitectureContent() {
                 {selectedSystem.technology && (
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Tech</span>
+                      <span className="text-muted-foreground">{t("detail.technology")}</span>
                       <p className="font-medium mt-0.5">{selectedSystem.technology}</p>
                     </div>
                     {selectedSystem.hosting && (
                       <div>
-                        <span className="text-muted-foreground">Hosting</span>
+                        <span className="text-muted-foreground">{t("detail.hosting")}</span>
                         <p className="font-medium mt-0.5">{selectedSystem.hosting}</p>
                       </div>
                     )}
@@ -1505,27 +1512,27 @@ function ArchitectureContent() {
         <div className="flex-1 overflow-auto p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-sm">Roadmap Timeline</h2>
+              <h2 className="font-semibold text-sm">{t("arch.gantt.title")}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {roadmapItems.length} items · Gantt view by scheduled dates
+                {roadmapItems.length} {t("arch.gantt.itemsWord")} · {t("arch.gantt.byDates")}
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-xs">
               {[
-                { label: "Not Started", color: "#334155" },
-                { label: "In Progress", color: "#3b82f6" },
-                { label: "Blocked",     color: "#ef4444" },
-                { label: "Done",        color: "#22c55e" },
-                { label: "Cancelled",   color: "#475569" },
+                { key: "status.notStarted", color: "#334155" },
+                { key: "status.inProgress", color: "#3b82f6" },
+                { key: "status.blocked",     color: "#ef4444" },
+                { key: "status.done",        color: "#22c55e" },
+                { key: "status.cancelled",   color: "#475569" },
               ].map((s) => (
-                <span key={s.label} className="flex items-center gap-1.5 text-muted-foreground">
+                <span key={s.key} className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="w-3 h-3 rounded-sm inline-block" style={{ background: s.color }} />
-                  {s.label}
+                  {t(s.key)}
                 </span>
               ))}
               <span className="flex items-center gap-1 text-yellow-400">
                 <span className="inline-block border-l-2 border-dashed border-yellow-400 h-3" />
-                Today
+                {t("arch.gantt.today")}
               </span>
             </div>
           </div>

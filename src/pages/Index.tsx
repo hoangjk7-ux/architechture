@@ -1,5 +1,6 @@
-import { useQuery, useConvexAuth } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
+import { useCurrentUser } from "@/hooks/use-current-user.ts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,10 +54,10 @@ function StatCard({
 }
 
 export default function Index() {
-  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
+  const { isBusinessOwner } = useCurrentUser();
 
   const systemStats = useQuery(api.software_systems.getStats);
-  const integrationStats = useQuery(api.integrations.getStats);
+  const integrationStats = useQuery(api.integrations.getStats, isBusinessOwner ? "skip" : {});
   const roadmapStats = useQuery(api.roadmap.getStats);
   const vendors = useQuery(api.vendors.list);
 
@@ -116,7 +117,7 @@ export default function Index() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      {!isBusinessOwner && <div className="space-y-4">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Integrations</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard title="Total" value={integrationStats?.total} icon={GitBranch} />
@@ -132,7 +133,7 @@ export default function Index() {
             </span>
           </div>
         )}
-      </div>
+      </div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">

@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 
 const vendorArgs = {
   name: v.string(),
@@ -17,7 +17,7 @@ const vendorArgs = {
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const vendors = await ctx.db.query("vendors").collect();
     const systems = await ctx.db.query("software_systems").collect();
     return vendors.map((vendor) => ({
@@ -30,7 +30,7 @@ export const list = query({
 export const get = query({
   args: { id: v.id("vendors") },
   handler: async (ctx, args) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const vendor = await ctx.db.get(args.id);
     if (!vendor) return null;
     const systems = await ctx.db
@@ -69,7 +69,7 @@ export const remove = mutation({
 export const getExpiringContracts = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const vendors = await ctx.db.query("vendors").collect();
     const now = new Date().toISOString().split("T")[0];
     const ninetyDaysFromNow = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];

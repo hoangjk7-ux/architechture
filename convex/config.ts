@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 
 const CONFIG_TYPES = ["category", "department", "campus"] as const;
 type ConfigType = typeof CONFIG_TYPES[number];
@@ -8,7 +8,7 @@ type ConfigType = typeof CONFIG_TYPES[number];
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const items = await ctx.db.query("config_items").collect();
     const result: Record<ConfigType, typeof items> = { category: [], department: [], campus: [] };
     for (const item of items) {

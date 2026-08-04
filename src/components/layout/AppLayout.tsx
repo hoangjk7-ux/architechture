@@ -1,8 +1,9 @@
 import { Outlet, NavLink } from "react-router-dom";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
+import { routeRoles, type UserRole } from "@/lib/permissions.ts";
 import { cn } from "@/lib/utils.ts";
 import {
   LayoutDashboard,
@@ -17,28 +18,29 @@ import {
   Building2,
   LogOut,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { LanguageToggle } from "@/components/ui/language-toggle.tsx";
 
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/language.tsx";
 import { formatRole } from "@/lib/roles.ts";
 
-const navItems = [
-  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/systems", icon: Server, labelKey: "nav.systems", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/vendors", icon: Building2, labelKey: "nav.vendors", roles: ["cto", "it_manager", "viewer"] },
-  { to: "/architecture", icon: Map, labelKey: "nav.architecture", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/integrations", icon: GitBranch, labelKey: "nav.integrations", roles: ["cto", "it_manager", "viewer"] },
-  { to: "/roadmap", icon: ShieldCheck, labelKey: "nav.roadmap", roles: ["cto", "it_manager", "business_owner", "viewer"] },
-  { to: "/users", icon: Users, labelKey: "nav.users", roles: ["cto"] },
-  { to: "/settings", icon: Settings, labelKey: "nav.settings", roles: ["cto", "it_manager"] },
+const navItems: Array<{ to: string; icon: LucideIcon; labelKey: string; roles: readonly UserRole[] }> = [
+  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", roles: routeRoles.dashboard },
+  { to: "/systems", icon: Server, labelKey: "nav.systems", roles: routeRoles.systems },
+  { to: "/vendors", icon: Building2, labelKey: "nav.vendors", roles: routeRoles.vendors },
+  { to: "/architecture", icon: Map, labelKey: "nav.architecture", roles: routeRoles.architecture },
+  { to: "/integrations", icon: GitBranch, labelKey: "nav.integrations", roles: routeRoles.integrations },
+  { to: "/roadmap", icon: ShieldCheck, labelKey: "nav.roadmap", roles: routeRoles.roadmap },
+  { to: "/users", icon: Users, labelKey: "nav.users", roles: routeRoles.users },
+  { to: "/settings", icon: Settings, labelKey: "nav.settings", roles: routeRoles.settings },
 ];
 
 
 
 function AppLayoutInner() {
   const { user } = useCurrentUser();
-  const { signOut } = useSimpleAuth();
+  const { signOut } = useAuthActions();
   const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -88,7 +90,7 @@ function AppLayoutInner() {
               }
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{t(item.labelKey as any)}</span>}
+              {!collapsed && <span>{t(item.labelKey)}</span>}
             </NavLink>
           ))}
         </nav>
@@ -160,7 +162,7 @@ function AppLayoutInner() {
             }
           >
             <item.icon className="h-5 w-5" />
-            <span className="truncate max-w-[60px] text-center">{t(item.labelKey as any).split(" ")[0]}</span>
+            <span className="truncate max-w-[60px] text-center">{t(item.labelKey).split(" ")[0]}</span>
           </NavLink>
         ))}
       </nav>
@@ -169,7 +171,8 @@ function AppLayoutInner() {
 }
 
 export default function AppLayout() {
-  const { isAuthenticated, isLoading } = useSimpleAuth();
+  const { isAuthenticated, isLoading, user } = useCurrentUser();
+  const { signOut } = useAuthActions();
   const { t } = useLanguage();
 
   if (isLoading) {
@@ -196,6 +199,20 @@ export default function AppLayout() {
             </div>
           </div>
           <SignInButton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-center">
+        <div>
+          <h1 className="text-xl font-semibold">Access is not provisioned</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Contact a CTO to assign your account a role.</p>
+          <button className="mt-4 text-sm text-primary underline" onClick={() => void signOut()}>
+            {t("auth.signOut")}
+          </button>
         </div>
       </div>
     );

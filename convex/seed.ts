@@ -76,29 +76,6 @@ export const seedData = internalMutation({
       notes: "Data warehouse & analytics platform.",
     });
 
-    // Ensure admin user exists
-    const adminEmail = "hoangjk7@gmail.com";
-    const existingAdmin = await ctx.db
-      .query("users")
-      .withIndex("email", (q: any) => q.eq("email", adminEmail))
-      .collect();
-    if (existingAdmin.length === 0) {
-      await ctx.db.insert("users", {
-        email: adminEmail,
-        name: "Hoang",
-        role: "cto",
-        isManuallyAdded: true,
-        emailVerificationTime: Date.now(),
-      });
-    } else {
-      await ctx.db.patch(existingAdmin[0]._id, {
-        name: "Hoang",
-        role: "cto",
-        isManuallyAdded: true,
-        emailVerificationTime: Date.now(),
-      });
-    }
-
     // ── 2. Software Systems ──────────────────────────────────────────────────
     const erpId = await ctx.db.insert("software_systems", {
       name: "SAP S/4HANA",

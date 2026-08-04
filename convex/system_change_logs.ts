@@ -2,7 +2,7 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel.d.ts";
-import { getCurrentUser } from "./helpers.ts";
+import { requireAuthenticated, requireRole } from "./helpers.ts";
 
 export type FieldChange = { field: string; from?: string; to?: string };
 
@@ -38,7 +38,7 @@ export async function recordSystemChange(
     changes?: FieldChange[];
   }
 ) {
-  const user = await getCurrentUser(ctx);
+  const user = await requireAuthenticated(ctx);
   await ctx.db.insert("system_change_logs", {
     systemId: args.systemId,
     systemName: args.systemName,
@@ -52,7 +52,7 @@ export async function recordSystemChange(
 export const list = query({
   args: { systemId: v.optional(v.id("software_systems")), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    await getCurrentUser(ctx);
+    await requireRole(ctx, ["cto", "it_manager"]);
     const logs = args.systemId
       ? await ctx.db
           .query("system_change_logs")

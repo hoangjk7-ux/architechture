@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { requireRole, requireWriteAccess } from "./helpers.ts";
 
 const integrationArgs = {
   name: v.string(),
@@ -24,7 +24,7 @@ const integrationArgs = {
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireRole(ctx, ["cto", "it_manager", "viewer"]);
     const integrations = await ctx.db.query("integrations").collect();
     const systems = await ctx.db.query("software_systems").collect();
     const systemMap = new Map(systems.map((s) => [s._id, s]));
@@ -68,7 +68,7 @@ export const remove = mutation({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireRole(ctx, ["cto", "it_manager", "viewer"]);
     const [allIntegrations, systems] = await Promise.all([
       ctx.db.query("integrations").collect(),
       ctx.db.query("software_systems").collect(),

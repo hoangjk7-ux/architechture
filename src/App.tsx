@@ -1,36 +1,46 @@
+import { lazy } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import AppLayout from "./components/layout/AppLayout.tsx";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import SystemsPage from "./pages/systems/page.tsx";
-import VendorsPage from "./pages/vendors/page.tsx";
-import ArchitecturePage from "./pages/architecture/page.tsx";
-import IntegrationsPage from "./pages/integrations/page.tsx";
-import RoadmapPage from "./pages/roadmap/page.tsx";
-import UsersPage from "./pages/users/page.tsx";
-import SettingsPage from "./pages/settings/page.tsx";
+import { RouteBoundary } from "./shared/routing/RouteBoundary.tsx";
+import { RequireRole } from "./components/auth/RequireRole.tsx";
+import { routeRoles } from "./lib/permissions.ts";
+
+const Index = lazy(() => import("./pages/Index.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const SystemsPage = lazy(() => import("./pages/systems/page.tsx"));
+const VendorsPage = lazy(() => import("./pages/vendors/page.tsx"));
+const ArchitecturePage = lazy(() => import("./pages/architecture/page.tsx"));
+const IntegrationsPage = lazy(() => import("./pages/integrations/page.tsx"));
+const RoadmapPage = lazy(() => import("./pages/roadmap/page.tsx"));
+const UsersPage = lazy(() => import("./pages/users/page.tsx"));
+const SettingsPage = lazy(() => import("./pages/settings/page.tsx"));
 
 export default function App() {
   return (
     <DefaultProviders>
       <BrowserRouter>
-        <Routes>
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/systems" element={<SystemsPage />} />
-            <Route path="/vendors" element={<VendorsPage />} />
-            <Route path="/architecture" element={<ArchitecturePage />} />
-            <Route path="/integrations" element={<IntegrationsPage />} />
-            <Route path="/roadmap" element={<RoadmapPage />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/flow-diagram" element={<Navigate to="/architecture" replace />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <RouteBoundary>
+          <Routes>
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<RequireRole roles={routeRoles.dashboard}><Index /></RequireRole>} />
+              <Route path="/systems" element={<RequireRole roles={routeRoles.systems}><SystemsPage /></RequireRole>} />
+              <Route path="/vendors" element={<RequireRole roles={routeRoles.vendors}><VendorsPage /></RequireRole>} />
+              <Route path="/architecture" element={<RequireRole roles={routeRoles.architecture}><ArchitecturePage /></RequireRole>} />
+              <Route path="/integrations" element={<RequireRole roles={routeRoles.integrations}><IntegrationsPage /></RequireRole>} />
+              <Route path="/roadmap" element={<RequireRole roles={routeRoles.roadmap}><RoadmapPage /></RequireRole>} />
+              <Route path="/users" element={<RequireRole roles={routeRoles.users}><UsersPage /></RequireRole>} />
+              <Route path="/settings" element={<RequireRole roles={routeRoles.settings}><SettingsPage /></RequireRole>} />
+              <Route
+                path="/flow-diagram"
+                element={<Navigate to="/architecture" replace />}
+              />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </RouteBoundary>
       </BrowserRouter>
     </DefaultProviders>
   );

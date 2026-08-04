@@ -29,25 +29,28 @@ type SoftwareSystem = Doc<"software_systems">;
 
 // ─── Badge helpers ─────────────────────────────────────────────────────────────
 function RiskBadge({ level }: { level: string }) {
-  if (level === "high") return <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px] font-semibold">High Risk</Badge>;
-  if (level === "medium") return <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 text-[10px]">Medium</Badge>;
-  return <Badge className="bg-green-500/15 text-green-400 border-green-500/30 text-[10px]">Low</Badge>;
+  const { t } = useLanguage();
+  if (level === "high") return <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px] font-semibold">{t("systems.badge.highRisk")}</Badge>;
+  if (level === "medium") return <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 text-[10px]">{t("level.medium")}</Badge>;
+  return <Badge className="bg-green-500/15 text-green-400 border-green-500/30 text-[10px]">{t("level.low")}</Badge>;
 }
 
 function CriticalityBadge({ level }: { level: string }) {
-  if (level === "high") return <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">Critical</Badge>;
-  if (level === "medium") return <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30 text-[10px]">Medium</Badge>;
-  return <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px]">Low</Badge>;
+  const { t } = useLanguage();
+  if (level === "high") return <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">{t("systems.badge.critical")}</Badge>;
+  if (level === "medium") return <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30 text-[10px]">{t("level.medium")}</Badge>;
+  return <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/30 text-[10px]">{t("level.low")}</Badge>;
 }
 
 function TypeBadge({ type }: { type: string }) {
+  const { t } = useLanguage();
   const map: Record<string, string> = {
     core:       "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
     supporting: "bg-green-500/15 text-green-400 border-green-500/30",
     legacy:     "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
     pilot:      "bg-blue-500/15 text-blue-400 border-blue-500/30",
   };
-  return <Badge className={cn("text-[10px] capitalize", map[type] ?? "bg-muted text-muted-foreground")}>{type}</Badge>;
+  return <Badge className={cn("text-[10px]", map[type] ?? "bg-muted text-muted-foreground")}>{t(`systemType.${type}`)}</Badge>;
 }
 
 function StatusDot({ status }: { status: string }) {
@@ -128,7 +131,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
             <StatusDot status={system.status} />
             <span className="font-bold text-sm truncate" style={{ color: tc.text }}>{system.name}</span>
           </div>
-          <div className="text-[10px] opacity-60 mt-0.5" style={{ color: tc.text }}>{system.category} · {system.type}</div>
+          <div className="text-[10px] opacity-60 mt-0.5" style={{ color: tc.text }}>{system.category} · {t(`systemType.${system.type}`)}</div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {canWrite && (
@@ -146,14 +149,14 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
         {/* Key metrics */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { label: t("detail.status"),      value: system.status,      color: { active: "#22c55e", sunset: "#f59e0b", pilot: "#3b82f6", inactive: "#6b7280" }[system.status] ?? "#6b7280" },
-            { label: t("detail.criticality"), value: system.criticality, color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
-            { label: t("detail.riskLevel"),   value: system.riskLevel,   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
+            { label: t("detail.status"),      value: t(`status.${system.status}`),      color: { active: "#22c55e", sunset: "#f59e0b", pilot: "#3b82f6", inactive: "#6b7280" }[system.status] ?? "#6b7280" },
+            { label: t("detail.criticality"), value: t(`level.${system.criticality}`), color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
+            { label: t("detail.riskLevel"),   value: t(`level.${system.riskLevel}`),   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
             { label: t("detail.hosting"),     value: system.hosting ?? "—", color: "#94a3b8" },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-muted/30 rounded-lg p-2.5">
               <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{label}</div>
-              <div className="text-xs font-semibold capitalize" style={{ color }}>{value}</div>
+              <div className="text-xs font-semibold" style={{ color }}>{value}</div>
             </div>
           ))}
         </div>
@@ -242,23 +245,24 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
 }
 
 // ─── Activity log ────────────────────────────────────────────────────────────────
-const actionConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  created: { label: "Created", color: "#22c55e", icon: PlusCircle },
-  updated: { label: "Updated", color: "#3b82f6", icon: Pencil },
-  deleted: { label: "Deleted", color: "#ef4444", icon: Trash2 },
+const actionConfig: Record<string, { key: string; color: string; icon: React.ElementType }> = {
+  created: { key: "action.created", color: "#22c55e", icon: PlusCircle },
+  updated: { key: "action.updated", color: "#3b82f6", icon: Pencil },
+  deleted: { key: "action.deleted", color: "#ef4444", icon: Trash2 },
 };
 
 function ActivityLogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLanguage();
   const logs = useQuery(api.system_change_logs.list, open ? { limit: 200 } : "skip") ?? [];
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><History className="h-4 w-4" />System Activity Log</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><History className="h-4 w-4" />{t("systems.activityLogTitle")}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[65vh] overflow-y-auto space-y-2 pr-1">
           {logs.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">No changes recorded yet</div>
+            <div className="text-center py-10 text-muted-foreground text-sm">{t("systems.noLogs")}</div>
           ) : (
             logs.map((log) => {
               const cfg = actionConfig[log.action];
@@ -269,11 +273,11 @@ function ActivityLogDialog({ open, onClose }: { open: boolean; onClose: () => vo
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: cfg.color }} />
                       <span className="font-semibold truncate">{log.systemName}</span>
-                      <Badge className="text-[9px]" style={{ background: `${cfg.color}22`, color: cfg.color, borderColor: `${cfg.color}55` }}>{cfg.label}</Badge>
+                      <Badge className="text-[9px]" style={{ background: `${cfg.color}22`, color: cfg.color, borderColor: `${cfg.color}55` }}>{t(cfg.key)}</Badge>
                     </div>
                     <span className="text-muted-foreground shrink-0">{new Date(log._creationTime).toLocaleString()}</span>
                   </div>
-                  <div className="text-muted-foreground">by {log.actorName ?? log.actorEmail ?? "Unknown"}</div>
+                  <div className="text-muted-foreground">{t("systems.by")} {log.actorName ?? log.actorEmail ?? t("detail.unknown")}</div>
                   {log.changes && log.changes.length > 0 && (
                     <div className="space-y-0.5 pt-1 border-t border-border/50">
                       {log.changes.map((c, idx) => (
@@ -322,6 +326,7 @@ function SystemForm({ initial, onSave, onClose }: {
   initial?: Partial<SystemFormData> & { _id?: Id<"software_systems"> };
   onSave: (data: SystemFormData) => Promise<void>; onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const config = useQuery(api.config.listAll);
   const categories = config?.category.map((c) => c.name) ?? [];
   const departments = config?.department.map((d) => d.name) ?? [];
@@ -344,10 +349,10 @@ function SystemForm({ initial, onSave, onClose }: {
     setForm((f) => ({ ...f, [key]: f[key].includes(val) ? f[key].filter((x) => x !== val) : [...f[key], val] }));
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error("Name is required"); return; }
+    if (!form.name.trim()) { toast.error(t("common.nameRequired")); return; }
     setSaving(true);
     try { await onSave(form); onClose(); }
-    catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : "Failed to save")); }
+    catch (err: unknown) { toast.error((err as { data?: { message?: string } })?.data?.message ?? (err instanceof Error ? err.message : t("common.saveFailed"))); }
     finally { setSaving(false); }
   };
 
@@ -355,13 +360,13 @@ function SystemForm({ initial, onSave, onClose }: {
     <div className="space-y-4 max-h-[72vh] overflow-y-auto pr-1">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2 space-y-1">
-          <Label>System Name *</Label>
-          <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Student CRM" className="bg-input" />
+          <Label>{t("systems.form.name")}</Label>
+          <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("systems.form.namePlaceholder")} className="bg-input" />
         </div>
-        {([ ["Type", "type", [["core","Core"],["supporting","Supporting"],["legacy","Legacy"],["pilot","Pilot"]]],
-            ["Category", "category", categories.map((c) => [c, c])],
-            ["Status", "status", [["active","Active"],["pilot","Pilot"],["sunset","Sunset"],["inactive","Inactive"]]],
-            ["Criticality", "criticality", [["high","High"],["medium","Medium"],["low","Low"]]],
+        {([ [t("systems.form.type"), "type", [["core",t("systemType.core")],["supporting",t("systemType.supporting")],["legacy",t("systemType.legacy")],["pilot",t("systemType.pilot")]]],
+            [t("systems.form.category"), "category", categories.map((c) => [c, c])],
+            [t("systems.form.status"), "status", [["active",t("status.active")],["pilot",t("status.pilot")],["sunset",t("status.sunset")],["inactive",t("status.inactive")]]],
+            [t("systems.form.criticality"), "criticality", [["high",t("level.high")],["medium",t("level.medium")],["low",t("level.low")]]],
         ] as [string, keyof SystemFormData, [string,string][]][]).map(([label, key, opts]) => (
           <div key={label} className="space-y-1">
             <Label>{label}</Label>
@@ -372,24 +377,24 @@ function SystemForm({ initial, onSave, onClose }: {
           </div>
         ))}
         <div className="space-y-1">
-          <Label>Owner</Label>
-          <Input value={form.owner} onChange={(e) => set("owner", e.target.value)} placeholder="e.g. IT Team" className="bg-input" />
+          <Label>{t("systems.form.owner")}</Label>
+          <Input value={form.owner} onChange={(e) => set("owner", e.target.value)} placeholder={t("systems.form.ownerPlaceholder")} className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Vendor</Label>
+          <Label>{t("systems.form.vendor")}</Label>
           <Select value={form.vendorId ?? "none"} onValueChange={(v) => set("vendorId", v === "none" ? undefined : v as Id<"vendors">)}>
-            <SelectTrigger className="bg-input"><SelectValue placeholder="None" /></SelectTrigger>
+            <SelectTrigger className="bg-input"><SelectValue placeholder={t("common.noneInternal")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None (Internal)</SelectItem>
+              <SelectItem value="none">{t("common.noneInternal")}</SelectItem>
               {vendors.map((v) => <SelectItem key={v._id} value={v._id}>{v.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        {([ ["Technology", "technology", "e.g. Laravel, NodeJS"],
-            ["Database",   "database",   "e.g. MySQL, PostgreSQL"],
-            ["Hosting",    "hosting",    "e.g. AWS, On-premise"],
-            ["SLA",        "sla",        "e.g. 99.9%"],
-            ["License Type", "licenseType", "e.g. Subscription"],
+        {([ [t("systems.form.technology"), "technology", t("systems.form.technologyPlaceholder")],
+            [t("systems.form.database"),   "database",   t("systems.form.databasePlaceholder")],
+            [t("systems.form.hosting"),    "hosting",    t("systems.form.hostingPlaceholder")],
+            [t("systems.form.sla"),        "sla",        t("systems.form.slaPlaceholder")],
+            [t("systems.form.licenseType"), "licenseType", t("systems.form.licenseTypePlaceholder")],
         ] as [string, keyof SystemFormData, string][]).map(([label, key, ph]) => (
           <div key={label} className="space-y-1">
             <Label>{label}</Label>
@@ -397,32 +402,32 @@ function SystemForm({ initial, onSave, onClose }: {
           </div>
         ))}
         <div className="space-y-1">
-          <Label>Chi phí / Năm (VNĐ)</Label>
+          <Label>{t("systems.form.costPerYear")}</Label>
           <Input type="number" value={form.costPerYear ?? ""} onChange={(e) => set("costPerYear", e.target.value ? Number(e.target.value) : undefined)} placeholder="0" className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Contract End Date</Label>
+          <Label>{t("systems.form.contractEndDate")}</Label>
           <Input type="date" value={form.contractEndDate} onChange={(e) => set("contractEndDate", e.target.value)} className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Risk Level</Label>
+          <Label>{t("systems.form.riskLevel")}</Label>
           <Select value={form.riskLevel} onValueChange={(v) => set("riskLevel", v as CriticalityLevel)}>
             <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="high">High</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="low">Low</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="high">{t("level.high")}</SelectItem><SelectItem value="medium">{t("level.medium")}</SelectItem><SelectItem value="low">{t("level.low")}</SelectItem></SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>Technical Debt (0–100)</Label>
+          <Label>{t("systems.form.technicalDebt")}</Label>
           <Input type="number" min={0} max={100} value={form.technicalDebtScore} onChange={(e) => set("technicalDebtScore", Number(e.target.value))} className="bg-input" />
         </div>
         <div className="space-y-1">
-          <Label>Architecture Score (0–100)</Label>
+          <Label>{t("systems.form.architectureScore")}</Label>
           <Input type="number" min={0} max={100} value={form.architectureScore} onChange={(e) => set("architectureScore", Number(e.target.value))} className="bg-input" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Departments</Label>
+        <Label>{t("systems.form.departments")}</Label>
         <div className="flex flex-wrap gap-2">
           {departments.map((d) => (
             <button key={d} type="button" onClick={() => toggleArray("departments", d)}
@@ -434,7 +439,7 @@ function SystemForm({ initial, onSave, onClose }: {
       </div>
 
       <div className="space-y-2">
-        <Label>Campuses</Label>
+        <Label>{t("systems.form.campuses")}</Label>
         <div className="flex flex-wrap gap-2">
           {campuses.map((c) => (
             <button key={c} type="button" onClick={() => toggleArray("campuses", c)}
@@ -446,13 +451,13 @@ function SystemForm({ initial, onSave, onClose }: {
       </div>
 
       <div className="space-y-1">
-        <Label>Description</Label>
-        <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Brief description..." className="bg-input" rows={2} />
+        <Label>{t("systems.form.description")}</Label>
+        <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} placeholder={t("systems.form.descriptionPlaceholder")} className="bg-input" rows={2} />
       </div>
 
       <div className="flex justify-end gap-2 pt-2 sticky bottom-0 bg-card pb-1">
-        <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save System"}</Button>
+        <Button variant="ghost" onClick={onClose} disabled={saving}>{t("common.cancel")}</Button>
+        <Button onClick={handleSave} disabled={saving}>{saving ? t("common.saving") : t("systems.form.saveSystem")}</Button>
       </div>
     </div>
   );
@@ -460,6 +465,7 @@ function SystemForm({ initial, onSave, onClose }: {
 
 // ─── Main content ──────────────────────────────────────────────────────────────
 function SystemsContent() {
+  const { t } = useLanguage();
   const { canWrite } = useCurrentUser();
   const systems = useQuery(api.software_systems.list) ?? [];
   const vendors = useQuery(api.vendors.list) ?? [];
@@ -515,20 +521,20 @@ function SystemsContent() {
 
   const handleCreate = async (data: SystemFormData) => {
     await createSystem(data);
-    toast.success("System added");
+    toast.success(t("systems.toast.added"));
   };
 
   const handleUpdate = async (data: SystemFormData) => {
     if (!editing) return;
     await updateSystem({ id: editing._id, ...data });
-    toast.success("System updated");
+    toast.success(t("systems.toast.updated"));
     setEditing(null);
   };
 
   const handleDelete = async (id: Id<"software_systems">) => {
     if (selectedId === id) setSelectedId(null);
     await removeSystem({ id });
-    toast.success("System removed");
+    toast.success(t("systems.toast.removed"));
   };
 
   const toggleStat = (key: string) => setStatFilter((prev) => prev === key ? null : key);
@@ -544,16 +550,16 @@ function SystemsContent() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2"><Server className="h-6 w-6 text-primary" />System Inventory</h1>
-                <p className="text-muted-foreground text-sm mt-0.5">{systems.length} systems tracked across all campuses</p>
+                <h1 className="text-2xl font-bold flex items-center gap-2"><Server className="h-6 w-6 text-primary" />{t("systems.title")}</h1>
+                <p className="text-muted-foreground text-sm mt-0.5">{systems.length} {t("systems.subtitleSuffix")}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowLog(true)}>
-                  <History className="h-4 w-4" />Activity Log
+                  <History className="h-4 w-4" />{t("systems.activityLog")}
                 </Button>
                 {canWrite && (
                   <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />Add System
+                    <Plus className="h-4 w-4" />{t("systems.addSystem")}
                   </Button>
                 )}
               </div>
@@ -561,25 +567,25 @@ function SystemsContent() {
 
             {/* Stat cards */}
             <div className="flex flex-wrap gap-3">
-              <StatCard icon={Server}       label="Total Systems"     value={stats.total}    sub="across all campuses"    color="#6366f1" onClick={() => toggleStat("all")}      active={statFilter === null} />
-              <StatCard icon={AlertTriangle} label="Critical Systems"  value={stats.critical} sub="high criticality"       color="#ef4444" onClick={() => toggleStat("critical")}  active={statFilter === "critical"} />
-              <StatCard icon={Archive}       label="Legacy Systems"    value={stats.legacy}   sub="require migration plan" color="#f59e0b" onClick={() => toggleStat("legacy")}    active={statFilter === "legacy"} />
-              <StatCard icon={UserX}         label="No Owner"          value={stats.noOwner}  sub="unassigned systems"     color="#f97316" onClick={() => toggleStat("noOwner")}   active={statFilter === "noOwner"} />
-              <StatCard icon={CalendarClock} label="Expiring 90d"      value={stats.expiring} sub="contracts ending soon"  color="#e879f9" onClick={() => toggleStat("expiring")}  active={statFilter === "expiring"} />
-              <StatCard icon={TrendingDown}  label="High Tech Debt"    value={stats.highDebt} sub="debt score &gt; 60"     color="#94a3b8" onClick={() => toggleStat("highDebt")}  active={statFilter === "highDebt"} />
+              <StatCard icon={Server}       label={t("systems.stat.total")}     value={stats.total}    sub={t("systems.stat.totalSub")}    color="#6366f1" onClick={() => toggleStat("all")}      active={statFilter === null} />
+              <StatCard icon={AlertTriangle} label={t("systems.stat.critical")}  value={stats.critical} sub={t("systems.stat.criticalSub")}       color="#ef4444" onClick={() => toggleStat("critical")}  active={statFilter === "critical"} />
+              <StatCard icon={Archive}       label={t("systems.stat.legacy")}    value={stats.legacy}   sub={t("systems.stat.legacySub")} color="#f59e0b" onClick={() => toggleStat("legacy")}    active={statFilter === "legacy"} />
+              <StatCard icon={UserX}         label={t("systems.stat.noOwner")}          value={stats.noOwner}  sub={t("systems.stat.noOwnerSub")}     color="#f97316" onClick={() => toggleStat("noOwner")}   active={statFilter === "noOwner"} />
+              <StatCard icon={CalendarClock} label={t("systems.stat.expiring")}      value={stats.expiring} sub={t("systems.stat.expiringSub")}  color="#e879f9" onClick={() => toggleStat("expiring")}  active={statFilter === "expiring"} />
+              <StatCard icon={TrendingDown}  label={t("systems.stat.highDebt")}    value={stats.highDebt} sub={t("systems.stat.highDebtSub")}     color="#94a3b8" onClick={() => toggleStat("highDebt")}  active={statFilter === "highDebt"} />
             </div>
 
             {/* Filters */}
             <div className="flex flex-wrap gap-2 items-center">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name or category…" className="pl-9 bg-input h-9" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("systems.searchPlaceholder")} className="pl-9 bg-input h-9" />
               </div>
               {([
-                ["filterStatus",   filterStatus,   setFilterStatus,   "All Status",       [["all","All Status"],["active","Active"],["pilot","Pilot"],["sunset","Sunset"],["inactive","Inactive"]]],
-                ["filterType",     filterType,     setFilterType,     "All Types",        [["all","All Types"],["core","Core"],["supporting","Supporting"],["legacy","Legacy"],["pilot","Pilot"]]],
-                ["filterRisk",     filterRisk,     setFilterRisk,     "All Risk",         [["all","All Risk"],["high","High Risk"],["medium","Medium"],["low","Low"]]],
-                ["filterCritical", filterCritical, setFilterCritical, "All Criticality",  [["all","All Criticality"],["high","Critical"],["medium","Medium"],["low","Low"]]],
+                ["filterStatus",   filterStatus,   setFilterStatus,   t("status.allStatus"),       [["all",t("status.allStatus")],["active",t("status.active")],["pilot",t("status.pilot")],["sunset",t("status.sunset")],["inactive",t("status.inactive")]]],
+                ["filterType",     filterType,     setFilterType,     t("systemType.allTypes"),        [["all",t("systemType.allTypes")],["core",t("systemType.core")],["supporting",t("systemType.supporting")],["legacy",t("systemType.legacy")],["pilot",t("systemType.pilot")]]],
+                ["filterRisk",     filterRisk,     setFilterRisk,     t("level.allRisk"),         [["all",t("level.allRisk")],["high",t("systems.badge.highRisk")],["medium",t("level.medium")],["low",t("level.low")]]],
+                ["filterCritical", filterCritical, setFilterCritical, t("level.allCriticality"),  [["all",t("level.allCriticality")],["high",t("systems.badge.critical")],["medium",t("level.medium")],["low",t("level.low")]]],
               ] as [string, string, (v: string) => void, string, [string,string][]][]).map(([id, val, setVal, placeholder, opts]) => (
                 <Select key={id} value={val} onValueChange={setVal}>
                   <SelectTrigger className="w-36 bg-input h-9 text-xs">
@@ -590,10 +596,10 @@ function SystemsContent() {
               ))}
               {hasFilters && (
                 <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground gap-1 cursor-pointer" onClick={() => { setSearch(""); setFilterStatus("all"); setFilterType("all"); setFilterRisk("all"); setFilterCritical("all"); setStatFilter(null); }}>
-                  <X className="h-3 w-3" />Clear
+                  <X className="h-3 w-3" />{t("common.clear")}
                 </Button>
               )}
-              <span className="text-xs text-muted-foreground ml-auto">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
+              <span className="text-xs text-muted-foreground ml-auto">{filtered.length} {t("common.results")}</span>
             </div>
 
             {/* Table */}
@@ -602,15 +608,15 @@ function SystemsContent() {
             ) : filtered.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
                 <Server className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                <p className="font-medium">No systems found</p>
-                {canWrite && <Button variant="ghost" size="sm" onClick={() => setShowForm(true)} className="mt-2 cursor-pointer">Add your first system</Button>}
+                <p className="font-medium">{t("systems.noSystemsFound")}</p>
+                {canWrite && <Button variant="ghost" size="sm" onClick={() => setShowForm(true)} className="mt-2 cursor-pointer">{t("systems.addFirstSystem")}</Button>}
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/20">
-                      {["System", "Type / Category", "Owner", "Vendor", "Risk", "Scores", "Contract", "Actions"].map((h, i) => (
+                      {[t("systems.col.system"), t("systems.col.typeCategory"), t("systems.col.owner"), t("systems.col.vendor"), t("systems.col.risk"), t("systems.col.scores"), t("systems.col.contract"), t("systems.col.actions")].map((h, i) => (
                         <th key={h} className={cn("text-left p-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground", i >= 2 && i <= 3 ? "hidden md:table-cell" : i === 6 ? "hidden lg:table-cell" : i === 5 ? "hidden sm:table-cell" : "")}>{h}</th>
                       ))}
                     </tr>
@@ -643,11 +649,11 @@ function SystemsContent() {
                           <td className="p-3 hidden md:table-cell">
                             {s.owner
                               ? <span className="text-xs">{s.owner}</span>
-                              : <span className="text-xs text-yellow-400 flex items-center gap-1"><UserX className="h-3 w-3" />Unassigned</span>
+                              : <span className="text-xs text-yellow-400 flex items-center gap-1"><UserX className="h-3 w-3" />{t("common.unassigned")}</span>
                             }
                           </td>
                           <td className="p-3 hidden md:table-cell text-xs text-muted-foreground">
-                            {s.vendorId ? (vendorMap[s.vendorId] ?? "—") : <span className="text-blue-400">Internal</span>}
+                            {s.vendorId ? (vendorMap[s.vendorId] ?? "—") : <span className="text-blue-400">{t("common.internal")}</span>}
                           </td>
                           <td className="p-3"><RiskBadge level={s.riskLevel} /></td>
                           <td className="p-3 hidden sm:table-cell space-y-1">
@@ -700,7 +706,7 @@ function SystemsContent() {
       {/* Create Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl bg-card border-border">
-          <DialogHeader><DialogTitle>Add New System</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("systems.addNewSystem")}</DialogTitle></DialogHeader>
           <SystemForm onSave={handleCreate} onClose={() => setShowForm(false)} />
         </DialogContent>
       </Dialog>
@@ -708,7 +714,7 @@ function SystemsContent() {
       {/* Edit Dialog */}
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="max-w-2xl bg-card border-border">
-          <DialogHeader><DialogTitle>Edit System</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("systems.editSystem")}</DialogTitle></DialogHeader>
           {editing && <SystemForm initial={editing} onSave={handleUpdate} onClose={() => setEditing(null)} />}
         </DialogContent>
       </Dialog>

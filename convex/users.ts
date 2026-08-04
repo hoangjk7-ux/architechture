@@ -1,11 +1,11 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { getCurrentUser as getCurrentUserRecord } from "./helpers";
+import { requireAuthenticated, requireCTO } from "./helpers";
 
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    return await getCurrentUserRecord(ctx);
+    return await requireAuthenticated(ctx);
   },
 });
 
@@ -13,8 +13,7 @@ export const getCurrentUser = query({
 export const updateCurrentUser = mutation({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUserRecord(ctx);
-    if (!user) return null;
+    const user = await requireAuthenticated(ctx);
 
     const userId = user._id;
 
@@ -35,25 +34,10 @@ export const updateCurrentUser = mutation({
         return userId;
       }
 
-      // Multi-provider: transfer role from another authenticated account with same email
-      const existingWithRole = sameEmail.find(
-        (u) => u._id !== userId && !u.isManuallyAdded && u.role && u.role !== "viewer"
-      );
-      if (existingWithRole) {
-        await ctx.db.patch(userId, { role: existingWithRole.role });
-        return userId;
-      }
     }
 
-    // Assign cto if no other authenticated write-capable user exists, otherwise viewer
-    const allUsers = await ctx.db.query("users").collect();
-    const hasOtherWriteRole = allUsers.some(
-      (u) => u._id !== userId && !u.isManuallyAdded && (u.role === "cto" || u.role === "it_manager")
-    );
-    const role = !hasOtherWriteRole ? "cto" : "viewer";
-
-    if (role !== user.role) {
-      await ctx.db.patch(userId, { role });
+    if (user.role !== "viewer") {
+      await ctx.db.patch(userId, { role: "viewer" });
     }
     return userId;
   },
@@ -62,10 +46,7 @@ export const updateCurrentUser = mutation({
 export const listUsers = query({
   args: {},
   handler: async (ctx) => {
-    const me = await getCurrentUserRecord(ctx);
-    if (!me || (me.role !== "cto" && me.role !== "it_manager")) {
-      throw new ConvexError({ message: "Insufficient permissions", code: "FORBIDDEN" });
-    }
+    await requireCTO(ctx);
     return await ctx.db.query("users").collect();
   },
 });
@@ -82,10 +63,7 @@ export const inviteUser = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const me = await getCurrentUserRecord(ctx);
-    if (!me || me.role !== "cto") {
-      throw new ConvexError({ message: "Only CTO can invite users", code: "FORBIDDEN" });
-    }
+    await requireCTO(ctx);
     // Check if user with this email already exists
     const existing = await ctx.db
       .query("users")
@@ -108,45 +86,11 @@ export const inviteUser = mutation({
 export const removeUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const me = await getCurrentUserRecord(ctx);
-    if (!me || me.role !== "cto") {
-      throw new ConvexError({ message: "Only CTO can remove users", code: "FORBIDDEN" });
-    }
+    const me = await requireCTO(ctx);
     if (args.userId === me._id) {
       throw new ConvexError({ message: "Cannot remove yourself", code: "FORBIDDEN" });
     }
     await ctx.db.delete(args.userId);
-  },
-});
-
-// Called from the googleAuth httpAction (convex/http_actions/google.ts), which
-// runs outside a transaction and has no ctx.db — it must go through runMutation.
-export const upsertGoogleUser = internalMutation({
-  args: {
-    email: v.string(),
-    name: v.optional(v.string()),
-    image: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { name: args.name, image: args.image });
-      return { _id: existing._id, email: args.email, role: existing.role, name: args.name, image: args.image };
-    }
-
-    const role = args.email === "hoangjk7@gmail.com" ? "cto" : "viewer";
-    const id = await ctx.db.insert("users", {
-      email: args.email,
-      name: args.name,
-      image: args.image,
-      role,
-      isManuallyAdded: false,
-    });
-    return { _id: id, email: args.email, role, name: args.name, image: args.image };
   },
 });
 
@@ -161,10 +105,7 @@ export const updateUserRole = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const me = await getCurrentUserRecord(ctx);
-    if (!me || me.role !== "cto") {
-      throw new ConvexError({ message: "Only CTO can update roles", code: "FORBIDDEN" });
-    }
+    await requireCTO(ctx);
     await ctx.db.patch(args.userId, { role: args.role });
   },
 });

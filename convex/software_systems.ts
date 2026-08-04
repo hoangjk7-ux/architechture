@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 import { diffFields, recordSystemChange } from "./system_change_logs.ts";
 
 const systemArgs = {
@@ -29,7 +29,7 @@ const systemArgs = {
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const systems = await ctx.db.query("software_systems").collect();
     const vendors = await ctx.db.query("vendors").collect();
     const vendorMap = new Map(vendors.map((v) => [v._id, v]));
@@ -43,7 +43,7 @@ export const list = query({
 export const get = query({
   args: { id: v.id("software_systems") },
   handler: async (ctx, args) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const system = await ctx.db.get(args.id);
     if (!system) return null;
     const vendor = system.vendorId ? await ctx.db.get(system.vendorId) : undefined;
@@ -110,7 +110,7 @@ export const remove = mutation({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    await getCurrentUser(ctx);
+    await requireReadAccess(ctx);
     const systems = await ctx.db.query("software_systems").collect();
     const now = new Date().toISOString().split("T")[0];
     const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];

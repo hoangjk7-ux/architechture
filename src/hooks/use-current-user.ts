@@ -1,24 +1,19 @@
-import type { Id } from "@/convex/_generated/dataModel.d.ts";
-import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api.js";
 
 export function useCurrentUser() {
-  const { user, isAuthenticated } = useSimpleAuth();
-
-  const currentUser = isAuthenticated && user
-    ? {
-        _id: "local-admin" as Id<"users">,
-        name: user.name ?? user.username,
-        email: user.email ?? `${user.username}@local`,
-        role: user.role === "admin" ? "cto" : user.role,
-      }
-    : null;
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const currentUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
+  const user = currentUser ?? null;
 
   return {
-    user: currentUser,
-    isCTO: currentUser?.role === "cto",
-    isITManager: currentUser?.role === "it_manager",
-    isBusinessOwner: currentUser?.role === "business_owner",
-    isViewer: currentUser?.role === "viewer",
-    canWrite: currentUser?.role === "cto" || currentUser?.role === "it_manager",
+    user,
+    isAuthenticated,
+    isLoading: isAuthLoading || (isAuthenticated && currentUser === undefined),
+    isCTO: user?.role === "cto",
+    isITManager: user?.role === "it_manager",
+    isBusinessOwner: user?.role === "business_owner",
+    isViewer: user?.role === "viewer",
+    canWrite: user?.role === "cto" || user?.role === "it_manager",
   };
 }

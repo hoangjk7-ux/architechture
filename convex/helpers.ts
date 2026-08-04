@@ -14,27 +14,8 @@ type CurrentUser = {
 };
 
 export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<CurrentUser | null> {
-  let userId: string | null = null;
-  try {
-    userId = await getAuthUserId(ctx);
-  } catch (error: unknown) {
-    const maybeAuthError = error as { data?: { code?: string } };
-    if (maybeAuthError?.data?.code === "UNAUTHENTICATED") {
-      userId = null;
-    } else {
-      throw error;
-    }
-  }
-
-  if (!userId) {
-    return {
-      _id: "local-admin" as Id<"users">,
-      name: "Admin",
-      email: "admin@local",
-      role: "cto",
-      isManuallyAdded: true,
-    };
-  }
+  const userId = await getAuthUserId(ctx);
+  if (!userId) return null;
 
   const user = await ctx.db.get(userId as Id<"users">);
   if (!user) {
@@ -44,12 +25,20 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<Curre
   return user as CurrentUser;
 }
 
+export async function requireAuthenticated(ctx: QueryCtx | MutationCtx) {
+  const user = await getCurrentUser(ctx);
+  if (!user) {
+    throw new ConvexError({ message: "Authentication required", code: "UNAUTHENTICATED" });
+  }
+  return user;
+}
+
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
   allowedRoles: UserRole[]
 ) {
-  const user = await getCurrentUser(ctx);
-  if (!user || !user.role || !allowedRoles.includes(user.role)) {
+  const user = await requireAuthenticated(ctx);
+  if (!user.role || !allowedRoles.includes(user.role)) {
     throw new ConvexError({ message: "Insufficient permissions", code: "FORBIDDEN" });
   }
   return user;
@@ -57,4 +46,12 @@ export async function requireRole(
 
 export async function requireWriteAccess(ctx: QueryCtx | MutationCtx) {
   return requireRole(ctx, ["cto", "it_manager"]);
+}
+
+export async function requireReadAccess(ctx: QueryCtx | MutationCtx) {
+  return requireRole(ctx, ["cto", "it_manager", "business_owner", "viewer"]);
+}
+
+export async function requireCTO(ctx: QueryCtx | MutationCtx) {
+  return requireRole(ctx, ["cto"]);
 }
