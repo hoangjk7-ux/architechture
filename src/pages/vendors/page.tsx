@@ -16,6 +16,7 @@ import {
   TrendingUp, Search, Filter, CheckCircle2, Clock, XCircle,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
+import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { formatVnd } from "@/lib/format.ts";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -55,11 +56,16 @@ function SupportBadge({ level }: { level: string }) {
 }
 
 function ContractStatus({ dateStr }: { dateStr: string }) {
+  const { language } = useLanguage();
   const days = daysUntil(dateStr);
-  if (days < 0) return <span className="flex items-center gap-1 text-[10px] text-red-400"><XCircle className="h-3 w-3" />Expired {Math.abs(days)}d ago</span>;
-  if (days <= 30) return <span className="flex items-center gap-1 text-[10px] text-red-400 font-semibold"><AlertTriangle className="h-3 w-3" />{days}d left</span>;
-  if (days <= 90) return <span className="flex items-center gap-1 text-[10px] text-yellow-400"><Clock className="h-3 w-3" />{days}d left</span>;
-  return <span className="flex items-center gap-1 text-[10px] text-green-400"><CheckCircle2 className="h-3 w-3" />{days}d left</span>;
+  const daysLeft = language === "vi" ? `Còn ${days} ngày` : `${days}d left`;
+  if (days < 0) {
+    const agoLabel = language === "vi" ? `Đã hết hạn ${Math.abs(days)} ngày trước` : `Expired ${Math.abs(days)}d ago`;
+    return <span className="flex items-center gap-1 text-[10px] text-red-400"><XCircle className="h-3 w-3" />{agoLabel}</span>;
+  }
+  if (days <= 30) return <span className="flex items-center gap-1 text-[10px] text-red-400 font-semibold"><AlertTriangle className="h-3 w-3" />{daysLeft}</span>;
+  if (days <= 90) return <span className="flex items-center gap-1 text-[10px] text-yellow-400"><Clock className="h-3 w-3" />{daysLeft}</span>;
+  return <span className="flex items-center gap-1 text-[10px] text-green-400"><CheckCircle2 className="h-3 w-3" />{daysLeft}</span>;
 }
 
 // ─── Stat card ─────────────────────────────────────────────────────────────────
@@ -87,6 +93,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
   vendor: Vendor; systems: SoftwareSystem[]; onClose: () => void;
   onEdit: (v: Vendor) => void; canWrite: boolean;
 }) {
+  const { language, t } = useLanguage();
   const linked = useMemo(() => systems.filter((s) => s.vendorId === vendor._id), [systems, vendor._id]);
   const totalCost = linked.reduce((sum, s) => sum + (s.costPerYear ?? 0), 0);
 
@@ -104,7 +111,9 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
             <Building2 className="h-4 w-4 shrink-0" style={{ color: isUrgent ? "#ef4444" : isWarning ? "#f59e0b" : "#6366f1" }} />
             <span className="font-bold text-sm truncate">{vendor.name}</span>
           </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">{linked.length} linked system{linked.length !== 1 ? "s" : ""}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">
+            {linked.length} {language === "vi" ? "hệ thống liên kết" : `linked system${linked.length !== 1 ? "s" : ""}`}
+          </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {canWrite && (
@@ -124,8 +133,14 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
           <div className={cn("flex items-start gap-2 rounded-lg p-3 border text-xs", isUrgent ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-yellow-500/10 border-yellow-500/30 text-yellow-400")}>
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
             <div>
-              <div className="font-semibold">{isUrgent ? "Contract expiring soon!" : "Contract renewal needed"}</div>
-              <div className="opacity-80">{contractDays <= 0 ? "Already expired" : `${contractDays} days remaining`} · ends {vendor.contractEndDate}</div>
+              <div className="font-semibold">{isUrgent ? t("vendor.contractExpiringSoon") : t("vendor.contractRenewalNeeded")}</div>
+              <div className="opacity-80">
+                {contractDays <= 0
+                  ? t("vendor.alreadyExpired")
+                  : language === "vi" ? `Còn ${contractDays} ngày` : `${contractDays} days remaining`}
+                {" · "}
+                {language === "vi" ? "kết thúc" : "ends"} {vendor.contractEndDate}
+              </div>
             </div>
           </div>
         )}
@@ -140,19 +155,19 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
         <div className="grid grid-cols-2 gap-2">
           {vendor.sla && (
             <div className="bg-muted/30 rounded-lg p-2.5 col-span-1">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">SLA</div>
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("detail.sla")}</div>
               <div className="text-xs font-semibold flex items-center gap-1"><Shield className="h-3 w-3 text-blue-400" />{vendor.sla}</div>
             </div>
           )}
           {vendor.costPerYear !== undefined && (
             <div className="bg-muted/30 rounded-lg p-2.5">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Annual Cost</div>
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("detail.annualCost")}</div>
               <div className="text-xs font-semibold text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />{formatVnd(vendor.costPerYear)}</div>
             </div>
           )}
           {vendor.contractEndDate && (
             <div className="bg-muted/30 rounded-lg p-2.5 col-span-2">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Contract End Date</div>
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("detail.contractEndDate")}</div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold flex items-center gap-1"><CalendarClock className="h-3 w-3 text-muted-foreground" />{vendor.contractEndDate}</span>
                 <ContractStatus dateStr={vendor.contractEndDate} />
@@ -164,7 +179,7 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
         {/* Contact */}
         {(vendor.contactName || vendor.contactEmail) && (
           <div className="rounded-lg border border-border p-3 space-y-1.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contact</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t("vendor.contact")}</div>
             {vendor.contactName && <div className="flex items-center gap-2 text-xs"><Phone className="h-3 w-3 text-muted-foreground" />{vendor.contactName}</div>}
             {vendor.contactEmail && <div className="flex items-center gap-2 text-xs"><Mail className="h-3 w-3 text-muted-foreground" /><a href={`mailto:${vendor.contactEmail}`} className="text-blue-400 hover:underline">{vendor.contactEmail}</a></div>}
           </div>
@@ -173,11 +188,15 @@ function VendorDetailPanel({ vendor, systems, onClose, onEdit, canWrite }: {
         {/* Linked systems */}
         <div className="rounded-lg border border-border p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Linked Systems ({linked.length})</div>
-            {totalCost > 0 && <span className="text-[10px] text-green-400 font-mono">Σ {formatVnd(totalCost)}/năm</span>}
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t("vendor.linkedSystems")} ({linked.length})</div>
+            {totalCost > 0 && (
+              <span className="text-[10px] text-green-400 font-mono">
+                Σ {formatVnd(totalCost)}{language === "vi" ? "/năm" : "/yr"}
+              </span>
+            )}
           </div>
           {linked.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">No systems linked to this vendor.</p>
+            <p className="text-[11px] text-muted-foreground">{t("vendor.noLinkedSystems")}</p>
           ) : (
             <div className="space-y-1.5">
               {linked.map((s) => (

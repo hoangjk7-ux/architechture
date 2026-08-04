@@ -127,6 +127,23 @@ export default defineSchema({
     order: v.number(),
   }).index("by_type", ["type"]),
 
+  system_change_logs: defineTable({
+    systemId: v.optional(v.id("software_systems")),
+    systemName: v.string(),
+    action: v.union(v.literal("created"), v.literal("updated"), v.literal("deleted")),
+    changes: v.optional(
+      v.array(
+        v.object({
+          field: v.string(),
+          from: v.optional(v.string()),
+          to: v.optional(v.string()),
+        })
+      )
+    ),
+    actorName: v.optional(v.string()),
+    actorEmail: v.optional(v.string()),
+  }).index("by_system", ["systemId"]),
+
   roadmap_items: defineTable({
     title: v.string(),
     level: v.union(

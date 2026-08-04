@@ -18,6 +18,7 @@ import type * as integrations from "../integrations.js";
 import type * as roadmap from "../roadmap.js";
 import type * as seed from "../seed.js";
 import type * as software_systems from "../software_systems.js";
+import type * as system_change_logs from "../system_change_logs.js";
 import type * as system_modules from "../system_modules.js";
 import type * as users from "../users.js";
 import type * as vendors from "../vendors.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   roadmap: typeof roadmap;
   seed: typeof seed;
   software_systems: typeof software_systems;
+  system_change_logs: typeof system_change_logs;
   system_modules: typeof system_modules;
   users: typeof users;
   vendors: typeof vendors;

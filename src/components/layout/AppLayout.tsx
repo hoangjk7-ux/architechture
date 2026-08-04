@@ -16,9 +16,8 @@ import {
   ShieldCheck,
   Building2,
   LogOut,
-  Languages,
 } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
+import { LanguageToggle } from "@/components/ui/language-toggle.tsx";
 
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/language.tsx";
@@ -40,7 +39,7 @@ const navItems = [
 function AppLayoutInner() {
   const { user } = useCurrentUser();
   const { signOut } = useSimpleAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
 
   const isAuthenticated = Boolean(user);
@@ -96,16 +95,9 @@ function AppLayoutInner() {
 
         {/* User + Collapse */}
         <div className="p-2 border-t border-sidebar-border space-y-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
-            className="w-full justify-start gap-2"
-          >
-            <Languages className="h-4 w-4" />
-            {!collapsed && <span>{language === "vi" ? "English" : "Tiếng Việt"}</span>}
-          </Button>
+          <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-start px-1")}>
+            {collapsed ? <LanguageToggle iconOnly /> : <LanguageToggle />}
+          </div>
           {user && (
             <div className={cn("rounded-lg border border-border/60 bg-muted/20 p-2.5", collapsed ? "flex justify-center" : "flex items-center gap-2.5")}>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold uppercase text-primary">
@@ -143,15 +135,7 @@ function AppLayoutInner() {
         <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-sidebar">
           <span className="font-bold text-sm">TechGov</span>
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
-              className="h-8 px-2"
-            >
-              {language === "vi" ? "EN" : "VI"}
-            </Button>
+            <LanguageToggle />
             <Settings className="h-5 w-5 text-muted-foreground" />
           </div>
         </div>
@@ -186,7 +170,7 @@ function AppLayoutInner() {
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useSimpleAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -198,18 +182,21 @@ export default function AppLayout() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-8 p-4">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <Button type="button" variant="outline" size="sm" onClick={() => setLanguage(language === "vi" ? "en" : "vi")} className="gap-2">
-              <Languages className="h-4 w-4" />
-              {language === "vi" ? "English" : "Tiếng Việt"}
-            </Button>
+      <div className="relative min-h-screen overflow-hidden bg-background flex items-center justify-center p-4">
+        <div className="pointer-events-none absolute -top-32 -left-32 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+              <LayoutDashboard className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-foreground">{t("app.title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("app.subtitle")}</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">{t("app.title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("app.subtitle")}</p>
+          <SignInButton />
         </div>
-        <SignInButton />
       </div>
     );
   }

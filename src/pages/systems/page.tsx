@@ -13,10 +13,12 @@ import { toast } from "sonner";
 import {
   Plus, Search, Edit, Trash2, Server, Filter,
   AlertTriangle, Archive, UserX, CalendarClock,
-  ChevronRight, X,
+  ChevronRight, X, History,
   TrendingDown, TrendingUp, Shield, DollarSign,
+  PlusCircle, Pencil,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
+import { useLanguage } from "@/components/providers/language.tsx";
 import { cn } from "@/lib/utils.ts";
 import { formatVnd } from "@/lib/format.ts";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -102,6 +104,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
   system: SoftwareSystem; onClose: () => void;
   onEdit: (s: SoftwareSystem) => void; canWrite: boolean;
 }) {
+  const { t } = useLanguage();
   const modules = useQuery(api.system_modules.listBySystem, { systemId: system._id }) ?? [];
 
   const typeColors: Record<string, { bg: string; border: string; text: string }> = {
@@ -143,10 +146,10 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
         {/* Key metrics */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { label: "Status",      value: system.status,      color: { active: "#22c55e", sunset: "#f59e0b", pilot: "#3b82f6", inactive: "#6b7280" }[system.status] ?? "#6b7280" },
-            { label: "Criticality", value: system.criticality, color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
-            { label: "Risk Level",  value: system.riskLevel,   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
-            { label: "Hosting",     value: system.hosting ?? "—", color: "#94a3b8" },
+            { label: t("detail.status"),      value: system.status,      color: { active: "#22c55e", sunset: "#f59e0b", pilot: "#3b82f6", inactive: "#6b7280" }[system.status] ?? "#6b7280" },
+            { label: t("detail.criticality"), value: system.criticality, color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
+            { label: t("detail.riskLevel"),   value: system.riskLevel,   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
+            { label: t("detail.hosting"),     value: system.hosting ?? "—", color: "#94a3b8" },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-muted/30 rounded-lg p-2.5">
               <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{label}</div>
@@ -159,7 +162,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
         <div className="space-y-2.5">
           <div>
             <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground flex items-center gap-1"><TrendingUp className="h-2.5 w-2.5" />Architecture Score</span>
+              <span className="text-muted-foreground flex items-center gap-1"><TrendingUp className="h-2.5 w-2.5" />{t("detail.architectureScore")}</span>
               <span className="font-mono font-bold" style={{ color: system.architectureScore >= 70 ? "#22c55e" : system.architectureScore >= 50 ? "#f59e0b" : "#ef4444" }}>{system.architectureScore}/100</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -168,7 +171,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
           </div>
           <div>
             <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground flex items-center gap-1"><TrendingDown className="h-2.5 w-2.5" />Technical Debt</span>
+              <span className="text-muted-foreground flex items-center gap-1"><TrendingDown className="h-2.5 w-2.5" />{t("detail.technicalDebt")}</span>
               <span className="font-mono font-bold" style={{ color: system.technicalDebtScore > 60 ? "#ef4444" : system.technicalDebtScore > 30 ? "#f59e0b" : "#22c55e" }}>{system.technicalDebtScore}/100</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -180,11 +183,11 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
         {/* Modules summary */}
         {modules.length > 0 && (
           <div className="rounded-lg border border-border p-3 space-y-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Modules ({modules.length})</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t("detail.modules")} ({modules.length})</div>
             <div className="flex gap-3 text-[10px]">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-green-400">{inUse} active</span></span>
-              {planned > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-blue-400">{planned} upcoming</span></span>}
-              {deprecated > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /><span className="text-yellow-400">{deprecated} deprecated</span></span>}
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-green-400">{inUse} {t("detail.active")}</span></span>
+              {planned > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-blue-400">{planned} {t("detail.upcoming")}</span></span>}
+              {deprecated > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /><span className="text-yellow-400">{deprecated} {t("detail.deprecated")}</span></span>}
             </div>
             <div className="space-y-1 max-h-36 overflow-y-auto">
               {modules.slice(0, 12).map((m) => (
@@ -196,28 +199,28 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
                   }}>{m.lifecycle.replace("_", " ")}</span>
                 </div>
               ))}
-              {modules.length > 12 && <div className="text-[10px] text-muted-foreground">+{modules.length - 12} more</div>}
+              {modules.length > 12 && <div className="text-[10px] text-muted-foreground">+{modules.length - 12} {t("detail.more")}</div>}
             </div>
           </div>
         )}
 
         {/* Details */}
         <div className="space-y-1.5 text-[11px]">
-          {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="font-medium">{system.owner}</span></div>}
-          {system.technology && <div className="flex justify-between"><span className="text-muted-foreground">Technology</span><span className="font-medium">{system.technology}</span></div>}
-          {system.database && <div className="flex justify-between"><span className="text-muted-foreground">Database</span><span className="font-medium">{system.database}</span></div>}
-          {system.sla && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-2.5 w-2.5" />SLA</span><span className="font-medium">{system.sla}</span></div>}
-          {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />Chi phí/năm</span><span className="font-medium text-green-400">{formatVnd(system.costPerYear)}</span></div>}
+          {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.owner")}</span><span className="font-medium">{system.owner}</span></div>}
+          {system.technology && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.technology")}</span><span className="font-medium">{system.technology}</span></div>}
+          {system.database && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.database")}</span><span className="font-medium">{system.database}</span></div>}
+          {system.sla && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><Shield className="h-2.5 w-2.5" />{t("detail.sla")}</span><span className="font-medium">{system.sla}</span></div>}
+          {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.license")}</span><span className="font-medium">{system.licenseType}</span></div>}
+          {system.costPerYear !== undefined && <div className="flex justify-between"><span className="text-muted-foreground flex items-center gap-1"><DollarSign className="h-2.5 w-2.5" />{t("detail.annualCost")}</span><span className="font-medium text-green-400">{formatVnd(system.costPerYear)}</span></div>}
           {system.contractEndDate && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground flex items-center gap-1"><CalendarClock className="h-2.5 w-2.5" />Contract End</span>
+              <span className="text-muted-foreground flex items-center gap-1"><CalendarClock className="h-2.5 w-2.5" />{t("detail.contractEnd")}</span>
               <span className={cn("font-medium", new Date(system.contractEndDate) < new Date(Date.now() + 90 * 86400e3) ? "text-red-400" : "text-foreground")}>{system.contractEndDate}</span>
             </div>
           )}
           {system.departments.length > 0 && (
             <div className="flex justify-between items-start gap-2">
-              <span className="text-muted-foreground shrink-0">Departments</span>
+              <span className="text-muted-foreground shrink-0">{t("detail.departments")}</span>
               <div className="flex flex-wrap justify-end gap-1">
                 {system.departments.map((d) => <span key={d} className="text-[9px] bg-muted px-1.5 py-0.5 rounded">{d}</span>)}
               </div>
@@ -225,7 +228,7 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
           )}
           {system.campuses.length > 0 && (
             <div className="flex justify-between items-start gap-2">
-              <span className="text-muted-foreground shrink-0">Campuses</span>
+              <span className="text-muted-foreground shrink-0">{t("detail.campuses")}</span>
               <div className="flex flex-wrap justify-end gap-1">
                 {system.campuses.map((c) => <span key={c} className="text-[9px] bg-muted px-1.5 py-0.5 rounded">{c}</span>)}
               </div>
@@ -235,6 +238,61 @@ function SystemDetailPanel({ system, onClose, onEdit, canWrite }: {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Activity log ────────────────────────────────────────────────────────────────
+const actionConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  created: { label: "Created", color: "#22c55e", icon: PlusCircle },
+  updated: { label: "Updated", color: "#3b82f6", icon: Pencil },
+  deleted: { label: "Deleted", color: "#ef4444", icon: Trash2 },
+};
+
+function ActivityLogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const logs = useQuery(api.system_change_logs.list, open ? { limit: 200 } : "skip") ?? [];
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><History className="h-4 w-4" />System Activity Log</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[65vh] overflow-y-auto space-y-2 pr-1">
+          {logs.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground text-sm">No changes recorded yet</div>
+          ) : (
+            logs.map((log) => {
+              const cfg = actionConfig[log.action];
+              const Icon = cfg.icon;
+              return (
+                <div key={log._id} className="rounded-lg border border-border p-3 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: cfg.color }} />
+                      <span className="font-semibold truncate">{log.systemName}</span>
+                      <Badge className="text-[9px]" style={{ background: `${cfg.color}22`, color: cfg.color, borderColor: `${cfg.color}55` }}>{cfg.label}</Badge>
+                    </div>
+                    <span className="text-muted-foreground shrink-0">{new Date(log._creationTime).toLocaleString()}</span>
+                  </div>
+                  <div className="text-muted-foreground">by {log.actorName ?? log.actorEmail ?? "Unknown"}</div>
+                  {log.changes && log.changes.length > 0 && (
+                    <div className="space-y-0.5 pt-1 border-t border-border/50">
+                      {log.changes.map((c, idx) => (
+                        <div key={idx} className="flex flex-wrap gap-1">
+                          <span className="font-medium text-foreground/80">{c.field}:</span>
+                          <span className="text-red-400/80 line-through">{c.from ?? "—"}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-green-400">{c.to ?? "—"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -418,6 +476,7 @@ function SystemsContent() {
   const [editing, setEditing] = useState<SoftwareSystem | null>(null);
   const [selectedId, setSelectedId] = useState<Id<"software_systems"> | null>(null);
   const [statFilter, setStatFilter] = useState<string | null>(null);
+  const [showLog, setShowLog] = useState(false);
 
   // Dashboard stats
   const now = Date.now();
@@ -488,11 +547,16 @@ function SystemsContent() {
                 <h1 className="text-2xl font-bold flex items-center gap-2"><Server className="h-6 w-6 text-primary" />System Inventory</h1>
                 <p className="text-muted-foreground text-sm mt-0.5">{systems.length} systems tracked across all campuses</p>
               </div>
-              {canWrite && (
-                <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />Add System
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowLog(true)}>
+                  <History className="h-4 w-4" />Activity Log
                 </Button>
-              )}
+                {canWrite && (
+                  <Button onClick={() => setShowForm(true)} size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" />Add System
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Stat cards */}
@@ -648,6 +712,8 @@ function SystemsContent() {
           {editing && <SystemForm initial={editing} onSave={handleUpdate} onClose={() => setEditing(null)} />}
         </DialogContent>
       </Dialog>
+
+      <ActivityLogDialog open={showLog} onClose={() => setShowLog(false)} />
     </div>
   );
 }

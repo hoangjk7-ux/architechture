@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { useSimpleAuth } from "@/components/providers/simple-auth.tsx";
@@ -62,7 +61,7 @@ export interface SignInButtonProps extends React.ComponentProps<"div"> {
 export function SignInButton({ className, signInText, ...props }: SignInButtonProps) {
   const { isLoading, login, signIn } = useSimpleAuth();
   const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -179,28 +178,15 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
   };
 
   return (
-    <div className={cn("w-full max-w-sm space-y-4", className)} {...props}>
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
-          className="gap-2"
-        >
-          <Languages className="h-4 w-4" />
-          {language === "vi" ? "English" : "Tiếng Việt"}
-        </Button>
-      </div>
+    <div className={cn("w-full space-y-4", className)} {...props}>
+      <div className="rounded-2xl border border-border/70 bg-card/80 shadow-xl shadow-black/20 backdrop-blur-sm p-6 space-y-5">
+        <div className="space-y-1 text-center">
+          <p className="text-base font-semibold text-foreground">{resolvedSignInText}</p>
+          <p className="text-xs text-muted-foreground">
+            {language === "vi" ? "Đăng nhập bằng tài khoản Google của bạn hoặc tài khoản local" : "Sign in with your Google account or local account"}
+          </p>
+        </div>
 
-      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-center">
-        <p className="text-sm font-medium text-foreground">{resolvedSignInText}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {language === "vi" ? "Đăng nhập bằng tài khoản Google của bạn hoặc tài khoản local" : "Sign in with your Google account or local account"}
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-border/70 bg-background/80 p-4 shadow-sm">
         <div className="space-y-3">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="username">
@@ -211,7 +197,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               placeholder={language === "vi" ? "Tên đăng nhập" : "Enter username"}
-              className="mt-2"
+              className="mt-1.5"
             />
           </div>
           <div>
@@ -224,7 +210,7 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder={language === "vi" ? "Mật khẩu" : "Enter password"}
-              className="mt-2"
+              className="mt-1.5"
             />
           </div>
 
@@ -239,36 +225,34 @@ export function SignInButton({ className, signInText, ...props }: SignInButtonPr
             {isSubmitting ? (language === "vi" ? "Đang đăng nhập..." : "Signing in...") : resolvedSignInText}
           </Button>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2">
-        <span className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">{t("auth.or")}</span>
-        <span className="flex-1 h-px bg-border" />
-      </div>
+        <div className="flex items-center gap-2">
+          <span className="flex-1 h-px bg-border" />
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{t("auth.or")}</span>
+          <span className="flex-1 h-px bg-border" />
+        </div>
 
-      {googleClientId ? (
-        <div className="rounded-xl border border-border/70 bg-background/80 p-2 shadow-sm">
+        {googleClientId ? (
           <div ref={googleButtonRef} className="w-full min-h-[44px] flex justify-center" />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full h-11 rounded-xl border-border/70 bg-background/80 shadow-sm hover:bg-accent/70"
-            onClick={() => {
-              const url = chooseAuthUrlForNavigation("/api/auth/signin/google");
-              window.location.href = url;
-            }}
-          >
-            <img src="/google-logo.svg" alt="Google" className="mr-2 h-4 w-4" />
-            {t("auth.google")}
-          </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Google login needs a configured client ID in the environment.
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full h-11 rounded-xl border-border/70 bg-background/80 shadow-sm hover:bg-accent/70"
+              onClick={() => {
+                const url = chooseAuthUrlForNavigation("/api/auth/signin/google");
+                window.location.href = url;
+              }}
+            >
+              <img src="/google-logo.svg" alt="Google" className="mr-2 h-4 w-4" />
+              {t("auth.google")}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Google login needs a configured client ID in the environment.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

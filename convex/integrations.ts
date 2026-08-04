@@ -28,11 +28,15 @@ export const list = query({
     const integrations = await ctx.db.query("integrations").collect();
     const systems = await ctx.db.query("software_systems").collect();
     const systemMap = new Map(systems.map((s) => [s._id, s]));
-    return integrations.map((i) => ({
-      ...i,
-      sourceSystem: systemMap.get(i.sourceSystemId),
-      destinationSystem: systemMap.get(i.destinationSystemId),
-    }));
+    // Defensively drop any integration left dangling by a system that was
+    // deleted before cascade cleanup existed, so it never resurfaces in the UI.
+    return integrations
+      .filter((i) => systemMap.has(i.sourceSystemId) && systemMap.has(i.destinationSystemId))
+      .map((i) => ({
+        ...i,
+        sourceSystem: systemMap.get(i.sourceSystemId),
+        destinationSystem: systemMap.get(i.destinationSystemId),
+      }));
   },
 });
 
@@ -65,7 +69,14 @@ export const getStats = query({
   args: {},
   handler: async (ctx) => {
     await getCurrentUser(ctx);
-    const integrations = await ctx.db.query("integrations").collect();
+    const [allIntegrations, systems] = await Promise.all([
+      ctx.db.query("integrations").collect(),
+      ctx.db.query("software_systems").collect(),
+    ]);
+    const systemIds = new Set(systems.map((s) => s._id));
+    const integrations = allIntegrations.filter(
+      (i) => systemIds.has(i.sourceSystemId) && systemIds.has(i.destinationSystemId)
+    );
     return {
       total: integrations.length,
       healthy: integrations.filter((i) => i.healthStatus === "healthy").length,

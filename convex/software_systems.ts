@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getCurrentUser, requireWriteAccess } from "./helpers.ts";
+import { diffFields, recordSystemChange } from "./system_change_logs.ts";
 
 const systemArgs = {
   name: v.string(),
@@ -54,7 +55,9 @@ export const create = mutation({
   args: systemArgs,
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
-    return await ctx.db.insert("software_systems", args);
+    const id = await ctx.db.insert("software_systems", args);
+    await recordSystemChange(ctx, { systemId: id, systemName: args.name, action: "created" });
+    return id;
   },
 });
 
@@ -63,7 +66,14 @@ export const update = mutation({
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
     const { id, ...data } = args;
+    const existing = await ctx.db.get(id);
     await ctx.db.patch(id, data);
+    if (existing) {
+      const changes = diffFields(existing as Record<string, unknown>, data as Record<string, unknown>);
+      if (changes.length > 0) {
+        await recordSystemChange(ctx, { systemId: id, systemName: data.name, action: "updated", changes });
+      }
+    }
   },
 });
 
@@ -71,6 +81,28 @@ export const remove = mutation({
   args: { id: v.id("software_systems") },
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
+    const system = await ctx.db.get(args.id);
+    if (!system) return;
+
+    // Clean up everything that references this system so it doesn't keep
+    // showing up as a dangling reference (e.g. on the Integrations page).
+    const [asSource, asDestination, modules, roadmapItems] = await Promise.all([
+      ctx.db.query("integrations").withIndex("by_source", (q) => q.eq("sourceSystemId", args.id)).collect(),
+      ctx.db.query("integrations").withIndex("by_destination", (q) => q.eq("destinationSystemId", args.id)).collect(),
+      ctx.db.query("system_modules").withIndex("by_system", (q) => q.eq("systemId", args.id)).collect(),
+      ctx.db.query("roadmap_items").collect(),
+    ]);
+    const integrationIds = new Set([...asSource, ...asDestination].map((i) => i._id));
+
+    await Promise.all([
+      ...Array.from(integrationIds).map((id) => ctx.db.delete(id)),
+      ...modules.map((m) => ctx.db.delete(m._id)),
+      ...roadmapItems
+        .filter((r) => r.relatedSystemIds.includes(args.id))
+        .map((r) => ctx.db.patch(r._id, { relatedSystemIds: r.relatedSystemIds.filter((sid) => sid !== args.id) })),
+    ]);
+
+    await recordSystemChange(ctx, { systemId: args.id, systemName: system.name, action: "deleted" });
     await ctx.db.delete(args.id);
   },
 });

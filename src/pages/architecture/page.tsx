@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
+import { useLanguage } from "@/components/providers/language.tsx";
 import ReactFlow, {
   Background,
   Controls,
@@ -493,6 +494,7 @@ function DetailPanel({
   modules: SystemModule[]; onClose: () => void;
 }) {
   const { canWrite } = useCurrentUser();
+  const { t } = useLanguage();
   const createModule = useMutation(api.system_modules.create);
   const updateModule = useMutation(api.system_modules.update);
   const removeModule = useMutation(api.system_modules.remove);
@@ -518,7 +520,7 @@ function DetailPanel({
       usedBy: data.usedBy ? data.usedBy.split(",").map((s) => s.trim()).filter(Boolean) : [],
       sortOrder: modules.length,
     });
-    toast.success("Module added");
+    toast.success(t("toast.moduleAdded"));
   };
 
   const handleUpdateModule = async (data: ModuleFormData) => {
@@ -534,12 +536,12 @@ function DetailPanel({
       plannedDate: data.plannedDate || undefined,
       usedBy: data.usedBy ? data.usedBy.split(",").map((s) => s.trim()).filter(Boolean) : [],
     });
-    toast.success("Module updated");
+    toast.success(t("toast.moduleUpdated"));
   };
 
   const handleDeleteModule = async (id: SystemModule["_id"]) => {
     await removeModule({ id });
-    toast.success("Module deleted");
+    toast.success(t("toast.moduleDeleted"));
   };
 
   const moduleCount = modules.length;
@@ -548,9 +550,9 @@ function DetailPanel({
   const depCnt = modules.filter((m) => m.lifecycle === "deprecated" || m.lifecycle === "retired").length;
 
   const TABS: { id: PanelTab; label: string; count?: number }[] = [
-    { id: "modules", label: "Modules", count: moduleCount },
-    { id: "integrations", label: "Integrations", count: outbound.length + inbound.length },
-    { id: "overview", label: "Overview" },
+    { id: "modules", label: t("detail.modules"), count: moduleCount },
+    { id: "integrations", label: t("detail.integrations"), count: outbound.length + inbound.length },
+    { id: "overview", label: t("detail.overview") },
   ];
 
   return (
@@ -570,21 +572,21 @@ function DetailPanel({
 
       {moduleCount > 0 && (
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-muted/10 shrink-0">
-          <span className="text-[10px] text-muted-foreground">{moduleCount} modules</span>
+          <span className="text-[10px] text-muted-foreground">{moduleCount} {t("detail.modules").toLowerCase()}</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-[10px] text-green-400">{inUseCnt} active</span>
+            <span className="text-[10px] text-green-400">{inUseCnt} {t("detail.active")}</span>
           </div>
           {plannedCnt > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-[10px] text-blue-400">{plannedCnt} upcoming</span>
+              <span className="text-[10px] text-blue-400">{plannedCnt} {t("detail.upcoming")}</span>
             </div>
           )}
           {depCnt > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-yellow-500" />
-              <span className="text-[10px] text-yellow-400">{depCnt} deprecated</span>
+              <span className="text-[10px] text-yellow-400">{depCnt} {t("detail.deprecated")}</span>
             </div>
           )}
         </div>
@@ -627,7 +629,7 @@ function DetailPanel({
             {outbound.length > 0 && (
               <div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-2 flex items-center gap-1.5">
-                  <ArrowRight className="h-3 w-3" /> Outbound ({outbound.length})
+                  <ArrowRight className="h-3 w-3" /> {t("detail.outbound")} ({outbound.length})
                 </div>
                 <div className="space-y-1.5">
                   {outbound.map((intg) => {
@@ -637,17 +639,17 @@ function DetailPanel({
                     return (
                       <div key={intg._id} className="bg-muted/30 rounded-lg p-2.5 space-y-1.5 border" style={{ borderColor: hc.color + "33" }}>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold truncate">{dest?.name ?? "Unknown"}</span>
+                          <span className="text-xs font-semibold truncate">{dest?.name ?? t("detail.unknown")}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{hc.label}</span>
                         </div>
                         <div className="text-[10px] text-muted-foreground">{intg.name}</div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-mono">{intg.protocol}</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{mc.label}</span>
-                          {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">Non-compliant</span>}
-                          {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">Err {intg.errorRate}%</span>}
+                          {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">{t("detail.nonCompliant")}</span>}
+                          {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">{t("detail.error")} {intg.errorRate}%</span>}
                         </div>
-                        {intg.lastSync && <div className="text-[9px] text-muted-foreground">Last sync: {intg.lastSync.slice(0, 16).replace("T", " ")}</div>}
+                        {intg.lastSync && <div className="text-[9px] text-muted-foreground">{t("detail.lastSync")}: {intg.lastSync.slice(0, 16).replace("T", " ")}</div>}
                       </div>
                     );
                   })}
@@ -657,7 +659,7 @@ function DetailPanel({
             {inbound.length > 0 && (
               <div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-2 flex items-center gap-1.5">
-                  <ArrowLeft className="h-3 w-3" /> Inbound ({inbound.length})
+                  <ArrowLeft className="h-3 w-3" /> {t("detail.inbound")} ({inbound.length})
                 </div>
                 <div className="space-y-1.5">
                   {inbound.map((intg) => {
@@ -667,17 +669,17 @@ function DetailPanel({
                     return (
                       <div key={intg._id} className="bg-muted/30 rounded-lg p-2.5 space-y-1.5 border" style={{ borderColor: hc.color + "33" }}>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold truncate">{src?.name ?? "Unknown"}</span>
+                          <span className="text-xs font-semibold truncate">{src?.name ?? t("detail.unknown")}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0" style={{ background: hc.color + "22", color: hc.color }}>{hc.label}</span>
                         </div>
                         <div className="text-[10px] text-muted-foreground">{intg.name}</div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-mono">{intg.protocol}</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ background: mc.color + "22", color: mc.color }}>{mc.label}</span>
-                          {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">Non-compliant</span>}
-                          {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">Err {intg.errorRate}%</span>}
+                          {!intg.isArchitectureCompliant && <span className="text-[9px] text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">{t("detail.nonCompliant")}</span>}
+                          {intg.errorRate !== undefined && intg.errorRate > 0 && <span className="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">{t("detail.error")} {intg.errorRate}%</span>}
                         </div>
-                        {intg.lastSync && <div className="text-[9px] text-muted-foreground">Last sync: {intg.lastSync.slice(0, 16).replace("T", " ")}</div>}
+                        {intg.lastSync && <div className="text-[9px] text-muted-foreground">{t("detail.lastSync")}: {intg.lastSync.slice(0, 16).replace("T", " ")}</div>}
                       </div>
                     );
                   })}
@@ -685,7 +687,7 @@ function DetailPanel({
               </div>
             )}
             {outbound.length === 0 && inbound.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-8">No integrations recorded</p>
+              <p className="text-xs text-muted-foreground text-center py-8">{t("detail.noIntegrations")}</p>
             )}
           </div>
         )}
@@ -694,10 +696,10 @@ function DetailPanel({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "Status",      value: system.status,      color: STATUS_META[system.status]?.color ?? "#6b7280" },
-                { label: "Criticality", value: system.criticality, color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
-                { label: "Risk Level",  value: system.riskLevel,   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
-                { label: "Hosting",     value: system.hosting ?? "—", color: "#64748b" },
+                { label: t("detail.status"),      value: system.status,      color: STATUS_META[system.status]?.color ?? "#6b7280" },
+                { label: t("detail.criticality"), value: system.criticality, color: system.criticality === "high" ? "#ef4444" : system.criticality === "medium" ? "#f59e0b" : "#22c55e" },
+                { label: t("detail.riskLevel"),   value: system.riskLevel,   color: system.riskLevel === "high" ? "#ef4444" : system.riskLevel === "medium" ? "#f59e0b" : "#22c55e" },
+                { label: t("detail.hosting"),     value: system.hosting ?? "—", color: "#64748b" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-muted/40 rounded-lg p-2">
                   <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{label}</div>
@@ -708,7 +710,7 @@ function DetailPanel({
             <div className="space-y-2.5">
               <div>
                 <div className="flex justify-between text-[10px] mb-1">
-                  <span className="text-muted-foreground flex items-center gap-1"><TrendingUp className="h-2.5 w-2.5" /> Architecture Score</span>
+                  <span className="text-muted-foreground flex items-center gap-1"><TrendingUp className="h-2.5 w-2.5" /> {t("detail.architectureScore")}</span>
                   <span className="font-mono font-bold" style={{ color: system.architectureScore >= 70 ? "#22c55e" : system.architectureScore >= 50 ? "#f59e0b" : "#ef4444" }}>{system.architectureScore}/100</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -717,7 +719,7 @@ function DetailPanel({
               </div>
               <div>
                 <div className="flex justify-between text-[10px] mb-1">
-                  <span className="text-muted-foreground flex items-center gap-1"><TrendingDown className="h-2.5 w-2.5" /> Technical Debt</span>
+                  <span className="text-muted-foreground flex items-center gap-1"><TrendingDown className="h-2.5 w-2.5" /> {t("detail.technicalDebt")}</span>
                   <span className="font-mono font-bold" style={{ color: system.technicalDebtScore > 60 ? "#ef4444" : system.technicalDebtScore > 30 ? "#f59e0b" : "#22c55e" }}>{system.technicalDebtScore}/100</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -731,12 +733,12 @@ function DetailPanel({
               {system.sla && <span className="flex items-center gap-1 text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground"><Shield className="h-2.5 w-2.5" />{system.sla}</span>}
             </div>
             <div className="space-y-1.5 text-xs">
-              {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="font-medium">{system.owner}</span></div>}
-              {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">License</span><span className="font-medium">{system.licenseType}</span></div>}
-              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">Chi phí/năm</span><span className="font-medium">{formatVnd(system.costPerYear)}</span></div>}
-              {system.contractEndDate && <div className="flex justify-between"><span className="text-muted-foreground">Contract Ends</span><span className="font-medium">{system.contractEndDate}</span></div>}
-              {system.departments.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Departments</span><span className="font-medium text-right max-w-[55%]">{system.departments.join(", ")}</span></div>}
-              {system.campuses.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Campuses</span><span className="font-medium text-right max-w-[55%]">{system.campuses.join(", ")}</span></div>}
+              {system.owner && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.owner")}</span><span className="font-medium">{system.owner}</span></div>}
+              {system.licenseType && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.license")}</span><span className="font-medium">{system.licenseType}</span></div>}
+              {system.costPerYear && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.annualCost")}</span><span className="font-medium">{formatVnd(system.costPerYear)}</span></div>}
+              {system.contractEndDate && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.contractEnd")}</span><span className="font-medium">{system.contractEndDate}</span></div>}
+              {system.departments.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.departments")}</span><span className="font-medium text-right max-w-[55%]">{system.departments.join(", ")}</span></div>}
+              {system.campuses.length > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("detail.campuses")}</span><span className="font-medium text-right max-w-[55%]">{system.campuses.join(", ")}</span></div>}
               {system.description && <p className="text-muted-foreground leading-relaxed pt-1">{system.description}</p>}
             </div>
           </div>
@@ -744,13 +746,13 @@ function DetailPanel({
       </div>
 
       <Dialog open={showModuleForm} onOpenChange={setShowModuleForm}>
-        <DialogContent><DialogHeader><DialogTitle>Add Module</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>{t("modal.addModule")}</DialogTitle></DialogHeader>
           <ModuleForm onSave={handleCreateModule} onClose={() => setShowModuleForm(false)} />
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editingModule} onOpenChange={(open) => !open && setEditingModule(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Edit Module</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>{t("modal.editModule")}</DialogTitle></DialogHeader>
           {editingModule && (
             <ModuleForm
               initial={{
