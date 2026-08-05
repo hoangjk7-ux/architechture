@@ -4,14 +4,34 @@ on:
   workflow_dispatch:
     inputs:
       deployment:
-        description: 'Convex deployment ref (e.g. prod:quiet-impala-764)'
+        description: 'Exact Convex deployment ref (for example dev:name or prod:name)'
         required: true
-        default: 'prod:quiet-impala-764'
+        type: string
+      confirmation:
+        description: 'Enter SEED:<deployment>, exactly matching the deployment above'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed-${{ inputs.deployment }}
+  cancel-in-progress: false
 
 jobs:
   seed:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
+      - name: Validate explicit confirmation
+        env:
+          TARGET_DEPLOYMENT: ${{ inputs.deployment }}
+          PROVIDED_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          test -n "$TARGET_DEPLOYMENT"
+          test "$PROVIDED_CONFIRMATION" = "SEED:$TARGET_DEPLOYMENT"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -23,7 +43,7 @@ jobs:
       - name: Enable pnpm
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          corepack prepare pnpm@10.32.1 --activate
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -467,8 +467,11 @@ function SystemForm({ initial, onSave, onClose }: {
 function SystemsContent() {
   const { t } = useLanguage();
   const { canWrite } = useCurrentUser();
-  const systems = useQuery(api.software_systems.list) ?? [];
-  const vendors = useQuery(api.vendors.list) ?? [];
+  const rawSystems = useQuery(api.software_systems.list);
+  const rawVendors = useQuery(api.vendors.list);
+  const isLoading = rawSystems === undefined || rawVendors === undefined;
+  const systems = useMemo(() => rawSystems ?? [], [rawSystems]);
+  const vendors = useMemo(() => rawVendors ?? [], [rawVendors]);
   const createSystem = useMutation(api.software_systems.create);
   const updateSystem = useMutation(api.software_systems.update);
   const removeSystem = useMutation(api.software_systems.remove);
@@ -485,7 +488,7 @@ function SystemsContent() {
   const [showLog, setShowLog] = useState(false);
 
   // Dashboard stats
-  const now = Date.now();
+  const now = useMemo(() => Date.now(), []);
   const stats = useMemo(() => ({
     total:    systems.length,
     critical: systems.filter((s) => s.criticality === "high").length,
@@ -603,7 +606,7 @@ function SystemsContent() {
             </div>
 
             {/* Table */}
-            {systems === undefined ? (
+            {isLoading ? (
               <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">

@@ -1,6 +1,36 @@
 import { mutation, query } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { requireAuthenticated, requireCTO } from "./helpers";
+import { domainError, normalizeEmail, optionalText } from "./domain/common";
+import type { MutationCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+
+type UserRole = NonNullable<Doc<"users">["role"]>;
+
+async function getTargetUser(ctx: MutationCtx, userId: Id<"users">) {
+  const target = await ctx.db.get(userId);
+  if (!target) domainError("NOT_FOUND", "User not found");
+  return target;
+}
+
+async function assertCtoCanBeRemovedOrDemoted(
+  ctx: MutationCtx,
+  target: Doc<"users">,
+  nextRole?: UserRole,
+) {
+  const removesActiveCto =
+    target.role === "cto" && !target.isManuallyAdded && nextRole !== "cto";
+  if (!removesActiveCto) return;
+
+  const ctos = await ctx.db
+    .query("users")
+    .withIndex("by_role", (q) => q.eq("role", "cto"))
+    .collect();
+  const activeCtoCount = ctos.filter((user) => !user.isManuallyAdded).length;
+  if (activeCtoCount <= 1) {
+    domainError("CONFLICT", "The last active CTO cannot be removed or demoted");
+  }
+}
 
 export const getCurrentUser = query({
   args: {},
@@ -22,18 +52,25 @@ export const updateCurrentUser = mutation({
 
     // Check if this email was pre-configured by a CTO invite (isManuallyAdded)
     if (user.email) {
+      const email = normalizeEmail(user.email);
       const sameEmail = await ctx.db
         .query("users")
-        .withIndex("email", (q) => q.eq("email", user.email!))
+        .withIndex("email", (q) => q.eq("email", email))
         .collect();
 
-      const invite = sameEmail.find((u) => u._id !== userId && u.isManuallyAdded && u.role);
+      const invitations = sameEmail.filter(
+        (candidate) => candidate._id !== userId && candidate.isManuallyAdded && candidate.role,
+      );
+      if (invitations.length > 1) {
+        domainError("CONFLICT", "Multiple pending invitations exist for this email");
+      }
+      const invite = invitations[0];
       if (invite) {
-        await ctx.db.patch(userId, { role: invite.role });
+        await ctx.db.patch(userId, { email, role: invite.role });
         await ctx.db.delete(invite._id);
         return userId;
       }
-
+      if (user.email !== email) await ctx.db.patch(userId, { email });
     }
 
     if (user.role !== "viewer") {
@@ -64,19 +101,23 @@ export const inviteUser = mutation({
   },
   handler: async (ctx, args) => {
     await requireCTO(ctx);
-    // Check if user with this email already exists
-    const existing = await ctx.db
+    const email = normalizeEmail(args.email);
+    const sameEmail = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
-      .first();
+      .withIndex("email", (q) => q.eq("email", email))
+      .collect();
+    if (sameEmail.length > 1) {
+      domainError("CONFLICT", "Multiple users already exist for this email");
+    }
+    const existing = sameEmail[0];
     if (existing) {
-      // Update role of existing user
+      await assertCtoCanBeRemovedOrDemoted(ctx, existing, args.role);
       await ctx.db.patch(existing._id, { role: args.role });
       return existing._id;
     }
     return await ctx.db.insert("users", {
-      name: args.name || undefined,
-      email: args.email,
+      name: optionalText(args.name),
+      email,
       role: args.role,
       isManuallyAdded: true,
     });
@@ -90,6 +131,8 @@ export const removeUser = mutation({
     if (args.userId === me._id) {
       throw new ConvexError({ message: "Cannot remove yourself", code: "FORBIDDEN" });
     }
+    const target = await getTargetUser(ctx, args.userId);
+    await assertCtoCanBeRemovedOrDemoted(ctx, target);
     await ctx.db.delete(args.userId);
   },
 });
@@ -106,6 +149,8 @@ export const updateUserRole = mutation({
   },
   handler: async (ctx, args) => {
     await requireCTO(ctx);
+    const target = await getTargetUser(ctx, args.userId);
+    await assertCtoCanBeRemovedOrDemoted(ctx, target, args.role);
     await ctx.db.patch(args.userId, { role: args.role });
   },
 });

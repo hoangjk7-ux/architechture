@@ -15,9 +15,12 @@ const HEALTH_CONFIG = {
 } as const;
 
 function FlowDiagramContent() {
-  const systems = useQuery(api.software_systems.list) ?? [];
-  const integrations = useQuery(api.integrations.list) ?? [];
-  const roadmapItems = useQuery(api.roadmap.list) ?? [];
+  const rawSystems = useQuery(api.software_systems.list);
+  const rawIntegrations = useQuery(api.integrations.list);
+  const rawRoadmapItems = useQuery(api.roadmap.list);
+  const systems = useMemo(() => rawSystems ?? [], [rawSystems]);
+  const integrations = useMemo(() => rawIntegrations ?? [], [rawIntegrations]);
+  const roadmapItems = useMemo(() => rawRoadmapItems ?? [], [rawRoadmapItems]);
 
   const [selectedId, setSelectedId] = useState<Id<"software_systems"> | null>(null);
   const [activeTab, setActiveTab] = useState<"flow" | "gantt">("flow");
@@ -37,7 +40,7 @@ function FlowDiagramContent() {
     return counts;
   }, [integrations]);
 
-  const isLoading = systems === undefined || integrations === undefined;
+  const isLoading = rawSystems === undefined || rawIntegrations === undefined;
 
   if (isLoading) {
     return <div className="p-6"><Skeleton className="h-[600px] w-full" /></div>;

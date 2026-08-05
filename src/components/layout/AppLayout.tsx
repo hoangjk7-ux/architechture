@@ -3,40 +3,27 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
-import { routeRoles, type UserRole } from "@/lib/permissions.ts";
 import { cn } from "@/lib/utils.ts";
 import {
   LayoutDashboard,
-  Server,
-  GitBranch,
-  Map,
-  Users,
-  Settings,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
-  Building2,
   LogOut,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { LanguageToggle } from "@/components/ui/language-toggle.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 import { useState } from "react";
 import { useLanguage } from "@/components/providers/language.tsx";
 import { formatRole } from "@/lib/roles.ts";
-
-const navItems: Array<{ to: string; icon: LucideIcon; labelKey: string; roles: readonly UserRole[] }> = [
-  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", roles: routeRoles.dashboard },
-  { to: "/systems", icon: Server, labelKey: "nav.systems", roles: routeRoles.systems },
-  { to: "/vendors", icon: Building2, labelKey: "nav.vendors", roles: routeRoles.vendors },
-  { to: "/architecture", icon: Map, labelKey: "nav.architecture", roles: routeRoles.architecture },
-  { to: "/integrations", icon: GitBranch, labelKey: "nav.integrations", roles: routeRoles.integrations },
-  { to: "/roadmap", icon: ShieldCheck, labelKey: "nav.roadmap", roles: routeRoles.roadmap },
-  { to: "/users", icon: Users, labelKey: "nav.users", roles: routeRoles.users },
-  { to: "/settings", icon: Settings, labelKey: "nav.settings", roles: routeRoles.settings },
-];
-
-
+import { MobileNavigation } from "./MobileNavigation.tsx";
+import { visibleNavigationForRole } from "./navigation.ts";
+import { preloadNavigationItem } from "./navigation.ts";
+import { RouteBoundary } from "@/shared/routing/RouteBoundary.tsx";
 
 function AppLayoutInner() {
   const { user } = useCurrentUser();
@@ -44,13 +31,7 @@ function AppLayoutInner() {
   const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
 
-  const isAuthenticated = Boolean(user);
-  const visibleNav = !isAuthenticated
-    ? navItems
-    : navItems.filter((item) =>
-        user?.role ? item.roles.includes(user.role) : false
-      );
-  
+  const visibleNav = user?.role ? visibleNavigationForRole(user.role) : [];
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -58,15 +39,24 @@ function AppLayoutInner() {
       <aside
         className={cn(
           "hidden md:flex flex-col border-r border-border bg-sidebar transition-all duration-300",
-          collapsed ? "md:w-16" : "md:w-60"
+          collapsed ? "md:w-16" : "md:w-60",
         )}
       >
         {/* Logo */}
-        <div className={cn("flex items-center gap-3 p-4 border-b border-sidebar-border", collapsed && "justify-center")}>
+        <div
+          className={cn(
+            "flex items-center gap-3 p-4 border-b border-sidebar-border",
+            collapsed && "justify-center",
+          )}
+        >
           {!collapsed && (
             <div>
-              <div className="text-sm font-bold text-sidebar-foreground leading-tight">TechGov</div>
-              <div className="text-[10px] text-muted-foreground leading-tight">CTO Platform</div>
+              <div className="text-sm font-bold text-sidebar-foreground leading-tight">
+                TechGov
+              </div>
+              <div className="text-[10px] text-muted-foreground leading-tight">
+                CTO Platform
+              </div>
             </div>
           )}
           {collapsed && <LayoutDashboard className="h-5 w-5 text-primary" />}
@@ -74,48 +64,79 @@ function AppLayoutInner() {
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {visibleNav.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  collapsed && "justify-center px-2"
-                )
-              }
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{t(item.labelKey)}</span>}
-            </NavLink>
-          ))}
+          {visibleNav.map((item) => {
+            const label = t(item.labelKey);
+            const link = (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/"}
+                aria-label={label}
+                onMouseEnter={() => preloadNavigationItem(item)}
+                onFocus={() => preloadNavigationItem(item)}
+                className={({ isActive }) =>
+                  cn(
+                    "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    collapsed && "justify-center px-2",
+                  )
+                }
+              >
+                <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {!collapsed && <span>{label}</span>}
+              </NavLink>
+            );
+
+            return collapsed ? (
+              <Tooltip key={item.to}>
+                <TooltipTrigger asChild>{link}</TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  {label}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              link
+            );
+          })}
         </nav>
 
         {/* User + Collapse */}
         <div className="p-2 border-t border-sidebar-border space-y-1">
-          <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-start px-1")}>
+          <div
+            className={cn(
+              "flex items-center",
+              collapsed ? "justify-center" : "justify-start px-1",
+            )}
+          >
             {collapsed ? <LanguageToggle iconOnly /> : <LanguageToggle />}
           </div>
           {user && (
-            <div className={cn("rounded-lg border border-border/60 bg-muted/20 p-2.5", collapsed ? "flex justify-center" : "flex items-center gap-2.5")}>
+            <div
+              className={cn(
+                "rounded-lg border border-border/60 bg-muted/20 p-2.5",
+                collapsed ? "flex justify-center" : "flex items-center gap-2.5",
+              )}
+            >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold uppercase text-primary">
                 {(user.name ?? user.email ?? "U").charAt(0)}
               </div>
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-semibold text-sidebar-foreground">{user.name ?? user.email}</div>
-                    <div className="mt-0.5 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                      {formatRole(user.role)}
+                  <div className="truncate text-xs font-semibold text-sidebar-foreground">
+                    {user.name ?? user.email}
+                  </div>
+                  <div className="mt-0.5 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    {formatRole(user.role)}
                   </div>
                 </div>
               )}
             </div>
           )}
           <button
+            type="button"
+            aria-label={t("auth.signOut")}
             onClick={() => void signOut()}
             className="w-full flex items-center justify-center gap-2 p-2 rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
           >
@@ -123,10 +144,17 @@ function AppLayoutInner() {
             {!collapsed && <span className="text-xs">{t("auth.signOut")}</span>}
           </button>
           <button
+            type="button"
+            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+            aria-expanded={!collapsed}
             onClick={() => setCollapsed(!collapsed)}
             className="w-full flex items-center justify-center p-2 rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
           </button>
         </div>
       </aside>
@@ -138,34 +166,18 @@ function AppLayoutInner() {
           <span className="font-bold text-sm">TechGov</span>
           <div className="flex items-center gap-2">
             <LanguageToggle />
-            <Settings className="h-5 w-5 text-muted-foreground" />
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
-          <Outlet />
+        <div className="flex-1 overflow-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+          <RouteBoundary>
+            <Outlet />
+          </RouteBoundary>
         </div>
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 flex justify-around border-t border-border bg-sidebar md:hidden pb-safe">
-        {visibleNav.slice(0, 5).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-col items-center gap-1 px-3 py-2 text-[10px] cursor-pointer",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )
-            }
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="truncate max-w-[60px] text-center">{t(item.labelKey).split(" ")[0]}</span>
-          </NavLink>
-        ))}
-      </nav>
+      <MobileNavigation items={visibleNav} translate={t} />
     </div>
   );
 }
@@ -194,8 +206,12 @@ export default function AppLayout() {
               <LayoutDashboard className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-foreground">{t("app.title")}</h1>
-              <p className="text-sm text-muted-foreground">{t("app.subtitle")}</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                {t("app.title")}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {t("app.subtitle")}
+              </p>
             </div>
           </div>
           <SignInButton />
@@ -209,8 +225,13 @@ export default function AppLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4 text-center">
         <div>
           <h1 className="text-xl font-semibold">Access is not provisioned</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Contact a CTO to assign your account a role.</p>
-          <button className="mt-4 text-sm text-primary underline" onClick={() => void signOut()}>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Contact a CTO to assign your account a role.
+          </p>
+          <button
+            className="mt-4 text-sm text-primary underline"
+            onClick={() => void signOut()}
+          >
             {t("auth.signOut")}
           </button>
         </div>

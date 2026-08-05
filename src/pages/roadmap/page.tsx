@@ -170,7 +170,8 @@ function RoadmapForm({ initial, onSave, onClose, items }: {
 
 function RoadmapContent() {
   const { canWrite } = useCurrentUser();
-  const items = useQuery(api.roadmap.list) ?? [];
+  const rawItems = useQuery(api.roadmap.list);
+  const items = rawItems ?? [];
   const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
   const stats = useQuery(api.roadmap.getStats, !isConvexAuthenticated ? "skip" : undefined);
   const createItem = useMutation(api.roadmap.create);
@@ -294,7 +295,11 @@ function RoadmapContent() {
         </Select>
       </div>
 
-      {items.length === 0 ? (
+      {rawItems === undefined ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
+        </div>
+      ) : items.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <ShieldCheck className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p>No roadmap items yet</p>

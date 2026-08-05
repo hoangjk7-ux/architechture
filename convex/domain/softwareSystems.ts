@@ -1,4 +1,11 @@
-import { numberInRange, nonNegativeNumber, optionalText, requiredText, uniqueTexts } from "./common";
+import {
+  isoDate,
+  numberInRange,
+  nonNegativeNumber,
+  optionalText,
+  requiredText,
+  uniqueTexts,
+} from "./common";
 
 export type SoftwareSystemInput = {
   name: string;
@@ -12,12 +19,15 @@ export type SoftwareSystemInput = {
   sla?: string;
   licenseType?: string;
   costPerYear?: number;
+  contractEndDate?: string;
   technicalDebtScore: number;
   architectureScore: number;
   description?: string;
 };
 
-export function normalizeSoftwareSystem<T extends SoftwareSystemInput>(input: T): T {
+export function normalizeSoftwareSystem<T extends SoftwareSystemInput>(
+  input: T,
+): T {
   return {
     ...input,
     name: requiredText(input.name, "name"),
@@ -31,8 +41,19 @@ export function normalizeSoftwareSystem<T extends SoftwareSystemInput>(input: T)
     sla: optionalText(input.sla),
     licenseType: optionalText(input.licenseType),
     costPerYear: nonNegativeNumber(input.costPerYear, "costPerYear"),
-    technicalDebtScore: numberInRange(input.technicalDebtScore, 0, 100, "technicalDebtScore"),
-    architectureScore: numberInRange(input.architectureScore, 0, 100, "architectureScore"),
+    contractEndDate: isoDate(input.contractEndDate, "contractEndDate"),
+    technicalDebtScore: numberInRange(
+      input.technicalDebtScore,
+      0,
+      100,
+      "technicalDebtScore",
+    ),
+    architectureScore: numberInRange(
+      input.architectureScore,
+      0,
+      100,
+      "architectureScore",
+    ),
     description: optionalText(input.description),
   };
 }

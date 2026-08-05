@@ -400,8 +400,11 @@ function VendorForm({ initial, onSave, onClose }: {
 function VendorsContent() {
   const { t } = useLanguage();
   const { canWrite } = useCurrentUser();
-  const vendors = useQuery(api.vendors.list) ?? [];
-  const systems = useQuery(api.software_systems.list) ?? [];
+  const rawVendors = useQuery(api.vendors.list);
+  const rawSystems = useQuery(api.software_systems.list);
+  const isLoading = rawVendors === undefined || rawSystems === undefined;
+  const vendors = useMemo(() => rawVendors ?? [], [rawVendors]);
+  const systems = useMemo(() => rawSystems ?? [], [rawSystems]);
   const createVendor = useMutation(api.vendors.create);
   const updateVendor = useMutation(api.vendors.update);
   const removeVendor = useMutation(api.vendors.remove);
@@ -413,8 +416,6 @@ function VendorsContent() {
   const [filterRisk, setFilterRisk] = useState("all");
   const [filterContract, setFilterContract] = useState("all");
   const [statFilter, setStatFilter] = useState<string | null>(null);
-
-  const now = Date.now();
 
   const stats = useMemo(() => ({
     total:    vendors.length,
@@ -444,7 +445,7 @@ function VendorsContent() {
       if (da <= 90 || db <= 90) return da - db;
       return b.riskScore - a.riskScore;
     });
-  }, [vendors, search, filterRisk, filterContract, statFilter, now]);
+  }, [vendors, search, filterRisk, filterContract, statFilter]);
 
   const selectedVendor = useMemo(() => vendors.find((v) => v._id === selectedId) ?? null, [vendors, selectedId]);
 
@@ -528,7 +529,7 @@ function VendorsContent() {
             </div>
 
             {/* Grid */}
-            {vendors === undefined ? (
+            {isLoading ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
               </div>

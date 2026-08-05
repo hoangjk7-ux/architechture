@@ -205,7 +205,8 @@ function IntegrationForm({ initial, onSave, onClose }: {
 function IntegrationsContent() {
   const { t } = useLanguage();
   const { canWrite } = useCurrentUser();
-  const integrations = useQuery(api.integrations.list) ?? [];
+  const rawIntegrations = useQuery(api.integrations.list);
+  const integrations = rawIntegrations ?? [];
   const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
   const stats = useQuery(api.integrations.getStats, !isConvexAuthenticated ? "skip" : undefined);
   const createIntegration = useMutation(api.integrations.create);
@@ -254,7 +255,11 @@ function IntegrationsContent() {
         </div>
       )}
 
-      {integrations.length === 0 ? (
+      {rawIntegrations === undefined ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
+        </div>
+      ) : integrations.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <GitBranch className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p>{t("integrations.noIntegrationsTracked")}</p>

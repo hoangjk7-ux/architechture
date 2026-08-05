@@ -7,7 +7,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "tsc -b && vite build",
-    "seed": "sh -c \"npx convex run seedData --push --deployment ${CONVEX_DEPLOYMENT:-dev}\"",
+    "seed": "sh -c \"test -n \\\"$CONVEX_DEPLOYMENT\\\" && convex run seed:seedData --push --deployment \\\"$CONVEX_DEPLOYMENT\\\"\"",
     "lint": "eslint src convex",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",

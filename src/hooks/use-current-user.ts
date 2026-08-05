@@ -1,9 +1,18 @@
+import {
+  createContext,
+  createElement,
+  useContext,
+  type ReactNode,
+} from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 
-export function useCurrentUser() {
+function useCurrentUserValue() {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const currentUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
+  const currentUser = useQuery(
+    api.users.getCurrentUser,
+    isAuthenticated ? {} : "skip",
+  );
   const user = currentUser ?? null;
 
   return {
@@ -16,4 +25,21 @@ export function useCurrentUser() {
     isViewer: user?.role === "viewer",
     canWrite: user?.role === "cto" || user?.role === "it_manager",
   };
+}
+
+type CurrentUserValue = ReturnType<typeof useCurrentUserValue>;
+
+const CurrentUserContext = createContext<CurrentUserValue | null>(null);
+
+export function CurrentUserProvider({ children }: { children: ReactNode }) {
+  const value = useCurrentUserValue();
+  return createElement(CurrentUserContext.Provider, { value }, children);
+}
+
+export function useCurrentUser() {
+  const value = useContext(CurrentUserContext);
+  if (!value) {
+    throw new Error("useCurrentUser must be used within CurrentUserProvider");
+  }
+  return value;
 }
