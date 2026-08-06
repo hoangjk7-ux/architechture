@@ -237,6 +237,13 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
   );
 }
 
+function scoreTone(value: number, goodAtHigh = true) {
+  if (goodAtHigh) {
+    return value >= 70 ? "#22c55e" : value >= 50 ? "#f59e0b" : "#ef4444";
+  }
+  return value > 60 ? "#ef4444" : value > 30 ? "#f59e0b" : "#22c55e";
+}
+
 function SystemNode({ data }: NodeProps<NodeData>) {
   const { system: s, inCount, outCount, worstHealth, isSelected } = data;
   const meta = TYPE_META[s.type] ?? TYPE_META.core;
@@ -1676,11 +1683,6 @@ function DeptSummaryCard({
   onClick: () => void;
 }) {
   const { t } = useLanguage();
-  const typeCounts: Record<string, number> = {};
-  systems.forEach((s) => {
-    typeCounts[s.type] = (typeCounts[s.type] ?? 0) + 1;
-  });
-
   const healthCounts: Record<string, number> = {
     healthy: 0,
     degraded: 0,
@@ -1694,74 +1696,111 @@ function DeptSummaryCard({
 
   const totalCost = systems.reduce((sum, s) => sum + (s.costPerYear ?? 0), 0);
   const criticalCount = systems.filter((s) => s.criticality === "high").length;
+  const noOwnerCount = systems.filter((s) => !s.owner).length;
+  const avgArchitecture = systems.length
+    ? Math.round(
+        systems.reduce((sum, s) => sum + s.architectureScore, 0) /
+          systems.length,
+      )
+    : 0;
+  const avgDebt = systems.length
+    ? Math.round(
+        systems.reduce((sum, s) => sum + s.technicalDebtScore, 0) /
+          systems.length,
+      )
+    : 0;
+  const unhealthyCount = healthCounts.degraded + healthCounts.down;
 
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-xl border p-4 hover:bg-muted/20 transition-all cursor-pointer w-full"
+      className="group text-left rounded-lg border p-4 hover:bg-muted/25 transition-all cursor-pointer w-full"
       style={{ borderColor: color + "55", background: color + "08" }}
     >
-      <div className="flex items-center gap-2 mb-3">
-        <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ background: color }}
-        />
-        <span className="font-semibold text-sm flex-1 truncate">{name}</span>
-        <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-          {systems.length} {t("arch.systemsWord")}
-        </span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span
+              className="h-2.5 w-2.5 rounded-full shrink-0"
+              style={{ background: color }}
+            />
+            <span className="font-semibold text-sm truncate">{name}</span>
+          </div>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {systems.length} {t("arch.systemsWord")}
+          </p>
+        </div>
+        <div
+          className="rounded-md px-2 py-1 text-right"
+          style={{ background: color + "14" }}
+        >
+          <div className="text-lg font-bold leading-none" style={{ color }}>
+            {avgArchitecture || "—"}
+          </div>
+          <div className="text-[9px] text-muted-foreground mt-0.5">
+            {t("dept.avgArchitecture")}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 mb-3">
-        {(Object.entries(typeCounts) as [string, number][]).map(
-          ([type, count]) => {
-            const m = TYPE_META[type] ?? TYPE_META.core;
-            return (
-              <span
-                key={type}
-                className="text-[9px] px-1.5 py-0.5 rounded font-medium"
-                style={{ background: m.badge + "22", color: m.badge }}
-              >
-                {t(`systemType.${type}`)} {count}
-              </span>
-            );
-          },
-        )}
-        {criticalCount > 0 && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-red-500/15 text-red-400">
-            🔴 {t("systems.badge.critical")} {criticalCount}
-          </span>
-        )}
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+          <div className="text-[9px] text-muted-foreground">
+            {t("dept.critical")}
+          </div>
+          <div className="text-sm font-semibold text-red-400">
+            {criticalCount}
+          </div>
+        </div>
+        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+          <div className="text-[9px] text-muted-foreground">
+            {t("dept.noOwner")}
+          </div>
+          <div className="text-sm font-semibold text-orange-400">
+            {noOwnerCount}
+          </div>
+        </div>
+        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+          <div className="text-[9px] text-muted-foreground">
+            {t("dept.avgDebt")}
+          </div>
+          <div
+            className="text-sm font-semibold"
+            style={{ color: scoreTone(avgDebt, false) }}
+          >
+            {avgDebt || "—"}
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-3">
+      <div className="mt-3 flex h-1.5 overflow-hidden rounded-full bg-muted">
         {(Object.entries(healthCounts) as [string, number][])
           .filter(([, c]) => c > 0)
           .map(([h, c]) => {
             const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
             return (
-              <div key={h} className="flex items-center gap-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: hm.color }}
-                />
-                <span className="text-[10px]" style={{ color: hm.color }}>
-                  {c}
-                </span>
-              </div>
+              <span
+                key={h}
+                className="h-full"
+                style={{
+                  width: `${(c / Math.max(systems.length, 1)) * 100}%`,
+                  background: hm.color,
+                }}
+              />
             );
           })}
       </div>
 
-      {totalCost > 0 && (
-        <div
-          className="text-[10px] text-green-400 font-mono border-t pt-2"
-          style={{ borderColor: color + "33" }}
-        >
-          {formatVnd(totalCost)}
-          {t("vendors.perYear")}
-        </div>
-      )}
+      <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground" style={{ borderColor: color + "33" }}>
+        <span>
+          {unhealthyCount > 0
+            ? `${unhealthyCount} ${t("health.degraded").toLowerCase()}`
+            : t("health.healthy")}
+        </span>
+        <span className="font-mono text-green-400">
+          {totalCost > 0 ? `${formatVnd(totalCost)}${t("vendors.perYear")}` : "—"}
+        </span>
+      </div>
     </button>
   );
 }
@@ -1803,6 +1842,29 @@ function DeptView({
         ? (byDept[selectedDept] ?? [])
         : systems;
 
+  const integrationCounts = useMemo(() => {
+    const counts = new globalThis.Map<
+      Id<"software_systems">,
+      { inbound: number; outbound: number }
+    >();
+    for (const integration of integrations) {
+      const source = counts.get(integration.sourceSystemId) ?? {
+        inbound: 0,
+        outbound: 0,
+      };
+      source.outbound += 1;
+      counts.set(integration.sourceSystemId, source);
+
+      const destination = counts.get(integration.destinationSystemId) ?? {
+        inbound: 0,
+        outbound: 0,
+      };
+      destination.inbound += 1;
+      counts.set(integration.destinationSystemId, destination);
+    }
+    return counts;
+  }, [integrations]);
+
   // Stats for selected dept
   const totalCost = activeSystems.reduce(
     (sum, s) => sum + (s.costPerYear ?? 0),
@@ -1811,6 +1873,19 @@ function DeptView({
   const criticalCount = activeSystems.filter(
     (s) => s.criticality === "high",
   ).length;
+  const noOwnerCount = activeSystems.filter((s) => !s.owner).length;
+  const avgArchitecture = activeSystems.length
+    ? Math.round(
+        activeSystems.reduce((sum, s) => sum + s.architectureScore, 0) /
+          activeSystems.length,
+      )
+    : 0;
+  const avgDebt = activeSystems.length
+    ? Math.round(
+        activeSystems.reduce((sum, s) => sum + s.technicalDebtScore, 0) /
+          activeSystems.length,
+      )
+    : 0;
   const healthCounts = activeSystems.reduce<Record<string, number>>(
     (acc, s) => {
       const h = worstHealthFor(s._id, integrations);
@@ -1821,12 +1896,20 @@ function DeptView({
   );
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 flex-col lg:flex-row overflow-hidden bg-background">
       {/* ── Sidebar ── */}
-      <div className="w-52 shrink-0 border-r border-border overflow-y-auto py-3 px-2 space-y-0.5 bg-muted/10">
+      <div className="lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-border overflow-y-auto p-3 bg-muted/10">
+        <div className="mb-3 px-1">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("dept.portfolio")}
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            {t("dept.selectHint")}
+          </p>
+        </div>
         <button
           onClick={() => setSelectedDept(null)}
-          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+          className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
             selectedDept === null
               ? "bg-primary/15 text-primary"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1849,7 +1932,7 @@ function DeptView({
             <button
               key={dept.name}
               onClick={() => setSelectedDept(dept.name)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
                 selectedDept === dept.name
                   ? "font-semibold"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1879,7 +1962,7 @@ function DeptView({
             </div>
             <button
               onClick={() => setSelectedDept("__none__")}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer ${
                 selectedDept === "__none__"
                   ? "bg-muted text-foreground font-semibold"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1898,44 +1981,66 @@ function DeptView({
       {/* ── Content ── */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Stats bar */}
-        <div className="shrink-0 px-5 py-2.5 border-b border-border bg-muted/10 flex flex-wrap items-center gap-4 text-[10px]">
-          <span className="font-semibold text-foreground">
-            {selectedDept === null
-              ? t("dept.all")
-              : selectedDept === "__none__"
-                ? t("dept.uncategorized")
-                : selectedDept}
-          </span>
-          <span className="text-muted-foreground">
-            {activeSystems.length} {t("arch.systemsWord")}
-          </span>
-          {criticalCount > 0 && (
-            <span className="text-red-400 font-medium">
-              🔴 {criticalCount} {t("dept.critical")}
-            </span>
-          )}
-          {(Object.entries(healthCounts) as [string, number][])
-            .filter(([, c]) => c > 0)
-            .map(([h, c]) => {
-              const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
-              return (
-                <span key={h} className="flex items-center gap-1">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: hm.color }}
-                  />
-                  <span style={{ color: hm.color }}>
-                    {t(`health.${h}`)} {c}
-                  </span>
-                </span>
-              );
-            })}
-          {totalCost > 0 && (
-            <span className="ml-auto text-green-400 font-mono">
-              {formatVnd(totalCost)}
-              {t("vendors.perYear")}
-            </span>
-          )}
+        <div className="shrink-0 border-b border-border bg-muted/10 p-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold truncate">
+                {selectedDept === null
+                  ? t("dept.all")
+                  : selectedDept === "__none__"
+                    ? t("dept.uncategorized")
+                    : selectedDept}
+              </h3>
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                {(Object.entries(healthCounts) as [string, number][])
+                  .filter(([, c]) => c > 0)
+                  .map(([h, c]) => {
+                    const hm = HEALTH_META[h] ?? HEALTH_META.unknown;
+                    return (
+                      <span key={h} className="flex items-center gap-1.5">
+                        <span
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{ background: hm.color }}
+                        />
+                        <span style={{ color: hm.color }}>
+                          {t(`health.${h}`)} {c}
+                        </span>
+                      </span>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+              {[
+                [t("arch.systemsWord"), activeSystems.length, "#94a3b8"],
+                [t("dept.critical"), criticalCount, "#ef4444"],
+                [t("dept.noOwner"), noOwnerCount, "#f97316"],
+                [t("dept.avgArchitecture"), avgArchitecture || "—", scoreTone(avgArchitecture)],
+                [t("dept.avgDebt"), avgDebt || "—", scoreTone(avgDebt, false)],
+                [
+                  t("dept.totalSpend"),
+                  totalCost > 0 ? formatVnd(totalCost) : "—",
+                  "#22c55e",
+                ],
+              ].map(([label, value, color]) => (
+                <div
+                  key={String(label)}
+                  className="rounded-md border border-border bg-background/60 px-3 py-2"
+                >
+                  <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                    {label}
+                  </div>
+                  <div
+                    className="mt-1 truncate text-sm font-semibold"
+                    style={{ color: String(color) }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Overview grid (all depts) */}
@@ -1982,156 +2087,129 @@ function DeptView({
                 <p className="text-sm">{t("dept.noSystemsInDept")}</p>
               </div>
             ) : (
-              <>
-                {/* Table header */}
-                <div className="sticky top-0 z-10 grid grid-cols-[1fr_120px_90px_90px_80px_100px_110px] gap-3 px-5 py-2 border-b border-border bg-muted/30 text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
-                  <span>{t("dept.col.system")}</span>
-                  <span>{t("dept.col.typeStatus")}</span>
-                  <span>{t("dept.col.health")}</span>
-                  <span>{t("dept.col.archScore")}</span>
-                  <span className="text-center">
-                    {t("dept.col.integrations")}
-                  </span>
-                  <span className="text-right">
-                    {t("dept.col.costPerYear")}
-                  </span>
-                  <span>{t("dept.col.owner")}</span>
-                </div>
+              <div className="grid gap-3 p-4 xl:grid-cols-2">
                 {activeSystems.map((sys) => {
                   const meta = TYPE_META[sys.type] ?? TYPE_META.core;
                   const statusMeta =
                     STATUS_META[sys.status] ?? STATUS_META.inactive;
                   const worst = worstHealthFor(sys._id, integrations);
                   const hm = HEALTH_META[worst] ?? HEALTH_META.unknown;
-                  const outCount = integrations.filter(
-                    (i) => i.sourceSystemId === sys._id,
-                  ).length;
-                  const inCount = integrations.filter(
-                    (i) => i.destinationSystemId === sys._id,
-                  ).length;
+                  const flow = integrationCounts.get(sys._id) ?? {
+                    inbound: 0,
+                    outbound: 0,
+                  };
+                  const architectureColor = scoreTone(sys.architectureScore);
+                  const debtColor = scoreTone(sys.technicalDebtScore, false);
                   return (
                     <div
                       key={sys._id}
-                      className="grid grid-cols-[1fr_120px_90px_90px_80px_100px_110px] gap-3 px-5 py-3 border-b border-border hover:bg-muted/20 transition-colors items-center"
+                      className="rounded-lg border border-border bg-card/80 p-4 transition-colors hover:bg-muted/20"
                     >
-                      {/* Name + category */}
-                      <div className="min-w-0">
-                        <div className="font-semibold text-sm truncate">
-                          {sys.name}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">
+                            {sys.name}
+                          </div>
+                          <div className="mt-1 text-[10px] text-muted-foreground truncate">
+                            {sys.category}
+                            {sys.technology ? ` · ${sys.technology}` : ""}
+                          </div>
                         </div>
-                        <div className="text-[10px] text-muted-foreground truncate">
-                          {sys.category}
-                          {sys.technology ? ` · ${sys.technology}` : ""}
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ background: hm.color }}
+                          />
+                          <span
+                            className="text-[10px] font-medium"
+                            style={{ color: hm.color }}
+                          >
+                            {t(`health.${worst}`)}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Type + status */}
-                      <div className="flex flex-col gap-1">
-                        <span
-                          className="text-[9px] px-1.5 py-0.5 rounded font-medium w-fit"
-                          style={{
-                            background: meta.badge + "22",
-                            color: meta.badge,
-                          }}
-                        >
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] px-2 py-1 rounded font-medium" style={{ background: meta.badge + "22", color: meta.badge }}>
                           {t(`systemType.${sys.type}`)}
                         </span>
-                        <span
-                          className="flex items-center gap-1 text-[10px]"
-                          style={{ color: statusMeta.color }}
-                        >
-                          {statusMeta.icon}{" "}
-                          <span className="capitalize">{sys.status}</span>
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-background/60" style={{ color: statusMeta.color }}>
+                          {statusMeta.icon}
+                          {t(`status.${sys.status}`)}
                         </span>
-                      </div>
-
-                      {/* Health */}
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ background: hm.color }}
-                        />
-                        <span
-                          className="text-[10px]"
-                          style={{ color: hm.color }}
-                        >
-                          {t(`health.${worst}`)}
-                        </span>
-                      </div>
-
-                      {/* Arch score */}
-                      <div className="space-y-0.5">
-                        <div className="flex justify-between text-[9px] text-muted-foreground">
-                          <span>Arch</span>
-                          <span
-                            style={{
-                              color:
-                                sys.architectureScore >= 70
-                                  ? "#22c55e"
-                                  : sys.architectureScore >= 50
-                                    ? "#f59e0b"
-                                    : "#ef4444",
-                            }}
-                          >
-                            {sys.architectureScore}
+                        {sys.criticality === "high" && (
+                          <span className="text-[10px] px-2 py-1 rounded bg-red-500/15 text-red-400">
+                            {t("systems.badge.critical")}
                           </span>
+                        )}
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-[10px] sm:grid-cols-4">
+                        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+                          <div className="text-muted-foreground">
+                            {t("dept.owner")}
+                          </div>
+                          <div className="mt-1 truncate font-medium">
+                            {sys.owner ?? t("common.unassigned")}
+                          </div>
                         </div>
-                        <ScoreBar
-                          value={sys.architectureScore}
-                          color={
-                            sys.architectureScore >= 70
-                              ? "#22c55e"
-                              : sys.architectureScore >= 50
-                                ? "#f59e0b"
-                                : "#ef4444"
-                          }
-                        />
-                        <div className="flex justify-between text-[9px] text-muted-foreground">
-                          <span>Debt</span>
-                          <span
-                            style={{
-                              color:
-                                sys.technicalDebtScore > 60
-                                  ? "#ef4444"
-                                  : sys.technicalDebtScore > 30
-                                    ? "#f59e0b"
-                                    : "#22c55e",
-                            }}
-                          >
-                            {sys.technicalDebtScore}
-                          </span>
+                        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+                          <div className="text-muted-foreground">
+                            {t("dept.integrationFlow")}
+                          </div>
+                          <div className="mt-1 font-medium">
+                            {t("dept.outbound")} {flow.outbound} ·{" "}
+                            {t("dept.inbound")} {flow.inbound}
+                          </div>
                         </div>
-                        <ScoreBar
-                          value={sys.technicalDebtScore}
-                          color={
-                            sys.technicalDebtScore > 60
-                              ? "#ef4444"
-                              : sys.technicalDebtScore > 30
-                                ? "#f59e0b"
-                                : "#22c55e"
-                          }
-                        />
+                        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+                          <div className="text-muted-foreground">
+                            {t("dept.col.costPerYear")}
+                          </div>
+                          <div className="mt-1 truncate font-mono font-medium text-green-400">
+                            {sys.costPerYear ? formatVnd(sys.costPerYear) : "—"}
+                          </div>
+                        </div>
+                        <div className="rounded-md bg-background/50 border border-border/60 p-2">
+                          <div className="text-muted-foreground">
+                            {t("dept.riskDebt")}
+                          </div>
+                          <div className="mt-1 font-medium" style={{ color: debtColor }}>
+                            {t(`level.${sys.riskLevel}`)} · {sys.technicalDebtScore}
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Integrations */}
-                      <div className="text-[10px] text-muted-foreground text-center">
-                        <div>↑ {outCount}</div>
-                        <div>↓ {inCount}</div>
-                      </div>
-
-                      {/* Cost */}
-                      <div className="text-[10px] text-green-400 font-mono text-right">
-                        {sys.costPerYear ? formatVnd(sys.costPerYear) : "—"}
-                      </div>
-
-                      {/* Owner */}
-                      <div className="text-[10px] text-muted-foreground truncate">
-                        {sys.owner ?? "—"}
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>{t("detail.architectureScore")}</span>
+                            <span style={{ color: architectureColor }}>
+                              {sys.architectureScore}
+                            </span>
+                          </div>
+                          <ScoreBar
+                            value={sys.architectureScore}
+                            color={architectureColor}
+                          />
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>{t("detail.technicalDebt")}</span>
+                            <span style={{ color: debtColor }}>
+                              {sys.technicalDebtScore}
+                            </span>
+                          </div>
+                          <ScoreBar
+                            value={sys.technicalDebtScore}
+                            color={debtColor}
+                          />
+                        </div>
                       </div>
                     </div>
                   );
                 })}
-              </>
+              </div>
             )}
           </div>
         )}
