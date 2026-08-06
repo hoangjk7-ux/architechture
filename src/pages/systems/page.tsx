@@ -249,6 +249,9 @@ const actionConfig: Record<string, { key: string; color: string; icon: React.Ele
   created: { key: "action.created", color: "#22c55e", icon: PlusCircle },
   updated: { key: "action.updated", color: "#3b82f6", icon: Pencil },
   deleted: { key: "action.deleted", color: "#ef4444", icon: Trash2 },
+  feature_created: { key: "action.featureCreated", color: "#22c55e", icon: PlusCircle },
+  feature_updated: { key: "action.featureUpdated", color: "#8b5cf6", icon: Pencil },
+  feature_deleted: { key: "action.featureDeleted", color: "#ef4444", icon: Trash2 },
 };
 
 function ActivityLogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {

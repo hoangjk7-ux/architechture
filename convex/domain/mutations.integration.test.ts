@@ -192,4 +192,54 @@ describe("DATA-02 mutation validation", () => {
       t.mutation(api.config.add, { type: "category", name: "erp" }),
     ).rejects.toMatchObject({ data: { code: "CONFLICT" } });
   });
+
+  it("records feature adjustment logs for module create, update and delete", async () => {
+    const t = await createAuthorizedConvexTest();
+    const systemId = await t.mutation(api.software_systems.create, systemInput);
+    const moduleId = await t.mutation(api.system_modules.create, {
+      systemId,
+      name: "Enrollment Portal",
+      lifecycle: "planned",
+      health: "unknown",
+      usedBy: ["Admissions"],
+      sortOrder: 0,
+    });
+
+    await t.mutation(api.system_modules.update, {
+      id: moduleId,
+      health: "healthy",
+      version: "1.0.0",
+    });
+    await t.mutation(api.system_modules.remove, { id: moduleId });
+
+    const logs = await t.run(async (ctx) =>
+      ctx.db
+        .query("system_change_logs")
+        .withIndex("by_system", (q) => q.eq("systemId", systemId))
+        .collect(),
+    );
+    const featureLogs = logs.filter((log) => log.action.startsWith("feature_"));
+
+    expect(featureLogs.map((log) => log.action)).toEqual([
+      "feature_created",
+      "feature_updated",
+      "feature_deleted",
+    ]);
+    expect(featureLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          systemName: "Finance Core · Enrollment Portal",
+          action: "feature_updated",
+          changes: expect.arrayContaining([
+            expect.objectContaining({
+              field: "health",
+              from: "unknown",
+              to: "healthy",
+            }),
+            expect.objectContaining({ field: "version", to: "1.0.0" }),
+          ]),
+        }),
+      ]),
+    );
+  });
 });

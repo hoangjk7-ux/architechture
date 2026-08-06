@@ -228,6 +228,9 @@ const translations: TranslationMap = {
   "action.created": { vi: "Đã tạo", en: "Created" },
   "action.updated": { vi: "Đã cập nhật", en: "Updated" },
   "action.deleted": { vi: "Đã xoá", en: "Deleted" },
+  "action.featureCreated": { vi: "Đã thêm tính năng", en: "Feature added" },
+  "action.featureUpdated": { vi: "Đã điều chỉnh tính năng", en: "Feature updated" },
+  "action.featureDeleted": { vi: "Đã xoá tính năng", en: "Feature deleted" },
 
   // ─── Vendors page ────────────────────────────────────────────────────────
   "vendors.title": { vi: "Quản lý Nhà cung cấp & Hợp đồng", en: "Vendor & Contract Management" },

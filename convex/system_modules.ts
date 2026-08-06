@@ -4,6 +4,20 @@ import type { Doc, Id } from "./_generated/dataModel.d.ts";
 import { requireReadAccess, requireWriteAccess } from "./helpers.ts";
 import { domainError } from "./domain/common.ts";
 import { normalizeSystemModule } from "./domain/systemModules.ts";
+import { diffFields, recordSystemChange } from "./system_change_logs.ts";
+
+function moduleLogSnapshot(module: Doc<"system_modules">) {
+  return {
+    name: module.name,
+    description: module.description,
+    lifecycle: module.lifecycle,
+    health: module.health,
+    usedBy: module.usedBy,
+    version: module.version,
+    plannedDate: module.plannedDate,
+    notes: module.notes,
+  };
+}
 
 export const listBySystem = query({
   args: { systemId: v.id("software_systems") },
@@ -50,10 +64,22 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
-    if (!(await ctx.db.get(args.systemId))) {
+    const system = await ctx.db.get(args.systemId);
+    if (!system) {
       domainError("NOT_FOUND", "Software system not found", "systemId");
     }
-    return await ctx.db.insert("system_modules", normalizeSystemModule(args));
+    const data = normalizeSystemModule(args);
+    const id = await ctx.db.insert("system_modules", data);
+    await recordSystemChange(ctx, {
+      systemId: args.systemId,
+      systemName: `${system.name} · ${data.name}`,
+      action: "feature_created",
+      changes: [
+        { field: "lifecycle", to: data.lifecycle },
+        { field: "health", to: data.health },
+      ],
+    });
+    return id;
   },
 });
 
@@ -89,8 +115,9 @@ export const update = mutation({
     const { id, ...patch } = args;
     const existing = await ctx.db.get(id);
     if (!existing) domainError("NOT_FOUND", "System module not found", "id");
+    const system = await ctx.db.get(existing.systemId);
     const normalized = normalizeSystemModule({ ...existing, ...patch });
-    await ctx.db.patch(id, {
+    const updatePatch = {
       ...patch,
       name: normalized.name,
       description: normalized.description,
@@ -98,7 +125,22 @@ export const update = mutation({
       version: normalized.version,
       plannedDate: normalized.plannedDate,
       notes: normalized.notes,
-    });
+    };
+    await ctx.db.patch(id, updatePatch);
+
+    const updated = { ...existing, ...updatePatch };
+    const changes = diffFields(
+      moduleLogSnapshot(existing),
+      moduleLogSnapshot(updated),
+    );
+    if (changes.length > 0) {
+      await recordSystemChange(ctx, {
+        systemId: existing.systemId,
+        systemName: `${system?.name ?? "Unknown system"} · ${normalized.name}`,
+        action: "feature_updated",
+        changes,
+      });
+    }
   },
 });
 
@@ -106,8 +148,15 @@ export const remove = mutation({
   args: { id: v.id("system_modules") },
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
-    if (!(await ctx.db.get(args.id)))
+    const existing = await ctx.db.get(args.id);
+    if (!existing)
       domainError("NOT_FOUND", "System module not found", "id");
+    const system = await ctx.db.get(existing.systemId);
     await ctx.db.delete(args.id);
+    await recordSystemChange(ctx, {
+      systemId: existing.systemId,
+      systemName: `${system?.name ?? "Unknown system"} · ${existing.name}`,
+      action: "feature_deleted",
+    });
   },
 });

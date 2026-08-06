@@ -19,8 +19,9 @@ const LEVEL_INDENT: Record<string, number> = {
 };
 
 const ROW_H = 32;
-const LABEL_W = 200;
+const LABEL_W = 260;
 const CHART_PADDING = 12;
+const MIN_CHART_W = 720;
 
 interface Props {
   items: RoadmapItem[];
@@ -93,7 +94,7 @@ export default function GanttChart({ items }: Props) {
   const today = new Date();
   const todayX = Math.round((today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  const svgWidth = 800; // base width, scales via viewBox
+  const svgWidth = LABEL_W + CHART_PADDING * 2 + MIN_CHART_W; // base width, scales via viewBox
   const chartW = svgWidth - LABEL_W - CHART_PADDING * 2;
   const svgHeight = ROW_H * (rows.length + 1) + 40;
 
@@ -110,7 +111,7 @@ export default function GanttChart({ items }: Props) {
       <svg
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         className="w-full"
-        style={{ minHeight: svgHeight }}
+        style={{ minWidth: svgWidth, minHeight: svgHeight }}
       >
         <defs>
           <pattern id="gantt-grid" width={chartW / Math.max(1, months.length)} height={ROW_H} patternUnits="userSpaceOnUse" x={LABEL_W + CHART_PADDING}>
@@ -206,7 +207,7 @@ export default function GanttChart({ items }: Props) {
                 fontSize={item.level === "initiative" ? "10" : "9"}
                 fontWeight={item.level === "initiative" ? "700" : "400"}
               >
-                {item.title.length > 22 ? item.title.slice(0, 20) + "…" : item.title}
+                {item.title.length > 32 ? item.title.slice(0, 30) + "…" : item.title}
               </text>
 
               {/* Level dot */}

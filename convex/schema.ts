@@ -130,7 +130,14 @@ export default defineSchema({
   system_change_logs: defineTable({
     systemId: v.optional(v.id("software_systems")),
     systemName: v.string(),
-    action: v.union(v.literal("created"), v.literal("updated"), v.literal("deleted")),
+    action: v.union(
+      v.literal("created"),
+      v.literal("updated"),
+      v.literal("deleted"),
+      v.literal("feature_created"),
+      v.literal("feature_updated"),
+      v.literal("feature_deleted")
+    ),
     changes: v.optional(
       v.array(
         v.object({

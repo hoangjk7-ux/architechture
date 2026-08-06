@@ -34,7 +34,13 @@ export async function recordSystemChange(
   args: {
     systemId?: Id<"software_systems">;
     systemName: string;
-    action: "created" | "updated" | "deleted";
+    action:
+      | "created"
+      | "updated"
+      | "deleted"
+      | "feature_created"
+      | "feature_updated"
+      | "feature_deleted";
     changes?: FieldChange[];
   }
 ) {
