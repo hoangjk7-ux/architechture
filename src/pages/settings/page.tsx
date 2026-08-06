@@ -7,36 +7,38 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { toast } from "sonner";
 import { Settings, Tag, Building2, MapPin, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
+import { useLanguage } from "@/components/providers/language.tsx";
 import type { Id, Doc } from "@/convex/_generated/dataModel.d.ts";
 
 type ConfigItem = Doc<"config_items">;
 type ConfigType = "category" | "department" | "campus";
 
-const CARD_CONFIG: Record<ConfigType, { label: string; icon: React.ElementType; color: string; placeholder: string; description: string }> = {
+const CARD_CONFIG: Record<ConfigType, { labelKey: string; icon: React.ElementType; color: string; placeholderKey: string; descriptionKey: string }> = {
   category: {
-    label: "Category",
+    labelKey: "settings.category",
     icon: Tag,
     color: "text-indigo-400",
-    placeholder: "VD: CRM, ERP, SIS…",
-    description: "Phân loại chức năng của hệ thống phần mềm",
+    placeholderKey: "settings.categoryPlaceholder",
+    descriptionKey: "settings.categoryDesc",
   },
   department: {
-    label: "Department",
+    labelKey: "settings.department",
     icon: Building2,
     color: "text-blue-400",
-    placeholder: "VD: Finance, HR, Admissions…",
-    description: "Các phòng ban sử dụng hệ thống",
+    placeholderKey: "settings.departmentPlaceholder",
+    descriptionKey: "settings.departmentDesc",
   },
   campus: {
-    label: "Campus",
+    labelKey: "settings.campus",
     icon: MapPin,
     color: "text-green-400",
-    placeholder: "VD: Hà Nội, TP.HCM, Đà Nẵng…",
-    description: "Cơ sở / chi nhánh áp dụng hệ thống",
+    placeholderKey: "settings.campusPlaceholder",
+    descriptionKey: "settings.campusDesc",
   },
 };
 
 function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: ConfigItem[]; canWrite: boolean }) {
+  const { t } = useLanguage();
   const addItem = useMutation(api.config.add);
   const updateItem = useMutation(api.config.update);
   const removeItem = useMutation(api.config.remove);
@@ -55,9 +57,9 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
     try {
       await addItem({ type, name: newName.trim() });
       setNewName("");
-      toast.success(`Đã thêm ${cfg.label}`);
+      toast.success(`${t("settings.add")} ${t(cfg.labelKey).toLowerCase()}`);
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể thêm");
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.addFailed"));
     } finally {
       setAdding(false);
     }
@@ -68,9 +70,9 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
     try {
       await updateItem({ id, name: editName.trim() });
       setEditingId(null);
-      toast.success("Đã cập nhật");
+      toast.success(t("settings.toast.updated"));
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể cập nhật");
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.updateFailed"));
     }
   };
 
@@ -79,7 +81,7 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       await removeItem({ id });
       toast.success(`Đã xoá "${name}"`);
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? "Không thể xoá");
+      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.removeFailed"));
     }
   };
 
@@ -91,8 +93,8 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
           <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm">{cfg.label}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{cfg.description}</p>
+          <h3 className="font-semibold text-sm">{t(cfg.labelKey)}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t(cfg.descriptionKey)}</p>
         </div>
         <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
           {items.length}
@@ -103,7 +105,7 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       <div className="flex-1 overflow-y-auto divide-y divide-border/50" style={{ maxHeight: 280 }}>
         {items.length === 0 ? (
           <div className="py-8 text-center text-xs text-muted-foreground">
-            Chưa có dữ liệu. Thêm mới bên dưới.
+            {t("settings.noData")}
           </div>
         ) : (
           items.map((item) => (
@@ -157,12 +159,12 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder={cfg.placeholder}
+            placeholder={t(cfg.placeholderKey)}
             className="h-8 text-xs flex-1 bg-input"
           />
           <Button size="sm" onClick={handleAdd} disabled={adding || !newName.trim()} className="gap-1 h-8 px-3">
             <Plus className="h-3.5 w-3.5" />
-            Thêm
+            {t("settings.add")}
           </Button>
         </div>
       )}
@@ -172,16 +174,17 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
 
 function SettingsContent() {
   const { canWrite } = useCurrentUser();
+  const { t } = useLanguage();
   const config = useQuery(api.config.listAll);
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="h-6 w-6 text-primary" />Cấu hình hệ thống
+          <Settings className="h-6 w-6 text-primary" />{t("settings.title")}
         </h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Quản lý danh sách Category, Department và Campus dùng cho toàn bộ hệ thống
+          {t("settings.subtitle")}
         </p>
       </div>
 

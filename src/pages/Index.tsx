@@ -14,6 +14,7 @@ import {
   Clock,
   ShieldAlert,
 } from "lucide-react";
+import { useLanguage } from "@/components/providers/language.tsx";
 
 function StatCard({
   title,
@@ -55,6 +56,7 @@ function StatCard({
 
 export default function Index() {
   const { isBusinessOwner } = useCurrentUser();
+  const { t } = useLanguage();
 
   const systemStats = useQuery(api.software_systems.getStats);
   const integrationStats = useQuery(api.integrations.getStats, isBusinessOwner ? "skip" : {});
@@ -66,21 +68,21 @@ export default function Index() {
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Technology governance overview</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Systems</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("dashboard.systems")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total Systems" value={systemStats?.total} icon={Server} />
-          <StatCard title="Active" value={systemStats?.active} icon={CheckCircle2} variant="success" />
-          <StatCard title="High Risk" value={systemStats?.highRisk} icon={ShieldAlert} variant="danger" />
-          <StatCard title="Legacy" value={systemStats?.legacy} icon={Clock} variant="warning" />
+          <StatCard title={t("dashboard.totalSystems")} value={systemStats?.total} icon={Server} />
+          <StatCard title={t("dashboard.active")} value={systemStats?.active} icon={CheckCircle2} variant="success" />
+          <StatCard title={t("dashboard.highRisk")} value={systemStats?.highRisk} icon={ShieldAlert} variant="danger" />
+          <StatCard title={t("dashboard.legacy")} value={systemStats?.legacy} icon={Clock} variant="warning" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <StatCard
-            title="Avg Architecture Score"
+            title={t("dashboard.avgArchitectureScore")}
             value={systemStats?.avgArchitectureScore !== undefined ? `${systemStats.avgArchitectureScore}%` : undefined}
             icon={TrendingUp}
             variant={
@@ -94,7 +96,7 @@ export default function Index() {
             }
           />
           <StatCard
-            title="Avg Technical Debt"
+            title={t("dashboard.avgTechnicalDebt")}
             value={systemStats?.avgTechnicalDebt !== undefined ? `${systemStats.avgTechnicalDebt}%` : undefined}
             icon={AlertTriangle}
             variant={
@@ -108,28 +110,28 @@ export default function Index() {
             }
           />
           <StatCard
-            title="Expiring Contracts"
+            title={t("dashboard.expiringContracts")}
             value={systemStats?.expiringContracts}
             icon={Clock}
-            description="Within 30 days"
+            description={t("dashboard.within30Days")}
             variant={systemStats?.expiringContracts ? "warning" : "default"}
           />
         </div>
       </div>
 
       {!isBusinessOwner && <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Integrations</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("dashboard.integrations")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total" value={integrationStats?.total} icon={GitBranch} />
-          <StatCard title="Healthy" value={integrationStats?.healthy} icon={CheckCircle2} variant="success" />
-          <StatCard title="Degraded" value={integrationStats?.degraded} icon={AlertTriangle} variant="warning" />
-          <StatCard title="Down" value={integrationStats?.down} icon={ShieldAlert} variant="danger" />
+          <StatCard title={t("dashboard.total")} value={integrationStats?.total} icon={GitBranch} />
+          <StatCard title={t("dashboard.healthy")} value={integrationStats?.healthy} icon={CheckCircle2} variant="success" />
+          <StatCard title={t("dashboard.degraded")} value={integrationStats?.degraded} icon={AlertTriangle} variant="warning" />
+          <StatCard title={t("dashboard.down")} value={integrationStats?.down} icon={ShieldAlert} variant="danger" />
         </div>
         {integrationStats?.nonCompliant !== undefined && integrationStats.nonCompliant > 0 && (
           <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900">
             <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />
             <span className="text-sm text-yellow-800 dark:text-yellow-200">
-              {integrationStats.nonCompliant} integration{integrationStats.nonCompliant > 1 ? "s" : ""} not architecture-compliant
+              {integrationStats.nonCompliant} {t("dashboard.nonCompliantIntegrations")}
             </span>
           </div>
         )}
@@ -137,30 +139,30 @@ export default function Index() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Roadmap</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("dashboard.roadmap")}</h2>
           <div className="grid grid-cols-2 gap-4">
-            <StatCard title="In Progress" value={roadmapStats?.inProgress} icon={TrendingUp} />
-            <StatCard title="Blocked" value={roadmapStats?.blocked} icon={AlertTriangle} variant="danger" />
+            <StatCard title={t("dashboard.inProgress")} value={roadmapStats?.inProgress} icon={TrendingUp} />
+            <StatCard title={t("dashboard.blocked")} value={roadmapStats?.blocked} icon={AlertTriangle} variant="danger" />
             <StatCard
-              title="Completion Rate"
+              title={t("dashboard.completionRate")}
               value={roadmapStats?.completionRate !== undefined ? `${roadmapStats.completionRate}%` : undefined}
               icon={CheckCircle2}
               variant="success"
             />
-            <StatCard title="Overdue" value={roadmapStats?.overdue} icon={Clock} variant={roadmapStats?.overdue ? "warning" : "default"} />
+            <StatCard title={t("dashboard.overdue")} value={roadmapStats?.overdue} icon={Clock} variant={roadmapStats?.overdue ? "warning" : "default"} />
           </div>
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Vendors</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("dashboard.vendors")}</h2>
           <div className="grid grid-cols-2 gap-4">
-            <StatCard title="Total Vendors" value={vendors?.length} icon={Building2} />
+            <StatCard title={t("dashboard.totalVendors")} value={vendors?.length} icon={Building2} />
             <StatCard
-              title="High Risk"
+              title={t("dashboard.highRisk")}
               value={highRiskVendors}
               icon={ShieldAlert}
               variant={highRiskVendors ? "danger" : "default"}
-              description="Risk score ≥ 70"
+              description={t("dashboard.riskScoreAtLeast70")}
             />
           </div>
           {vendors === undefined ? (
@@ -168,7 +170,7 @@ export default function Index() {
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : vendors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No vendors yet.</p>
+            <p className="text-sm text-muted-foreground">{t("dashboard.noVendors")}</p>
           ) : (
             <div className="space-y-2">
               {vendors.slice(0, 5).map((v) => (
@@ -178,7 +180,7 @@ export default function Index() {
                     variant={v.riskScore >= 70 ? "destructive" : v.riskScore >= 40 ? "secondary" : "outline"}
                     className="text-xs shrink-0"
                   >
-                    Risk {v.riskScore}
+                    {t("dashboard.risk")} {v.riskScore}
                   </Badge>
                 </div>
               ))}
