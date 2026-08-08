@@ -1573,7 +1573,7 @@ function DetailPanel({
                   <span className="font-medium">{system.licenseType}</span>
                 </div>
               )}
-              {system.costPerYear && (
+              {system.costPerYear !== undefined && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     {t("detail.annualCost")}
@@ -1735,7 +1735,7 @@ function DeptSummaryCard({
           style={{ background: color + "14" }}
         >
           <div className="text-lg font-bold leading-none" style={{ color }}>
-            {avgArchitecture || "—"}
+            {systems.length > 0 ? avgArchitecture : "—"}
           </div>
           <div className="text-[9px] text-muted-foreground mt-0.5">
             {t("dept.avgArchitecture")}
@@ -1768,7 +1768,7 @@ function DeptSummaryCard({
             className="text-sm font-semibold"
             style={{ color: scoreTone(avgDebt, false) }}
           >
-            {avgDebt || "—"}
+            {systems.length > 0 ? avgDebt : "—"}
           </div>
         </div>
       </div>
@@ -2016,8 +2016,16 @@ function DeptView({
                 [t("arch.systemsWord"), activeSystems.length, "#94a3b8"],
                 [t("dept.critical"), criticalCount, "#ef4444"],
                 [t("dept.noOwner"), noOwnerCount, "#f97316"],
-                [t("dept.avgArchitecture"), avgArchitecture || "—", scoreTone(avgArchitecture)],
-                [t("dept.avgDebt"), avgDebt || "—", scoreTone(avgDebt, false)],
+                [
+                  t("dept.avgArchitecture"),
+                  activeSystems.length > 0 ? avgArchitecture : "—",
+                  scoreTone(avgArchitecture),
+                ],
+                [
+                  t("dept.avgDebt"),
+                  activeSystems.length > 0 ? avgDebt : "—",
+                  scoreTone(avgDebt, false),
+                ],
                 [
                   t("dept.totalSpend"),
                   totalCost > 0 ? formatVnd(totalCost) : "—",
@@ -2167,7 +2175,7 @@ function DeptView({
                             {t("dept.col.costPerYear")}
                           </div>
                           <div className="mt-1 truncate font-mono font-medium text-green-400">
-                            {sys.costPerYear ? formatVnd(sys.costPerYear) : "—"}
+                            {sys.costPerYear !== undefined ? formatVnd(sys.costPerYear) : "—"}
                           </div>
                         </div>
                         <div className="rounded-md bg-background/50 border border-border/60 p-2">
