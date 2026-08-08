@@ -20,15 +20,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Enable pnpm
         run: |
           corepack enable
           corepack prepare pnpm@10.32.1 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -48,10 +50,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Upload coverage summary
+      # Machine-readable coverage data only (no HTML site with rendered
+      # source) — enough to diff/track the baseline without publishing a
+      # browsable copy of the codebase as a build artifact.
+      - name: Upload coverage data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage/
+          name: coverage-data
+          path: |
+            coverage/coverage-final.json
+            coverage/clover.xml
           retention-days: 14

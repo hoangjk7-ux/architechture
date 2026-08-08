@@ -18,16 +18,16 @@ Google OAuth credentials for sign-in — see `docs/security/auth-rbac.md` and
 
 ## Scripts
 
-| Command | Purpose |
-|---|---|
-| `pnpm run dev` | Start the Vite dev server |
-| `pnpm run build` | Typecheck + production build |
-| `pnpm run test` | Run the test suite once |
-| `pnpm run test:coverage` | Run tests with coverage (v8, `all: true`) |
-| `pnpm run lint` | ESLint over `src` and `convex` |
-| `pnpm run typecheck` | `tsc -b` project-wide |
-| `pnpm run check` | The full local/CI gate: prettier → lint → typecheck → test+coverage → build |
-| `pnpm run seed` | Seed a Convex deployment (requires explicit `CONVEX_DEPLOYMENT`; see script for safety guards) |
+| Command                  | Purpose                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `pnpm run dev`           | Start the Vite dev server                                                                      |
+| `pnpm run build`         | Typecheck + production build                                                                   |
+| `pnpm run test`          | Run the test suite once                                                                        |
+| `pnpm run test:coverage` | Run tests with coverage (v8, `all: true`)                                                      |
+| `pnpm run lint`          | ESLint over `src` and `convex`                                                                 |
+| `pnpm run typecheck`     | `tsc -b` project-wide                                                                          |
+| `pnpm run check`         | The full local/CI gate: prettier → lint → typecheck → test+coverage → build                    |
+| `pnpm run seed`          | Seed a Convex deployment (requires explicit `CONVEX_DEPLOYMENT`; see script for safety guards) |
 
 `pnpm run check` is the single gate used both locally and in CI
 (`.github/workflows/quality.yml`) — if it's green, the PR is green.
