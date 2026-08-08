@@ -305,7 +305,32 @@ Date: 2026-08-08
 
 ## Next
 
-Giai đoạn 0 hoàn tất theo tiêu chí kế hoạch (trừ việc branch protection trên
-GitHub — nằm ngoài phạm vi sửa code, cần bạn bật thủ công). Bước tiếp theo là
-Giai đoạn 1 (DATA-05/06/07 tách 3 PR, FE-03 hoàn tất mutation reliability) theo
-đúng thứ tự trong `.ai/claude-plan.md` v3.
+**Sửa lại (Codex review #5 — verify cuối cùng):** kết luận "Giai đoạn 0 hoàn
+tất" ở trên là **sớm**. Codex phát hiện `README.md` (thêm ở commit `9a6985e`,
+sau commit format `fabf6db`) chưa qua Prettier — `pnpm run check` thực tế đỏ
+ngay ở bước đầu tại HEAD lúc đó, mâu thuẫn trực tiếp với dòng "xanh toàn bộ"
+ghi phía trên. Đã sửa (commit `e0a0d3b`): format `README.md`, thêm
+`cache: pnpm` còn thiếu trong `quality.yml` (đúng yêu cầu kế hoạch nhưng bị bỏ
+sót), và thu hẹp step upload artifact (trước đó tải cả HTML site + source
+rendering thay vì chỉ dữ liệu coverage máy đọc được). Lần này verify bằng
+`$?` sau khi ghi log ra file, không chỉ nhìn `tail` output — xác nhận
+`REAL_EXIT=0`.
+
+**Điều kiện còn lại trước khi Giai đoạn 0 thực sự đóng** (theo Codex, chưa
+làm trong phiên này):
+
+1. **Push và có ít nhất 1 lần GitHub Actions chạy xanh thật** — định nghĩa
+   YAML đúng cú pháp không đồng nghĩa "CI xanh"; local `pnpm run check` xanh
+   chỉ chứng minh script đúng, chưa chứng minh workflow chạy được trên
+   runner GitHub thật.
+2. **Bật branch protection/ruleset** yêu cầu quality check trước khi merge —
+   nằm ngoài phạm vi sửa code trong repo, cần bạn thao tác trên GitHub.
+3. (Không blocker, nên làm) Giai đoạn 3 ratchet mới chỉ định nghĩa rõ cho
+   lines/branches; nên ghi rõ statements/functions có được ratchet cùng hay
+   không, và phân bổ khối lượng test cụ thể cho từng mốc thay vì chỉ có con
+   số mục tiêu.
+
+Bước tiếp theo là Giai đoạn 1 (DATA-05/06/07 tách 3 PR, FE-03 hoàn tất mutation
+reliability) theo đúng thứ tự trong `.ai/claude-plan.md` v3 — nhưng việc push +
+xác nhận CI xanh trên GitHub nên làm trước hoặc song song, vì đó là điều kiện
+"CI never lies" của chính Giai đoạn 0.
