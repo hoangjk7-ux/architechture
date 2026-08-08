@@ -16,11 +16,29 @@ quality gate và xử lý rủi ro dữ liệu trước.
   được trong `read-only` — Vite ghi `node_modules/.vite-temp` → `EROFS`).
   Lint: 1 cảnh báo Fast Refresh (`language.tsx:518`).
 - Test: 45/45 đạt (13 file).
-- Coverage (vitest v8, `pnpm run test:coverage`): 63.54% statements, 65.61%
-  lines, 56.12% branches, 56.21% functions. **`convex/domain` (validators
-  thuần) = 95.45% stmt / 98.33% line — đây KHÔNG phải "domain+security"
-  gộp.** Chưa có coverage riêng cho security/RBAC/auth helper module; cần đo
-  tách biệt trước khi đặt threshold ≥95% cho nhóm đó.
+- **Coverage — sửa lại sau phát hiện quan trọng ngày 2026-08-08.** Con số cũ
+  "63.54% statements / 65.61% lines / 56.12% branches" chỉ là
+  **"imported-files coverage"**: `vitest.config.ts` trước đó không bật
+  `coverage.all`, nên report chỉ tính các file **thực sự được import bởi test
+  suite** — gần như toàn bộ `src/pages/**` (bao gồm `architecture/page.tsx`
+  2.972 dòng) không hề xuất hiện trong report, kể cả ở mức 0%, vì chưa từng
+  được import. Sau khi bật `all: true` + `include: ["src/**/*.{ts,tsx}",
+  "convex/**/*.ts"]` (đã áp dụng trong `vitest.config.ts`, xác nhận qua Codex
+  review lần 4), **coverage thật đo được tại HEAD là 14.26% statements, 6.48%
+  branches, 10.04% functions, 14.66% lines** — gần như toàn bộ business logic
+  trong `src/pages/**` (systems/vendors/integrations/roadmap/settings/users/
+  architecture) là 0%. Đã kiểm tra: loại `src/components/ui/**` (shadcn
+  primitive) khỏi denominator chỉ nâng lên ~17.76%/7.48% — không phải do UI
+  primitive kéo số xuống, gap thật nằm ở page code chưa test. Theo khuyến nghị
+  Codex, **không** blanket-exclude `src/components/ui/**` (một số file như
+  `signin.tsx` có logic thật). Giữ số cũ 63.54%/56.12% trong tài liệu lịch sử
+  làm mốc tham chiếu (nó vẫn đúng về việc các module có test đạt coverage khá),
+  nhưng gọi đúng tên "imported-files coverage", không phải baseline đại diện
+  toàn bộ ứng dụng. **`convex/domain`** (validators thuần) = 95.45% stmt /
+  95.31% line (số line giảm nhẹ so với 98.33% cũ do reformat Prettier đổi số
+  dòng vật lý, không phải regression logic). Chưa có coverage riêng cho
+  security/RBAC/auth helper module; cần đo tách biệt trước khi đặt threshold
+  riêng cho nhóm đó.
 - Bundle (đo 2 cách, ghi cả hai vì lệch nhau do công cụ khác nhau):
   - Vite build report tại HEAD (build trực tiếp, `pnpm run build`): main
     552.86 kB minified / **168.40 kB gzip**; Architecture chunk 258.58 kB
@@ -253,15 +271,44 @@ Mục tiêu:
 
 ## Giai đoạn 3 — Nâng chất lượng kiểm thử
 
-Thời gian: 5–7 ngày · Ưu tiên: P1 · Owner: `quality-engineer` (phối hợp
+Thời gian: **điều chỉnh lại, không còn vừa trong 5–7 ngày** (xem lý do dưới) ·
+Ưu tiên: P1 · Owner: `quality-engineer` (phối hợp
 `data-integrity-engineer`/`security-engineer` cho test theo domain)
 
-Ratchet coverage (không ép thẳng 80% toàn repo), số chính xác thay vì làm tròn:
-- Mốc 1: lines ≥70%, branches ≥60%.
-- Mốc 2: lines ≥80%, branches ≥70%.
-- `convex/domain`: giữ ≥95% (đã đạt 95.45%, không để tụt).
-- Security/RBAC/auth helper: đo và đặt threshold **riêng** sau khi Giai đoạn 0
-  xác định đúng glob — không suy diễn từ số domain.
+**Cập nhật quan trọng 2026-08-08 (sau phát hiện coverage all:true, Codex review
+lần 4):** baseline thật tại HEAD là **14.26% statements / 6.48% branches /
+14.66% lines**, không phải 63.54%/56.12% như bản kế hoạch trước giả định (xem
+"Hiện trạng"). Với denominator hiện tại (~2.566 statements toàn `src/**` +
+`convex/**`), đạt 70% cần cover thêm khoảng **1.400 statements** — gần gấp 5
+lần khối lượng test hiện có. Không khả thi trong một Giai đoạn 3 duy nhất
+5–7 ngày. Ratchet được chia lại thành nhiều mốc gần hơn, mỗi mốc có thể là 1
+sprint/workstream riêng thay vì gộp chung "Giai đoạn 3":
+
+- Baseline (đã đạt, Giai đoạn 0): lines 14.66% / branches 6.48%.
+- Mốc gần 1: lines ≥25%, branches ≥15%.
+- Mốc gần 2: lines ≥40%, branches ≥30%.
+- Mốc gần 3: lines ≥55%, branches ≥45%.
+- Mục tiêu release/maturity (không còn là "Mốc 1" cũ): lines ≥70%, branches ≥60%.
+- Mục tiêu dài hạn (không còn là "Mốc 2" cũ): lines ≥80%, branches ≥70%.
+- `convex/domain`: giữ ≥95% stmt (đã đạt 95.45%, không để tụt); lines threshold
+  thực tế 95.3% (giảm nhẹ từ 98.33% do Prettier đổi số dòng vật lý, không phải
+  regression — xem `.ai/provenance-audit.md`).
+- Security/RBAC/auth helper: đo và đặt threshold **riêng** sau khi xác định
+  đúng glob — không suy diễn từ số domain.
+
+**Không blanket-exclude `src/components/ui/**`** khỏi coverage denominator dù
+phần lớn là shadcn boilerplate — loại bỏ chỉ nâng số từ 14.23%→17.76% (không
+đáng kể) và có nguy cơ che mất các file có logic thật trong cùng thư mục
+(`signin.tsx` thuộc vùng security). Nếu sau này audit từng file xác nhận một số
+là bản sao upstream không tuỳ biến, có thể thêm allowlist loại trừ — không loại
+cả thư mục.
+
+**Khuyến nghị bổ sung (Codex):** ưu tiên **diff coverage cho code mới/sửa**
+(vd. ≥80% lines/≥70% branches trên file thay đổi trong PR) thay vì chỉ chờ
+global percentage tự tăng — global baseline thấp không thể cải thiện ngay lập
+tức, nhưng code mới không được phép tạo thêm nợ kiểm thử. Ban đầu có thể là
+cảnh báo (warning) ở Giai đoạn 0/1, chuyển thành blocking khi có hạ tầng CI hỗ
+trợ diff coverage.
 
 Ưu tiên test cho module coverage thấp hiện tại: `integrations.ts` (31%),
 `vendors.ts` (33%), `software_systems.ts` (45%), `config.ts` (49%),
