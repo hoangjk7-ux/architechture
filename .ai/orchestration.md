@@ -16,17 +16,36 @@
 
 ## Current dirty-file protection
 
-Các file sau đang có thay đổi của người dùng tại thời điểm tạo plan và mặc định
-không được ghi đè:
+Cập nhật 2026-08-08 sau audit provenance (`.ai/provenance-audit.md`, đã qua 3
+vòng phản biện Codex): danh sách 5 file cũ (snapshot lúc lập kế hoạch ban đầu)
+đã được commit qua `563fd38`/`c611489`/`9daed39` và **không còn ở trạng thái
+chưa commit**. **Danh sách "dirty file" là một snapshot tại thời điểm task bắt
+đầu, không phải sự thật cố định** — phải sinh lại bằng `git status --short`
+mỗi lần một agent bắt đầu việc; kể cả dòng ghi chú này cũng có thể lỗi thời
+ngay sau khi được viết (ví dụ: audit Bước 0 ngày 2026-08-08 dẫn tới việc sửa
+`src/pages/architecture/page.tsx`, khiến working tree đổi lại chỉ vài phút sau
+khi ghi "chỉ `.ai/*.md` dirty").
 
-- `src/components/providers/language.tsx`
-- `src/pages/architecture/page.tsx`
-- `src/pages/integrations/page.tsx`
+**Historical/high-conflict files** — không phải "đang dirty", nhưng từng bị
+nhiều luồng ownership sửa trong cùng một commit (`c611489` trộn DATA+FE+test),
+nên agent nào chạm vào các file này phải đọc `git log -p` gần nhất trước khi
+sửa, không giả định mình là chủ sở hữu duy nhất của lịch sử file. Quy tắc là
+**một task/commit có accountable owner rõ và review đúng vùng chạm**, không
+phải tuyệt đối "1 PR chỉ được chạm file của đúng 1 owner" — thay đổi xuyên
+vùng vẫn được phép nếu có sign-off từ owner liên quan (xem bảng accountability
+của workstream `OPS` bên dưới làm mẫu):
+
+- `convex/schema.ts`
+- `convex/system_change_logs.ts`
+- `convex/system_modules.ts`
+- `convex/domain/mutations.integration.test.ts`
+- `src/pages/flow-diagram/_components/GanttChart.tsx`
 - `src/pages/systems/page.tsx`
-- `src/pages/vendors/page.tsx`
+- `src/components/providers/language.tsx`
 
-Agent Frontend phải đọc diff trước khi chạm các file này và chỉ tiếp tục khi có
-worktree/commit nền rõ ràng hoặc orchestrator xác nhận thay đổi đã được bảo toàn.
+Agent Frontend/Data phải đọc diff gần nhất trước khi chạm các file này và chỉ
+tiếp tục khi có worktree/commit nền rõ ràng hoặc orchestrator xác nhận thay đổi
+đã được bảo toàn.
 
 ## Workstreams and ownership
 
@@ -177,6 +196,49 @@ Acceptance:
 - Lint does not scan `OpenHands/` and no application error is hidden by ignores.
 - CI never deploys or seeds production.
 
+### OPS — Dependency, observability and production readiness
+
+Added 2026-08-08 (`.ai/claude-plan.md` v3, Giai đoạn 4) — not owned by
+`quality-engineer` alone; scope spans dependency, security, frontend
+performance, deployment config and operational rollout.
+
+Owner: `OPS` (no dedicated agent defined yet — orchestrator must assign or
+create one before dispatching Giai đoạn 4 tasks)
+
+Owned files:
+
+- Dependency manifests (`package.json` dependency bumps, coordinated with the
+  owner of the affected area — see accountability table below)
+- Deployment config (`vercel.json`, CI workflow beyond QLT-02's baseline)
+- Runbooks, observability config, smoke-test scripts (new)
+
+Accountability (Accountable → Reviewer):
+
+| Hạng mục | Accountable | Reviewer |
+|---|---|---|
+| Dependency inventory, vulnerability decision log | OPS | QLT + owner package tương ứng |
+| Vite/TypeScript/Vitest, CI bundle gate | QLT | OPS |
+| React/React Router, Radix/Tailwind, chart/diagram libs | FE | QLT |
+| Convex/Auth upgrade | SEC | DATA, OPS |
+| Security headers, cấu hình Vercel | OPS | SEC |
+| Structured logging, error tracking, alert policy | OPS | SEC/DATA/FE |
+| Staging smoke và runbook | OPS | SEC/DATA/FE |
+| Auth rollback | SEC | OPS |
+| Schema/data migration rollback | DATA | OPS |
+| Bundle/performance regression | FE | QLT |
+
+Rules: no self-deploy, no production credentials; depends on Giai đoạn 0–3
+closing first; must hand off explicitly when staging access/secrets are
+needed; production readiness requires an explicit human/credential gate and
+cannot be marked complete by repository changes alone.
+
+Acceptance:
+
+- No critical/high dependency without a documented decision (upgrade, or
+  accepted risk with owner/reason/expiry).
+- Production smoke checklist passes on staging (evidence retained).
+- Error dashboard and rollback (forward-fix/expand-contract) procedure documented.
+
 ## Dependency graph
 
 ```text
@@ -194,7 +256,19 @@ DATA-01 -> DATA-02 -> DATA-03 -> DATA-04 -> DATA-05 -> DATA-06
 FE-01 -> FE-02 -> FE-03 -> FE-04 -> FE-05 -> FE-06 -> FE-07 -> FE-08
 
 SEC-04 + DATA-04 + FE-03 + QLT-03 -> QLT-04 -> QLT-05 -> final hardening
+
+QLT-01 + SEC-04 + DATA-04 + FE-03 -> OPS (Giai đoạn 4, .ai/claude-plan.md v3)
 ```
+
+**Superseded items (đã bị `.ai/claude-plan.md` v3 thay thế một phần, giữ ở
+đây chỉ để tham chiếu lịch sử — không dùng làm nguồn số liệu hiện tại):**
+
+- FE-05 mô tả Architecture là "1,556-line page"; số thật tại HEAD 2026-08-08
+  là **2,972 dòng** (xem baseline trong `claude-plan.md` v3).
+- QLT-04 ghi "overall >=80%... domain/security >=95%" như một gate chung; v3
+  yêu cầu ratchet theo 2 mốc (70/60 rồi 80/70) và **tách threshold domain
+  khỏi security** — không suy diễn coverage security từ coverage
+  `convex/domain`.
 
 Safe initial concurrency:
 
@@ -218,6 +292,13 @@ If a script does not exist yet, QLT-01 owns adding it. A failure caused by an
 existing dirty file must be reported, not silently formatted.
 
 ## Merge waves
+
+Waves 0–3 below are closed (see `.ai/final-report.md`). For work after Wave 3,
+`.ai/claude-plan.md` v3 ("Giai đoạn 0–4") is the authoritative execution plan —
+it supersedes the "Wave 4" line item below with a more detailed sequence
+(provenance/behavior audit, split PRs, `OPS` workstream, characterization
+tests before Architecture refactor). Do not plan against "Wave 4" as written
+here without cross-checking `claude-plan.md` v3 first.
 
 1. **Wave 0:** SEC-00, QLT-01 and failing security tests from SEC-01.
 2. **Wave 1:** SEC-02/03; FE-01/02 on non-dirty files; DATA-01 pure validators.
