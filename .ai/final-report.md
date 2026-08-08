@@ -253,3 +253,59 @@ Date: 2026-08-08
 Thấp. Chưa commit. `pnpm run check` vẫn fail đúng lý do đã biết từ đầu Giai
 đoạn 0 (Prettier scope chưa thu hẹp, không phải regression mới) — việc này là
 bước tiếp theo của Giai đoạn 0, chưa làm trong phiên này.
+
+# Giai đoạn 0 — hoàn tất (Prettier scope, CI, coverage baseline thật)
+
+Date: 2026-08-08
+
+## Completed
+
+- **Prettier scope thu hẹp.** `.prettierignore` loại `.ai/**`, `.claude/**`,
+  `.convex/local/**`, `AGENTS.md`, `CLAUDE.md` (lý do ghi trong file) — số
+  file lệch format giảm từ 57 xuống 41, đúng "mã nguồn/cấu hình sản phẩm".
+  Format 41 file trong 1 commit riêng (`fabf6db`), verify diff chỉ là
+  whitespace/import-wrap/quote-style, không đổi logic.
+- **CI thật lần đầu tiên.** `.github/workflows/quality.yml` chạy
+  prettier→lint→typecheck→test+coverage→build, frozen lockfile, pnpm pinned
+  qua corepack, concurrency cancel, timeout 15 phút. Trước đó chỉ có
+  `seed.yml`.
+- **Phát hiện quan trọng: coverage baseline cũ (63.54%/56.12%) là
+  "imported-files coverage", không đại diện toàn ứng dụng.** `vitest.config.ts`
+  chưa bật `coverage.all`, nên report chỉ tính file được test suite import —
+  gần như toàn bộ `src/pages/**` (bao gồm `architecture/page.tsx` 2.972 dòng)
+  vô hình trong report, không hiện cả ở mức 0%. Bật `all: true` +
+  `include: src/**, convex/**` cho ra số thật: **14.26% statements / 6.48%
+  branches / 14.66% lines**. Đã kiểm tra loại `src/components/ui/**` (shadcn)
+  khỏi denominator — chỉ nâng lên ~17.76%/7.48%, xác nhận gap thật nằm ở
+  business logic chưa test, không phải do UI boilerplate. Quyết định (đã hỏi
+  Codex, xem `.ai/codex-review.md` review #4): không blanket-exclude
+  `src/components/ui/**`.
+- Threshold coverage đặt đúng số đo được **sau khi format xong** (số dòng đổi
+  do reformat), có sub-threshold riêng cho `convex/domain/**`.
+- `pnpm run check` sửa để chạy `test:coverage` một lần thay vì `test` rồi lại
+  chạy coverage riêng — tránh chạy suite 2 lần.
+- `.ai/claude-plan.md` Giai đoạn 3: ratchet 2 mốc cũ (70/60, 80/70) viết lại
+  thành thang nhiều mốc gần hơn (25/15 → 40/30 → 55/45 → 70/60 → 80/70) vì
+  khoảng cách từ baseline thật đến 70% là ~5 lần khối lượng test hiện có,
+  không vừa trong một Giai đoạn 3 5–7 ngày như giả định cũ.
+- README.md tối thiểu (trước đó không có) trỏ về `.ai/` làm nguồn kế hoạch.
+
+## Verification
+
+- `pnpm run check`: **xanh toàn bộ lần đầu tiên trong phiên này** (prettier,
+  lint, typecheck, test+coverage 45/45, build).
+- Build: main 552.86 kB / 168.40 kB gzip; Architecture chunk 258.64 kB /
+  67.99 kB gzip — không đổi đáng kể so với trước format.
+
+## Files changed (2 commit)
+
+- `fabf6db` — 42 file, thuần format (`.prettierignore` + 41 file product code).
+- `9a6985e` — `package.json`, `vitest.config.ts`, `.github/workflows/quality.yml`
+  (mới), `README.md` (mới), `.ai/claude-plan.md`.
+
+## Next
+
+Giai đoạn 0 hoàn tất theo tiêu chí kế hoạch (trừ việc branch protection trên
+GitHub — nằm ngoài phạm vi sửa code, cần bạn bật thủ công). Bước tiếp theo là
+Giai đoạn 1 (DATA-05/06/07 tách 3 PR, FE-03 hoàn tất mutation reliability) theo
+đúng thứ tự trong `.ai/claude-plan.md` v3.
