@@ -4,18 +4,21 @@ import type { Doc, Id } from "@/convex/_generated/dataModel.d.ts";
 type System = Doc<"software_systems">;
 type Integration = Doc<"integrations">;
 
-const TYPE_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
-  core:       { fill: "#312e81", stroke: "#6366f1", text: "#c7d2fe" },
+const TYPE_COLORS: Record<
+  string,
+  { fill: string; stroke: string; text: string }
+> = {
+  core: { fill: "#312e81", stroke: "#6366f1", text: "#c7d2fe" },
   supporting: { fill: "#14532d", stroke: "#22c55e", text: "#bbf7d0" },
-  legacy:     { fill: "#78350f", stroke: "#f59e0b", text: "#fde68a" },
-  pilot:      { fill: "#1e3a5f", stroke: "#3b82f6", text: "#bfdbfe" },
+  legacy: { fill: "#78350f", stroke: "#f59e0b", text: "#fde68a" },
+  pilot: { fill: "#1e3a5f", stroke: "#3b82f6", text: "#bfdbfe" },
 };
 
 const HEALTH_COLORS: Record<string, string> = {
-  healthy:  "#22c55e",
+  healthy: "#22c55e",
   degraded: "#f59e0b",
-  down:     "#ef4444",
-  unknown:  "#6b7280",
+  down: "#ef4444",
+  unknown: "#6b7280",
 };
 
 const NODE_W = 150;
@@ -43,7 +46,12 @@ function getCurvedPath(x1: number, y1: number, x2: number, y2: number): string {
   return `M ${x1},${y1} C ${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
 }
 
-export default function SystemFlowSVG({ systems, integrations, selectedId, onSelectSystem }: Props) {
+export default function SystemFlowSVG({
+  systems,
+  integrations,
+  selectedId,
+  onSelectSystem,
+}: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
@@ -60,7 +68,9 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
 
   const posMap = useMemo(() => {
     const m: Record<string, NodePos> = {};
-    nodePositions.forEach((n) => { m[n.id] = n; });
+    nodePositions.forEach((n) => {
+      m[n.id] = n;
+    });
     return m;
   }, [nodePositions]);
 
@@ -70,7 +80,8 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
   const visibleIntegrations = useMemo(() => {
     if (!selectedId) return integrations;
     return integrations.filter(
-      (i) => i.sourceSystemId === selectedId || i.destinationSystemId === selectedId
+      (i) =>
+        i.sourceSystemId === selectedId || i.destinationSystemId === selectedId,
     );
   }, [integrations, selectedId]);
 
@@ -91,13 +102,16 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
     lastMouse.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging || !lastMouse.current) return;
-    const dx = e.clientX - lastMouse.current.x;
-    const dy = e.clientY - lastMouse.current.y;
-    setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
-    lastMouse.current = { x: e.clientX, y: e.clientY };
-  }, [dragging]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!dragging || !lastMouse.current) return;
+      const dx = e.clientX - lastMouse.current.x;
+      const dy = e.clientY - lastMouse.current.y;
+      setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+      lastMouse.current = { x: e.clientX, y: e.clientY };
+    },
+    [dragging],
+  );
 
   const handleMouseUp = useCallback(() => {
     setDragging(false);
@@ -117,16 +131,25 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
         <button
           onClick={() => setZoom((z) => Math.min(2, z + 0.1))}
           className="w-7 h-7 rounded bg-white/10 text-white text-sm hover:bg-white/20 cursor-pointer flex items-center justify-center font-mono leading-none"
-        >+</button>
+        >
+          +
+        </button>
         <button
           onClick={() => setZoom((z) => Math.max(0.3, z - 0.1))}
           className="w-7 h-7 rounded bg-white/10 text-white text-sm hover:bg-white/20 cursor-pointer flex items-center justify-center font-mono leading-none"
-        >−</button>
+        >
+          −
+        </button>
         <button
-          onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+          onClick={() => {
+            setZoom(1);
+            setPan({ x: 0, y: 0 });
+          }}
           className="w-7 h-7 rounded bg-white/10 text-white text-xs hover:bg-white/20 cursor-pointer flex items-center justify-center"
           title="Reset view"
-        >⊙</button>
+        >
+          ⊙
+        </button>
       </div>
 
       <svg
@@ -152,15 +175,31 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
               <path d="M0,0 L0,6 L9,3 z" fill={color} />
             </marker>
           ))}
-          <filter id="selected-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <filter
+            id="selected-glow"
+            x="-40%"
+            y="-40%"
+            width="180%"
+            height="180%"
+          >
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+          <pattern
+            id="grid"
+            width="40"
+            height="40"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 40 0 L 0 0 0 40"
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth="0.5"
+            />
           </pattern>
         </defs>
 
@@ -173,16 +212,32 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
             const dst = posMap[intg.destinationSystemId];
             if (!src || !dst) return null;
             const color = HEALTH_COLORS[intg.healthStatus] ?? "#6b7280";
-            const strokeW = intg.criticalLevel === "high" ? 2.5 : intg.criticalLevel === "medium" ? 1.8 : 1.2;
+            const strokeW =
+              intg.criticalLevel === "high"
+                ? 2.5
+                : intg.criticalLevel === "medium"
+                  ? 1.8
+                  : 1.2;
             const edgeOpacity = selectedId ? 0.9 : 0.85;
-            const path = getCurvedPath(src.cx + NODE_W / 2, src.cy, dst.cx - NODE_W / 2, dst.cy);
+            const path = getCurvedPath(
+              src.cx + NODE_W / 2,
+              src.cy,
+              dst.cx - NODE_W / 2,
+              dst.cy,
+            );
             const mx = (src.cx + NODE_W / 2 + dst.cx - NODE_W / 2) / 2;
             const my = (src.cy + dst.cy) / 2 - 10;
 
             return (
               <g key={intg._id}>
                 {intg.criticalLevel === "high" && (
-                  <path d={path} fill="none" stroke={color} strokeWidth={strokeW + 4} opacity={0.12} />
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={strokeW + 4}
+                    opacity={0.12}
+                  />
                 )}
                 <path
                   d={path}
@@ -192,7 +247,14 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   opacity={edgeOpacity}
                   markerEnd={`url(#arrow-${intg.healthStatus})`}
                 />
-                <text x={mx} y={my} textAnchor="middle" fill={color} fontSize="9" opacity={0.75}>
+                <text
+                  x={mx}
+                  y={my}
+                  textAnchor="middle"
+                  fill={color}
+                  fontSize="9"
+                  opacity={0.75}
+                >
                   {intg.protocol}
                 </text>
               </g>
@@ -205,7 +267,11 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
             if (!pos) return null;
             const colors = TYPE_COLORS[sys.type] ?? TYPE_COLORS.core;
             const isSelected = selectedId === sys._id;
-            const isDimmed = !!(selectedId && !isSelected && !connectedSet.has(sys._id));
+            const isDimmed = !!(
+              selectedId &&
+              !isSelected &&
+              !connectedSet.has(sys._id)
+            );
             const nodeOpacity = isDimmed ? 0.15 : 1;
 
             return (
@@ -216,7 +282,10 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                 opacity={nodeOpacity}
                 cursor="pointer"
                 filter={isSelected ? "url(#selected-glow)" : undefined}
-                onClick={(e) => { e.stopPropagation(); onSelectSystem(isSelected ? null : sys._id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectSystem(isSelected ? null : sys._id);
+                }}
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <rect
@@ -227,7 +296,13 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   stroke={isSelected ? "#fff" : colors.stroke}
                   strokeWidth={isSelected ? 2.5 : 1.5}
                 />
-                <rect width={NODE_W} height="4" rx="8" fill={colors.stroke} opacity={0.8} />
+                <rect
+                  width={NODE_W}
+                  height="4"
+                  rx="8"
+                  fill={colors.stroke}
+                  opacity={0.8}
+                />
                 <text
                   x={NODE_W / 2}
                   y={26}
@@ -236,7 +311,9 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   fontSize="11"
                   fontWeight="600"
                 >
-                  {sys.name.length > 16 ? sys.name.slice(0, 14) + "…" : sys.name}
+                  {sys.name.length > 16
+                    ? sys.name.slice(0, 14) + "…"
+                    : sys.name}
                 </text>
                 <text
                   x={NODE_W / 2}
@@ -252,12 +329,35 @@ export default function SystemFlowSVG({ systems, integrations, selectedId, onSel
                   cx={NODE_W - 10}
                   cy={10}
                   r="4"
-                  fill={sys.status === "active" ? "#22c55e" : sys.status === "sunset" ? "#ef4444" : "#f59e0b"}
+                  fill={
+                    sys.status === "active"
+                      ? "#22c55e"
+                      : sys.status === "sunset"
+                        ? "#ef4444"
+                        : "#f59e0b"
+                  }
                 />
                 {sys.criticality === "high" && (
                   <>
-                    <rect x={6} y={50} width={34} height={10} rx="3" fill="#ef4444" opacity={0.8} />
-                    <text x={23} y={58} textAnchor="middle" fill="white" fontSize="7" fontWeight="600">CRITICAL</text>
+                    <rect
+                      x={6}
+                      y={50}
+                      width={34}
+                      height={10}
+                      rx="3"
+                      fill="#ef4444"
+                      opacity={0.8}
+                    />
+                    <text
+                      x={23}
+                      y={58}
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="7"
+                      fontWeight="600"
+                    >
+                      CRITICAL
+                    </text>
                   </>
                 )}
               </g>

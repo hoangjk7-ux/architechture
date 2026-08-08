@@ -1791,14 +1791,19 @@ function DeptSummaryCard({
           })}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground" style={{ borderColor: color + "33" }}>
+      <div
+        className="mt-3 flex items-center justify-between gap-3 border-t pt-3 text-[10px] text-muted-foreground"
+        style={{ borderColor: color + "33" }}
+      >
         <span>
           {unhealthyCount > 0
             ? `${unhealthyCount} ${t("health.degraded").toLowerCase()}`
             : t("health.healthy")}
         </span>
         <span className="font-mono text-green-400">
-          {totalCost > 0 ? `${formatVnd(totalCost)}${t("vendors.perYear")}` : "—"}
+          {totalCost > 0
+            ? `${formatVnd(totalCost)}${t("vendors.perYear")}`
+            : "—"}
         </span>
       </div>
     </button>
@@ -2138,10 +2143,19 @@ function DeptView({
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] px-2 py-1 rounded font-medium" style={{ background: meta.badge + "22", color: meta.badge }}>
+                        <span
+                          className="text-[10px] px-2 py-1 rounded font-medium"
+                          style={{
+                            background: meta.badge + "22",
+                            color: meta.badge,
+                          }}
+                        >
                           {t(`systemType.${sys.type}`)}
                         </span>
-                        <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-background/60" style={{ color: statusMeta.color }}>
+                        <span
+                          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-background/60"
+                          style={{ color: statusMeta.color }}
+                        >
                           {statusMeta.icon}
                           {t(`status.${sys.status}`)}
                         </span>
@@ -2175,15 +2189,21 @@ function DeptView({
                             {t("dept.col.costPerYear")}
                           </div>
                           <div className="mt-1 truncate font-mono font-medium text-green-400">
-                            {sys.costPerYear !== undefined ? formatVnd(sys.costPerYear) : "—"}
+                            {sys.costPerYear !== undefined
+                              ? formatVnd(sys.costPerYear)
+                              : "—"}
                           </div>
                         </div>
                         <div className="rounded-md bg-background/50 border border-border/60 p-2">
                           <div className="text-muted-foreground">
                             {t("dept.riskDebt")}
                           </div>
-                          <div className="mt-1 font-medium" style={{ color: debtColor }}>
-                            {t(`level.${sys.riskLevel}`)} · {sys.technicalDebtScore}
+                          <div
+                            className="mt-1 font-medium"
+                            style={{ color: debtColor }}
+                          >
+                            {t(`level.${sys.riskLevel}`)} ·{" "}
+                            {sys.technicalDebtScore}
                           </div>
                         </div>
                       </div>

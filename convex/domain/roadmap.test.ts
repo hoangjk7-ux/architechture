@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { assertNoRoadmapCycle, assertRoadmapParent, normalizeRoadmapItem } from "./roadmap";
+import {
+  assertNoRoadmapCycle,
+  assertRoadmapParent,
+  normalizeRoadmapItem,
+} from "./roadmap";
 
 describe("roadmap domain rules", () => {
   it("enforces the roadmap level hierarchy", () => {
@@ -9,7 +13,9 @@ describe("roadmap domain rules", () => {
   });
 
   it("rejects cycles", () => {
-    expect(() => assertNoRoadmapCycle("item-a", ["item-b", "item-a"])).toThrow();
+    expect(() =>
+      assertNoRoadmapCycle("item-a", ["item-b", "item-a"]),
+    ).toThrow();
   });
 
   it("normalizes text, dates and alignment score", () => {

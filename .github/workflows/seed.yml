@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       deployment:
-        description: 'Exact Convex deployment ref (for example dev:name or prod:name)'
+        description: "Exact Convex deployment ref (for example dev:name or prod:name)"
         required: true
         type: string
       confirmation:
-        description: 'Enter SEED:<deployment>, exactly matching the deployment above'
+        description: "Enter SEED:<deployment>, exactly matching the deployment above"
         required: true
         type: string
 

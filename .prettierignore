@@ -1,1 +1,20 @@
+# Lockfile — never hand-formatted.
 /pnpm-lock.yaml
+
+# Session/orchestration planning docs (.ai/claude-plan.md, codex-review.md, …).
+# Tracked in git for audit trail, but high-churn and not shipped product —
+# forcing Prettier compliance here adds noisy diffs without protecting the
+# application. See .ai/claude-plan.md v3, Giai đoạn 0.
+.ai/
+
+# Claude Code skill reference material — not part of the application.
+.claude/
+
+# Local Convex dev-server state. Already covered by .convex/.gitignore, but
+# Prettier's automatic gitignore lookup only reads the repo-root .gitignore,
+# so nested ignores need to be repeated here explicitly.
+.convex/local/
+
+# Repo/agent governance instructions — not application source.
+AGENTS.md
+CLAUDE.md

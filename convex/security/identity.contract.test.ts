@@ -5,11 +5,16 @@ const { getAuthUserIdMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@convex-dev/auth/server", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@convex-dev/auth/server")>();
+  const actual =
+    await importOriginal<typeof import("@convex-dev/auth/server")>();
   return { ...actual, getAuthUserId: getAuthUserIdMock };
 });
 
-import { getCurrentUser, requireReadAccess, requireWriteAccess } from "../helpers.ts";
+import {
+  getCurrentUser,
+  requireReadAccess,
+  requireWriteAccess,
+} from "../helpers.ts";
 
 function contextWithUser(user: unknown = null) {
   return {
@@ -55,7 +60,9 @@ describe("SEC-01 identity contract", () => {
     const user = { _id: "user-pending", email: "pending@example.com" };
     getAuthUserIdMock.mockResolvedValue(user._id);
 
-    await expect(requireReadAccess(contextWithUser(user))).rejects.toMatchObject({
+    await expect(
+      requireReadAccess(contextWithUser(user)),
+    ).rejects.toMatchObject({
       data: { code: "FORBIDDEN" },
     });
   });

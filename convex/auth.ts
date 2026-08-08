@@ -18,5 +18,7 @@ if (!googleClientId || !googleClientSecret) {
 }
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Google({ clientId: googleClientId, clientSecret: googleClientSecret })],
+  providers: [
+    Google({ clientId: googleClientId, clientSecret: googleClientSecret }),
+  ],
 });

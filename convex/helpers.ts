@@ -13,7 +13,9 @@ type CurrentUser = {
   isManuallyAdded?: boolean;
 };
 
-export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<CurrentUser | null> {
+export async function getCurrentUser(
+  ctx: QueryCtx | MutationCtx,
+): Promise<CurrentUser | null> {
   const userId = await getAuthUserId(ctx);
   if (!userId) return null;
 
@@ -28,18 +30,24 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<Curre
 export async function requireAuthenticated(ctx: QueryCtx | MutationCtx) {
   const user = await getCurrentUser(ctx);
   if (!user) {
-    throw new ConvexError({ message: "Authentication required", code: "UNAUTHENTICATED" });
+    throw new ConvexError({
+      message: "Authentication required",
+      code: "UNAUTHENTICATED",
+    });
   }
   return user;
 }
 
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
-  allowedRoles: UserRole[]
+  allowedRoles: UserRole[],
 ) {
   const user = await requireAuthenticated(ctx);
   if (!user.role || !allowedRoles.includes(user.role)) {
-    throw new ConvexError({ message: "Insufficient permissions", code: "FORBIDDEN" });
+    throw new ConvexError({
+      message: "Insufficient permissions",
+      code: "FORBIDDEN",
+    });
   }
   return user;
 }

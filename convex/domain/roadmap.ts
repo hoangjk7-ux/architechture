@@ -1,4 +1,10 @@
-import { domainError, numberInRange, optionalText, orderedDates, requiredText } from "./common";
+import {
+  domainError,
+  numberInRange,
+  optionalText,
+  orderedDates,
+  requiredText,
+} from "./common";
 
 export type RoadmapLevel = "initiative" | "program" | "project" | "epic";
 
@@ -37,7 +43,10 @@ export function normalizeRoadmapItem<T extends RoadmapInput>(input: T): T {
   };
 }
 
-export function assertRoadmapParent(level: RoadmapLevel, parentLevel: RoadmapLevel | null): void {
+export function assertRoadmapParent(
+  level: RoadmapLevel,
+  parentLevel: RoadmapLevel | null,
+): void {
   const expected = requiredParentLevel[level];
   if (parentLevel !== expected) {
     domainError(
@@ -50,8 +59,15 @@ export function assertRoadmapParent(level: RoadmapLevel, parentLevel: RoadmapLev
   }
 }
 
-export function assertNoRoadmapCycle(itemId: string, ancestorIds: readonly string[]): void {
+export function assertNoRoadmapCycle(
+  itemId: string,
+  ancestorIds: readonly string[],
+): void {
   if (ancestorIds.includes(itemId)) {
-    domainError("VALIDATION_ERROR", "Roadmap parent would create a cycle", "parentId");
+    domainError(
+      "VALIDATION_ERROR",
+      "Roadmap parent would create a cycle",
+      "parentId",
+    );
   }
 }

@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { toast } from "sonner";
-import { Settings, Tag, Building2, MapPin, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import {
+  Settings,
+  Tag,
+  Building2,
+  MapPin,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+} from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user.ts";
 import { useLanguage } from "@/components/providers/language.tsx";
 import type { Id, Doc } from "@/convex/_generated/dataModel.d.ts";
@@ -13,7 +23,16 @@ import type { Id, Doc } from "@/convex/_generated/dataModel.d.ts";
 type ConfigItem = Doc<"config_items">;
 type ConfigType = "category" | "department" | "campus";
 
-const CARD_CONFIG: Record<ConfigType, { labelKey: string; icon: React.ElementType; color: string; placeholderKey: string; descriptionKey: string }> = {
+const CARD_CONFIG: Record<
+  ConfigType,
+  {
+    labelKey: string;
+    icon: React.ElementType;
+    color: string;
+    placeholderKey: string;
+    descriptionKey: string;
+  }
+> = {
   category: {
     labelKey: "settings.category",
     icon: Tag,
@@ -37,7 +56,15 @@ const CARD_CONFIG: Record<ConfigType, { labelKey: string; icon: React.ElementTyp
   },
 };
 
-function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: ConfigItem[]; canWrite: boolean }) {
+function ConfigCard({
+  type,
+  items,
+  canWrite,
+}: {
+  type: ConfigType;
+  items: ConfigItem[];
+  canWrite: boolean;
+}) {
   const { t } = useLanguage();
   const addItem = useMutation(api.config.add);
   const updateItem = useMutation(api.config.update);
@@ -59,7 +86,10 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       setNewName("");
       toast.success(`${t("settings.add")} ${t(cfg.labelKey).toLowerCase()}`);
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.addFailed"));
+      toast.error(
+        (err as { data?: { message?: string } })?.data?.message ??
+          t("settings.toast.addFailed"),
+      );
     } finally {
       setAdding(false);
     }
@@ -72,7 +102,10 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       setEditingId(null);
       toast.success(t("settings.toast.updated"));
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.updateFailed"));
+      toast.error(
+        (err as { data?: { message?: string } })?.data?.message ??
+          t("settings.toast.updateFailed"),
+      );
     }
   };
 
@@ -81,7 +114,10 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       await removeItem({ id });
       toast.success(`Đã xoá "${name}"`);
     } catch (err: unknown) {
-      toast.error((err as { data?: { message?: string } })?.data?.message ?? t("settings.toast.removeFailed"));
+      toast.error(
+        (err as { data?: { message?: string } })?.data?.message ??
+          t("settings.toast.removeFailed"),
+      );
     }
   };
 
@@ -94,7 +130,9 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm">{t(cfg.labelKey)}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{t(cfg.descriptionKey)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t(cfg.descriptionKey)}
+          </p>
         </div>
         <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
           {items.length}
@@ -102,27 +140,42 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
       </div>
 
       {/* Items list */}
-      <div className="flex-1 overflow-y-auto divide-y divide-border/50" style={{ maxHeight: 280 }}>
+      <div
+        className="flex-1 overflow-y-auto divide-y divide-border/50"
+        style={{ maxHeight: 280 }}
+      >
         {items.length === 0 ? (
           <div className="py-8 text-center text-xs text-muted-foreground">
             {t("settings.noData")}
           </div>
         ) : (
           items.map((item) => (
-            <div key={item._id} className="flex items-center gap-2 px-4 py-2.5 hover:bg-accent/30 group">
+            <div
+              key={item._id}
+              className="flex items-center gap-2 px-4 py-2.5 hover:bg-accent/30 group"
+            >
               {editingId === item._id ? (
                 <>
                   <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleEdit(item._id); if (e.key === "Escape") setEditingId(null); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleEdit(item._id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
                     className="h-7 text-xs flex-1 bg-input"
                     autoFocus
                   />
-                  <button onClick={() => handleEdit(item._id)} className="p-1 rounded hover:bg-green-500/20 text-green-400 cursor-pointer">
+                  <button
+                    onClick={() => handleEdit(item._id)}
+                    className="p-1 rounded hover:bg-green-500/20 text-green-400 cursor-pointer"
+                  >
                     <Check className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => setEditingId(null)} className="p-1 rounded hover:bg-muted text-muted-foreground cursor-pointer">
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="p-1 rounded hover:bg-muted text-muted-foreground cursor-pointer"
+                  >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </>
@@ -132,7 +185,10 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
                   {canWrite && (
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => { setEditingId(item._id); setEditName(item.name); }}
+                        onClick={() => {
+                          setEditingId(item._id);
+                          setEditName(item.name);
+                        }}
                         className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
                       >
                         <Pencil className="h-3 w-3" />
@@ -162,7 +218,12 @@ function ConfigCard({ type, items, canWrite }: { type: ConfigType; items: Config
             placeholder={t(cfg.placeholderKey)}
             className="h-8 text-xs flex-1 bg-input"
           />
-          <Button size="sm" onClick={handleAdd} disabled={adding || !newName.trim()} className="gap-1 h-8 px-3">
+          <Button
+            size="sm"
+            onClick={handleAdd}
+            disabled={adding || !newName.trim()}
+            className="gap-1 h-8 px-3"
+          >
             <Plus className="h-3.5 w-3.5" />
             {t("settings.add")}
           </Button>
@@ -181,7 +242,8 @@ function SettingsContent() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="h-6 w-6 text-primary" />{t("settings.title")}
+          <Settings className="h-6 w-6 text-primary" />
+          {t("settings.title")}
         </h1>
         <p className="text-muted-foreground text-sm mt-0.5">
           {t("settings.subtitle")}
@@ -190,13 +252,22 @@ function SettingsContent() {
 
       {config === undefined ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-72 rounded-xl" />)}
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-72 rounded-xl" />
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {(["category", "department", "campus"] as ConfigType[]).map((type) => (
-            <ConfigCard key={type} type={type} items={config[type]} canWrite={canWrite} />
-          ))}
+          {(["category", "department", "campus"] as ConfigType[]).map(
+            (type) => (
+              <ConfigCard
+                key={type}
+                type={type}
+                items={config[type]}
+                canWrite={canWrite}
+              />
+            ),
+          )}
         </div>
       )}
     </div>

@@ -12,13 +12,20 @@ export const bootstrapCto = internalMutation({
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email);
     const users = await ctx.db.query("users").collect();
-    const existing = users.find((user) => user.email?.trim().toLowerCase() === email);
+    const existing = users.find(
+      (user) => user.email?.trim().toLowerCase() === email,
+    );
 
     if (existing?.role === "cto") return existing._id;
 
-    const activeCto = users.find((user) => user.role === "cto" && !user.isManuallyAdded);
+    const activeCto = users.find(
+      (user) => user.role === "cto" && !user.isManuallyAdded,
+    );
     if (activeCto) {
-      domainError("CONFLICT", "An active CTO already exists; use audited role administration");
+      domainError(
+        "CONFLICT",
+        "An active CTO already exists; use audited role administration",
+      );
     }
 
     if (existing) {

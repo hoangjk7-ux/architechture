@@ -14,12 +14,14 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-    role: v.optional(v.union(
-      v.literal("cto"),
-      v.literal("it_manager"),
-      v.literal("business_owner"),
-      v.literal("viewer")
-    )),
+    role: v.optional(
+      v.union(
+        v.literal("cto"),
+        v.literal("it_manager"),
+        v.literal("business_owner"),
+        v.literal("viewer"),
+      ),
+    ),
     isManuallyAdded: v.optional(v.boolean()),
   })
     .index("email", ["email"])
@@ -32,16 +34,20 @@ export default defineSchema({
       v.literal("core"),
       v.literal("supporting"),
       v.literal("legacy"),
-      v.literal("pilot")
+      v.literal("pilot"),
     ),
     category: v.string(), // CRM, ERP, SIS, LMS, HRM, BI, etc.
     status: v.union(
       v.literal("active"),
       v.literal("sunset"),
       v.literal("pilot"),
-      v.literal("inactive")
+      v.literal("inactive"),
     ),
-    criticality: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+    criticality: v.union(
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
     owner: v.optional(v.string()),
     vendorId: v.optional(v.id("vendors")),
     departments: v.array(v.string()),
@@ -53,7 +59,11 @@ export default defineSchema({
     licenseType: v.optional(v.string()),
     costPerYear: v.optional(v.number()),
     contractEndDate: v.optional(v.string()),
-    riskLevel: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+    riskLevel: v.union(
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
     technicalDebtScore: v.number(), // 0-100
     architectureScore: v.number(), // 0-100
     description: v.optional(v.string()),
@@ -66,7 +76,11 @@ export default defineSchema({
     name: v.string(),
     contactEmail: v.optional(v.string()),
     contactName: v.optional(v.string()),
-    supportLevel: v.union(v.literal("24/7"), v.literal("business_hours"), v.literal("email_only")),
+    supportLevel: v.union(
+      v.literal("24/7"),
+      v.literal("business_hours"),
+      v.literal("email_only"),
+    ),
     sla: v.optional(v.string()),
     costPerYear: v.optional(v.number()),
     contractEndDate: v.optional(v.string()),
@@ -78,10 +92,33 @@ export default defineSchema({
     name: v.string(),
     sourceSystemId: v.id("software_systems"),
     destinationSystemId: v.id("software_systems"),
-    protocol: v.union(v.literal("REST"), v.literal("GraphQL"), v.literal("SOAP"), v.literal("Webhook"), v.literal("DB"), v.literal("ETL"), v.literal("Queue"), v.literal("Other")),
-    method: v.union(v.literal("realtime"), v.literal("batch"), v.literal("event_driven"), v.literal("manual")),
-    healthStatus: v.union(v.literal("healthy"), v.literal("degraded"), v.literal("down"), v.literal("unknown")),
-    criticalLevel: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),
+    protocol: v.union(
+      v.literal("REST"),
+      v.literal("GraphQL"),
+      v.literal("SOAP"),
+      v.literal("Webhook"),
+      v.literal("DB"),
+      v.literal("ETL"),
+      v.literal("Queue"),
+      v.literal("Other"),
+    ),
+    method: v.union(
+      v.literal("realtime"),
+      v.literal("batch"),
+      v.literal("event_driven"),
+      v.literal("manual"),
+    ),
+    healthStatus: v.union(
+      v.literal("healthy"),
+      v.literal("degraded"),
+      v.literal("down"),
+      v.literal("unknown"),
+    ),
+    criticalLevel: v.union(
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
     owner: v.optional(v.string()),
     errorRate: v.optional(v.number()),
     lastSync: v.optional(v.string()),
@@ -98,30 +135,34 @@ export default defineSchema({
     description: v.optional(v.string()),
     // lifecycle: what phase this feature/module is in
     lifecycle: v.union(
-      v.literal("in_use"),        // đang sử dụng
+      v.literal("in_use"), // đang sử dụng
       v.literal("in_development"), // đang phát triển
-      v.literal("planned"),        // dự kiến / kế hoạch
-      v.literal("deprecated"),     // lỗi thời, sắp bỏ
-      v.literal("retired")         // đã bỏ
+      v.literal("planned"), // dự kiến / kế hoạch
+      v.literal("deprecated"), // lỗi thời, sắp bỏ
+      v.literal("retired"), // đã bỏ
     ),
     // operational health of modules currently in use
     health: v.union(
       v.literal("healthy"),
       v.literal("degraded"),
       v.literal("down"),
-      v.literal("unknown")
+      v.literal("unknown"),
     ),
-    usedBy: v.array(v.string()),     // departments / roles using it
+    usedBy: v.array(v.string()), // departments / roles using it
     version: v.optional(v.string()), // current version / release
     plannedDate: v.optional(v.string()), // target date for planned/in-dev
     notes: v.optional(v.string()),
-    sortOrder: v.number(),           // display order within a system
+    sortOrder: v.number(), // display order within a system
   })
     .index("by_system", ["systemId"])
     .index("by_system_lifecycle", ["systemId", "lifecycle"]),
 
   config_items: defineTable({
-    type: v.union(v.literal("category"), v.literal("department"), v.literal("campus")),
+    type: v.union(
+      v.literal("category"),
+      v.literal("department"),
+      v.literal("campus"),
+    ),
     name: v.string(),
     color: v.optional(v.string()),
     order: v.number(),
@@ -136,7 +177,7 @@ export default defineSchema({
       v.literal("deleted"),
       v.literal("feature_created"),
       v.literal("feature_updated"),
-      v.literal("feature_deleted")
+      v.literal("feature_deleted"),
     ),
     changes: v.optional(
       v.array(
@@ -144,8 +185,8 @@ export default defineSchema({
           field: v.string(),
           from: v.optional(v.string()),
           to: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
     actorName: v.optional(v.string()),
     actorEmail: v.optional(v.string()),
@@ -157,7 +198,7 @@ export default defineSchema({
       v.literal("initiative"),
       v.literal("program"),
       v.literal("project"),
-      v.literal("epic")
+      v.literal("epic"),
     ),
     parentId: v.optional(v.id("roadmap_items")),
     status: v.union(
@@ -165,7 +206,7 @@ export default defineSchema({
       v.literal("in_progress"),
       v.literal("blocked"),
       v.literal("done"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
     owner: v.optional(v.string()),
     startDate: v.optional(v.string()),

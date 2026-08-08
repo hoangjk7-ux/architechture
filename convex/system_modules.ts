@@ -149,8 +149,7 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     await requireWriteAccess(ctx);
     const existing = await ctx.db.get(args.id);
-    if (!existing)
-      domainError("NOT_FOUND", "System module not found", "id");
+    if (!existing) domainError("NOT_FOUND", "System module not found", "id");
     const system = await ctx.db.get(existing.systemId);
     await ctx.db.delete(args.id);
     await recordSystemChange(ctx, {

@@ -21,16 +21,16 @@ The installed `@convex-dev/auth` version is `0.0.94`.
 
 ## Current gaps and exact implementation targets
 
-| Gap | Current evidence | Required implementation |
-| --- | --- | --- |
-| Anonymous becomes CTO | `convex/helpers.ts` returns `local-admin` when `getAuthUserId` is null | SEC-03: return null and make shared guards throw `UNAUTHENTICATED` |
-| Anonymous write passes | `requireWriteAccess` receives the synthetic CTO | SEC-03/04: fail closed, then apply guards to every endpoint |
-| Google response is not a session | `convex/http_actions/google.ts` verifies a token, upserts a user and returns `{ user }` | SEC-02: configure the Auth.js Google provider in `convex/auth.ts` and initiate it through `useAuthActions().signIn("google", ...)` |
-| Two client auth authorities | `SimpleAuthProvider` wraps `ConvexAuthProvider` and persists user/role | SEC-02: remove SimpleAuth authority; use `useConvexAuth` for session state and query `users.getCurrentUser` for role |
-| Sign-out is local only | SimpleAuth sign-out only clears component/storage state | SEC-02: await `useAuthActions().signOut()` |
-| Password bypass | `admin / 123456789` was checked in bundled client code | SEC-02: remove the local credential branch. The unverified Password provider is not exposed; it may return only with an invitation/verification policy and dedicated tests |
-| OAuth role assignment bypasses policy | `upsertGoogleUser` hard-codes a CTO email and returns role to the browser | SEC-02/05: provision in the Convex Auth user callback using normalized verified email and the ADR invitation/bootstrap rules |
-| CORS trusts request origin | custom Google action reflects the request `Origin` | Remove the custom route with the migration; if retained for a non-auth purpose, validate against an explicit allowlist |
+| Gap                                   | Current evidence                                                                        | Required implementation                                                                                                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anonymous becomes CTO                 | `convex/helpers.ts` returns `local-admin` when `getAuthUserId` is null                  | SEC-03: return null and make shared guards throw `UNAUTHENTICATED`                                                                                                         |
+| Anonymous write passes                | `requireWriteAccess` receives the synthetic CTO                                         | SEC-03/04: fail closed, then apply guards to every endpoint                                                                                                                |
+| Google response is not a session      | `convex/http_actions/google.ts` verifies a token, upserts a user and returns `{ user }` | SEC-02: configure the Auth.js Google provider in `convex/auth.ts` and initiate it through `useAuthActions().signIn("google", ...)`                                         |
+| Two client auth authorities           | `SimpleAuthProvider` wraps `ConvexAuthProvider` and persists user/role                  | SEC-02: remove SimpleAuth authority; use `useConvexAuth` for session state and query `users.getCurrentUser` for role                                                       |
+| Sign-out is local only                | SimpleAuth sign-out only clears component/storage state                                 | SEC-02: await `useAuthActions().signOut()`                                                                                                                                 |
+| Password bypass                       | `admin / 123456789` was checked in bundled client code                                  | SEC-02: remove the local credential branch. The unverified Password provider is not exposed; it may return only with an invitation/verification policy and dedicated tests |
+| OAuth role assignment bypasses policy | `upsertGoogleUser` hard-codes a CTO email and returns role to the browser               | SEC-02/05: provision in the Convex Auth user callback using normalized verified email and the ADR invitation/bootstrap rules                                               |
+| CORS trusts request origin            | custom Google action reflects the request `Origin`                                      | Remove the custom route with the migration; if retained for a non-auth purpose, validate against an explicit allowlist                                                     |
 
 ## Migration boundary
 

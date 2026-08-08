@@ -97,7 +97,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 25,
       architectureScore: 82,
-      description: "Core ERP system managing finance, logistics, and manufacturing processes across all campuses.",
+      description:
+        "Core ERP system managing finance, logistics, and manufacturing processes across all campuses.",
     });
 
     const crmId = await ctx.db.insert("software_systems", {
@@ -120,7 +121,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 18,
       architectureScore: 88,
-      description: "Primary CRM for managing sales pipeline, customer accounts, and marketing campaigns.",
+      description:
+        "Primary CRM for managing sales pipeline, customer accounts, and marketing campaigns.",
     });
 
     const hrmsId = await ctx.db.insert("software_systems", {
@@ -143,7 +145,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 22,
       architectureScore: 79,
-      description: "HR management system covering recruitment, payroll, performance, and learning.",
+      description:
+        "HR management system covering recruitment, payroll, performance, and learning.",
     });
 
     const itsmId = await ctx.db.insert("software_systems", {
@@ -166,7 +169,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 20,
       architectureScore: 85,
-      description: "IT service management platform for incident, change, and asset management.",
+      description:
+        "IT service management platform for incident, change, and asset management.",
     });
 
     const oracleEbsId = await ctx.db.insert("software_systems", {
@@ -189,7 +193,8 @@ export const seedData = internalMutation({
       riskLevel: "high",
       technicalDebtScore: 75,
       architectureScore: 35,
-      description: "Legacy ERP running on Campus B. Migration to SAP S/4HANA in progress.",
+      description:
+        "Legacy ERP running on Campus B. Migration to SAP S/4HANA in progress.",
     });
 
     const biId = await ctx.db.insert("software_systems", {
@@ -212,7 +217,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 15,
       architectureScore: 80,
-      description: "Business intelligence and data visualization platform used across all departments.",
+      description:
+        "Business intelligence and data visualization platform used across all departments.",
     });
 
     const m365Id = await ctx.db.insert("software_systems", {
@@ -235,7 +241,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 8,
       architectureScore: 92,
-      description: "Enterprise collaboration suite including Teams, SharePoint, Exchange, and OneDrive.",
+      description:
+        "Enterprise collaboration suite including Teams, SharePoint, Exchange, and OneDrive.",
     });
 
     const apiGatewayId = await ctx.db.insert("software_systems", {
@@ -256,7 +263,8 @@ export const seedData = internalMutation({
       riskLevel: "medium",
       technicalDebtScore: 35,
       architectureScore: 74,
-      description: "Internal API gateway handling routing, authentication, and rate limiting for all service integrations.",
+      description:
+        "Internal API gateway handling routing, authentication, and rate limiting for all service integrations.",
     });
 
     const dataWarehouseId = await ctx.db.insert("software_systems", {
@@ -279,7 +287,8 @@ export const seedData = internalMutation({
       riskLevel: "low",
       technicalDebtScore: 28,
       architectureScore: 83,
-      description: "Central data warehouse aggregating data from all core systems for analytics and reporting.",
+      description:
+        "Central data warehouse aggregating data from all core systems for analytics and reporting.",
     });
 
     const customerPortalId = await ctx.db.insert("software_systems", {
@@ -300,7 +309,8 @@ export const seedData = internalMutation({
       riskLevel: "medium",
       technicalDebtScore: 30,
       architectureScore: 70,
-      description: "Pilot customer-facing portal for self-service requests, order tracking, and support tickets.",
+      description:
+        "Pilot customer-facing portal for self-service requests, order tracking, and support tickets.",
     });
 
     // ── 3. System Modules ────────────────────────────────────────────────────
@@ -308,7 +318,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: erpId,
       name: "FI – Financial Accounting",
-      description: "General ledger, accounts payable/receivable, asset accounting.",
+      description:
+        "General ledger, accounts payable/receivable, asset accounting.",
       lifecycle: "in_use",
       health: "healthy",
       usedBy: ["Finance", "Accounting"],
@@ -333,7 +344,8 @@ export const seedData = internalMutation({
       health: "degraded",
       usedBy: ["Sales", "Logistics"],
       version: "2023 FPS02",
-      notes: "Performance issues during peak order periods. Optimization in progress.",
+      notes:
+        "Performance issues during peak order periods. Optimization in progress.",
       sortOrder: 3,
     });
     await ctx.db.insert("system_modules", {
@@ -371,7 +383,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: crmId,
       name: "Service Cloud",
-      description: "Case management, knowledge base, customer support SLA tracking.",
+      description:
+        "Case management, knowledge base, customer support SLA tracking.",
       lifecycle: "in_use",
       health: "healthy",
       usedBy: ["Customer Success", "Support"],
@@ -403,7 +416,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: hrmsId,
       name: "Employee Central",
-      description: "Core HR data, organizational structure, position management.",
+      description:
+        "Core HR data, organizational structure, position management.",
       lifecycle: "in_use",
       health: "healthy",
       usedBy: ["Human Resources"],
@@ -444,7 +458,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: hrmsId,
       name: "Payroll (Local)",
-      description: "Payroll processing integrated with local statutory regulations.",
+      description:
+        "Payroll processing integrated with local statutory regulations.",
       lifecycle: "deprecated",
       health: "degraded",
       usedBy: ["Payroll"],
@@ -456,7 +471,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: itsmId,
       name: "Incident Management",
-      description: "IT incident logging, triage, escalation, and resolution tracking.",
+      description:
+        "IT incident logging, triage, escalation, and resolution tracking.",
       lifecycle: "in_use",
       health: "healthy",
       usedBy: ["IT", "Operations"],
@@ -476,7 +492,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: itsmId,
       name: "Asset & Configuration Management",
-      description: "CMDB, hardware/software asset inventory, lifecycle tracking.",
+      description:
+        "CMDB, hardware/software asset inventory, lifecycle tracking.",
       lifecycle: "in_use",
       health: "degraded",
       usedBy: ["IT"],
@@ -487,7 +504,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: itsmId,
       name: "HR Service Delivery",
-      description: "HR case management, employee onboarding/offboarding workflows.",
+      description:
+        "HR case management, employee onboarding/offboarding workflows.",
       lifecycle: "in_development",
       health: "unknown",
       usedBy: ["Human Resources", "IT"],
@@ -499,7 +517,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: oracleEbsId,
       name: "Oracle Financials",
-      description: "GL, AP, AR running on Oracle EBS – read-only post-migration.",
+      description:
+        "GL, AP, AR running on Oracle EBS – read-only post-migration.",
       lifecycle: "deprecated",
       health: "degraded",
       usedBy: ["Finance"],
@@ -522,7 +541,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: biId,
       name: "Finance Dashboard Suite",
-      description: "P&L, balance sheet, cash flow, and budget variance dashboards.",
+      description:
+        "P&L, balance sheet, cash flow, and budget variance dashboards.",
       lifecycle: "in_use",
       health: "healthy",
       usedBy: ["Finance", "Executive"],
@@ -552,7 +572,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: biId,
       name: "HR Analytics",
-      description: "Headcount, attrition, hiring funnel, and training completion.",
+      description:
+        "Headcount, attrition, hiring funnel, and training completion.",
       lifecycle: "planned",
       health: "unknown",
       usedBy: ["Human Resources", "Executive"],
@@ -584,7 +605,8 @@ export const seedData = internalMutation({
     await ctx.db.insert("system_modules", {
       systemId: apiGatewayId,
       name: "API Analytics & Logging",
-      description: "Request tracing, latency monitoring, error rate dashboards.",
+      description:
+        "Request tracing, latency monitoring, error rate dashboards.",
       lifecycle: "in_development",
       health: "unknown",
       usedBy: ["IT", "Architecture"],
@@ -604,7 +626,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 90,
       relatedSystemIds: [erpId, oracleEbsId, apiGatewayId],
       priority: "high",
-      description: "Modernize the core ERP landscape by completing Oracle EBS sunset, upgrading SAP S/4HANA, and establishing an enterprise integration platform.",
+      description:
+        "Modernize the core ERP landscape by completing Oracle EBS sunset, upgrading SAP S/4HANA, and establishing an enterprise integration platform.",
     });
 
     const initiative2Id = await ctx.db.insert("roadmap_items", {
@@ -617,7 +640,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 85,
       relatedSystemIds: [dataWarehouseId, biId, erpId, crmId],
       priority: "high",
-      description: "Build a unified data platform enabling real-time analytics, self-service BI, and AI-powered insights across the organization.",
+      description:
+        "Build a unified data platform enabling real-time analytics, self-service BI, and AI-powered insights across the organization.",
     });
 
     const initiative3Id = await ctx.db.insert("roadmap_items", {
@@ -630,7 +654,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 78,
       relatedSystemIds: [crmId, customerPortalId],
       priority: "medium",
-      description: "Elevate customer-facing digital experiences through CRM optimization, AI-driven personalization, and self-service portal expansion.",
+      description:
+        "Elevate customer-facing digital experiences through CRM optimization, AI-driven personalization, and self-service portal expansion.",
     });
 
     // Programs under Initiative 1
@@ -645,7 +670,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 88,
       relatedSystemIds: [erpId, oracleEbsId],
       priority: "high",
-      description: "Complete Oracle EBS decommission and deliver SAP S/4HANA enhancements to support Campus B operations.",
+      description:
+        "Complete Oracle EBS decommission and deliver SAP S/4HANA enhancements to support Campus B operations.",
     });
 
     const prog1bId = await ctx.db.insert("roadmap_items", {
@@ -659,7 +685,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 82,
       relatedSystemIds: [apiGatewayId, erpId, crmId, hrmsId],
       priority: "high",
-      description: "Establish a centralized API gateway and event bus to replace point-to-point integrations.",
+      description:
+        "Establish a centralized API gateway and event bus to replace point-to-point integrations.",
     });
 
     // Programs under Initiative 2
@@ -674,7 +701,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 87,
       relatedSystemIds: [dataWarehouseId, biId],
       priority: "high",
-      description: "Migrate all data pipelines to Snowflake and roll out Power BI self-service analytics.",
+      description:
+        "Migrate all data pipelines to Snowflake and roll out Power BI self-service analytics.",
     });
 
     // Programs under Initiative 3
@@ -689,7 +717,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 75,
       relatedSystemIds: [crmId],
       priority: "medium",
-      description: "Implement Einstein AI features and expand Salesforce Service Cloud capabilities.",
+      description:
+        "Implement Einstein AI features and expand Salesforce Service Cloud capabilities.",
     });
 
     // Projects under Program 1a
@@ -704,7 +733,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 95,
       relatedSystemIds: [oracleEbsId, erpId],
       priority: "high",
-      description: "Final data migration from Oracle EBS to SAP S/4HANA, user acceptance testing, and system shutdown on Campus B.",
+      description:
+        "Final data migration from Oracle EBS to SAP S/4HANA, user acceptance testing, and system shutdown on Campus B.",
     });
 
     const proj1a2Id = await ctx.db.insert("roadmap_items", {
@@ -718,7 +748,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 80,
       relatedSystemIds: [erpId],
       priority: "high",
-      description: "Resolve SD module performance bottlenecks and implement order processing improvements.",
+      description:
+        "Resolve SD module performance bottlenecks and implement order processing improvements.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -732,7 +763,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 82,
       relatedSystemIds: [erpId, dataWarehouseId],
       priority: "medium",
-      description: "Deploy S/4HANA embedded analytics for Finance and Operations, reducing dependency on external reporting tools.",
+      description:
+        "Deploy S/4HANA embedded analytics for Finance and Operations, reducing dependency on external reporting tools.",
     });
 
     // Projects under Program 1b
@@ -747,7 +779,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 88,
       relatedSystemIds: [apiGatewayId],
       priority: "high",
-      description: "Implement HA/DR for API gateway, complete API analytics module, and onboard all tier-1 integrations.",
+      description:
+        "Implement HA/DR for API gateway, complete API analytics module, and onboard all tier-1 integrations.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -761,7 +794,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 76,
       relatedSystemIds: [apiGatewayId, erpId, crmId, hrmsId, itsmId],
       priority: "medium",
-      description: "Migrate remaining direct DB-link and ETL integrations to go through the central API gateway.",
+      description:
+        "Migrate remaining direct DB-link and ETL integrations to go through the central API gateway.",
     });
 
     // Projects under Program 2a
@@ -776,7 +810,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 90,
       relatedSystemIds: [dataWarehouseId, erpId, crmId],
       priority: "high",
-      description: "Complete migration of legacy SQL Server DW to Snowflake and validate all ELT pipelines.",
+      description:
+        "Complete migration of legacy SQL Server DW to Snowflake and validate all ELT pipelines.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -790,7 +825,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 85,
       relatedSystemIds: [biId, dataWarehouseId],
       priority: "medium",
-      description: "Deploy Power BI premium capacity, establish data governance policies, and train 200+ business users.",
+      description:
+        "Deploy Power BI premium capacity, establish data governance policies, and train 200+ business users.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -804,7 +840,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 83,
       relatedSystemIds: [biId, hrmsId, dataWarehouseId],
       priority: "medium",
-      description: "Build HR analytics dashboards covering headcount, attrition, and learning metrics in Power BI.",
+      description:
+        "Build HR analytics dashboards covering headcount, attrition, and learning metrics in Power BI.",
     });
 
     // Projects under Program 3a
@@ -819,7 +856,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 72,
       relatedSystemIds: [crmId, dataWarehouseId],
       priority: "medium",
-      description: "Configure and train Salesforce Einstein AI lead scoring model using 3 years of historical win/loss data.",
+      description:
+        "Configure and train Salesforce Einstein AI lead scoring model using 3 years of historical win/loss data.",
     });
 
     const proj3a2Id = await ctx.db.insert("roadmap_items", {
@@ -833,7 +871,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 70,
       relatedSystemIds: [customerPortalId, crmId, apiGatewayId],
       priority: "medium",
-      description: "Expand pilot portal to full production: order tracking, returns management, and live chat support.",
+      description:
+        "Expand pilot portal to full production: order tracking, returns management, and live chat support.",
     });
 
     // Epics
@@ -848,7 +887,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 95,
       relatedSystemIds: [oracleEbsId, erpId],
       priority: "high",
-      description: "Extract, transform, and load General Ledger and Accounts Payable historical data from Oracle EBS to SAP.",
+      description:
+        "Extract, transform, and load General Ledger and Accounts Payable historical data from Oracle EBS to SAP.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -862,7 +902,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 92,
       relatedSystemIds: [oracleEbsId, erpId],
       priority: "high",
-      description: "3-month parallel run of Oracle EBS and SAP S/4HANA Finance modules with user acceptance testing.",
+      description:
+        "3-month parallel run of Oracle EBS and SAP S/4HANA Finance modules with user acceptance testing.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -876,7 +917,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 78,
       relatedSystemIds: [erpId],
       priority: "high",
-      description: "Identify and resolve N+1 queries, missing HANA indexes, and batch job contention in SD order processing.",
+      description:
+        "Identify and resolve N+1 queries, missing HANA indexes, and batch job contention in SD order processing.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -890,7 +932,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 90,
       relatedSystemIds: [apiGatewayId],
       priority: "high",
-      description: "Configure active-active Kong Gateway cluster with automated failover and health checks.",
+      description:
+        "Configure active-active Kong Gateway cluster with automated failover and health checks.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -904,7 +947,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 68,
       relatedSystemIds: [customerPortalId, apiGatewayId, m365Id],
       priority: "medium",
-      description: "Integrate customer portal with Azure AD B2C for federated SSO using existing Microsoft 365 tenant.",
+      description:
+        "Integrate customer portal with Azure AD B2C for federated SSO using existing Microsoft 365 tenant.",
     });
 
     await ctx.db.insert("roadmap_items", {
@@ -917,7 +961,8 @@ export const seedData = internalMutation({
       architectureAlignmentScore: 65,
       relatedSystemIds: [itsmId],
       priority: "medium",
-      description: "Clean and enrich 4,000+ CMDB records. Blocked pending resource allocation from IT Ops team.",
+      description:
+        "Clean and enrich 4,000+ CMDB records. Blocked pending resource allocation from IT Ops team.",
     });
 
     // ── 5. Integrations ──────────────────────────────────────────────────────
@@ -933,7 +978,8 @@ export const seedData = internalMutation({
       errorRate: 0.2,
       lastSync: "2025-05-15T08:30:00Z",
       isArchitectureCompliant: true,
-      description: "Synchronizes customer master data (accounts, contacts, pricing) from SAP S/4HANA to Salesforce in real-time via API Gateway.",
+      description:
+        "Synchronizes customer master data (accounts, contacts, pricing) from SAP S/4HANA to Salesforce in real-time via API Gateway.",
     });
 
     await ctx.db.insert("integrations", {
@@ -948,7 +994,8 @@ export const seedData = internalMutation({
       errorRate: 0.5,
       lastSync: "2025-05-15T02:00:00Z",
       isArchitectureCompliant: true,
-      description: "Nightly ETL batch extracting Salesforce Opportunities, Accounts, and Cases to Snowflake for BI reporting.",
+      description:
+        "Nightly ETL batch extracting Salesforce Opportunities, Accounts, and Cases to Snowflake for BI reporting.",
     });
 
     await ctx.db.insert("integrations", {
@@ -963,7 +1010,8 @@ export const seedData = internalMutation({
       errorRate: 8.3,
       lastSync: "2025-05-14T03:15:00Z",
       isArchitectureCompliant: false,
-      description: "Direct DB link syncing cost center and org unit data from SAP FI to SuccessFactors Employee Central. Legacy connection flagged for migration to API.",
+      description:
+        "Direct DB link syncing cost center and org unit data from SAP FI to SuccessFactors Employee Central. Legacy connection flagged for migration to API.",
     });
 
     await ctx.db.insert("integrations", {
@@ -978,7 +1026,8 @@ export const seedData = internalMutation({
       errorRate: 12.1,
       lastSync: "2025-05-13T22:00:00Z",
       isArchitectureCompliant: false,
-      description: "Ongoing ETL migration of historical GL balances and AP invoices from Oracle EBS to SAP. Degraded due to data quality issues in source records.",
+      description:
+        "Ongoing ETL migration of historical GL balances and AP invoices from Oracle EBS to SAP. Degraded due to data quality issues in source records.",
     });
 
     await ctx.db.insert("integrations", {
@@ -993,7 +1042,8 @@ export const seedData = internalMutation({
       errorRate: 0.1,
       lastSync: "2025-05-15T09:45:00Z",
       isArchitectureCompliant: true,
-      description: "ServiceNow webhooks push P1/P2 incident alerts and change notifications to Microsoft Teams channels.",
+      description:
+        "ServiceNow webhooks push P1/P2 incident alerts and change notifications to Microsoft Teams channels.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1008,7 +1058,8 @@ export const seedData = internalMutation({
       errorRate: 0.3,
       lastSync: "2025-05-15T01:00:00Z",
       isArchitectureCompliant: true,
-      description: "Nightly extraction of GL postings, cost center actuals, and inventory movements from SAP to Snowflake.",
+      description:
+        "Nightly extraction of GL postings, cost center actuals, and inventory movements from SAP to Snowflake.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1023,7 +1074,8 @@ export const seedData = internalMutation({
       errorRate: 1.2,
       lastSync: "2025-05-15T09:50:00Z",
       isArchitectureCompliant: true,
-      description: "Escalates high-priority Salesforce Service Cloud cases to ServiceNow incidents for IT involvement.",
+      description:
+        "Escalates high-priority Salesforce Service Cloud cases to ServiceNow incidents for IT involvement.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1038,7 +1090,8 @@ export const seedData = internalMutation({
       errorRate: 0.8,
       lastSync: "2025-05-15T10:00:00Z",
       isArchitectureCompliant: true,
-      description: "API Gateway proxies product catalog and pricing data from SAP to the customer self-service portal.",
+      description:
+        "API Gateway proxies product catalog and pricing data from SAP to the customer self-service portal.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1053,7 +1106,8 @@ export const seedData = internalMutation({
       errorRate: 0,
       lastSync: "2025-05-10T03:00:00Z",
       isArchitectureCompliant: true,
-      description: "Planned nightly HR data extraction to Snowflake for HR Analytics Power BI dashboards. Currently in setup.",
+      description:
+        "Planned nightly HR data extraction to Snowflake for HR Analytics Power BI dashboards. Currently in setup.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1068,7 +1122,8 @@ export const seedData = internalMutation({
       errorRate: 2.0,
       lastSync: "2025-05-15T06:00:00Z",
       isArchitectureCompliant: true,
-      description: "Pushes approved IT asset procurement requests from ServiceNow to SAP MM purchase requisitions.",
+      description:
+        "Pushes approved IT asset procurement requests from ServiceNow to SAP MM purchase requisitions.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1083,7 +1138,8 @@ export const seedData = internalMutation({
       errorRate: 0.4,
       lastSync: "2025-05-15T05:30:00Z",
       isArchitectureCompliant: true,
-      description: "Scheduled Power BI dataset refresh pulling curated Snowflake views via DirectQuery and Import mode.",
+      description:
+        "Scheduled Power BI dataset refresh pulling curated Snowflake views via DirectQuery and Import mode.",
     });
 
     await ctx.db.insert("integrations", {
@@ -1098,7 +1154,8 @@ export const seedData = internalMutation({
       errorRate: 100,
       lastSync: "2025-04-30T22:00:00Z",
       isArchitectureCompliant: false,
-      description: "Archive pipeline for Oracle EBS historical data to Snowflake. Currently down due to source DB connection failure pending EBS shutdown.",
+      description:
+        "Archive pipeline for Oracle EBS historical data to Snowflake. Currently down due to source DB connection failure pending EBS shutdown.",
     });
 
     return { message: "Seed data inserted successfully." };

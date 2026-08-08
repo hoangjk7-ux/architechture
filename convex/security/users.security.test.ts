@@ -19,7 +19,10 @@ function asUser(t: ReturnType<typeof createConvexTest>, userId: Id<"users">) {
 describe("SEC-05 user and role hardening", () => {
   it("normalizes invitation email before lookup and storage", async () => {
     const t = createConvexTest();
-    const ctoId = await insertUser(t, { email: "cto@example.com", role: "cto" });
+    const ctoId = await insertUser(t, {
+      email: "cto@example.com",
+      role: "cto",
+    });
 
     const invitedId = await asUser(t, ctoId).mutation(api.users.inviteUser, {
       name: "Invited User",
@@ -51,7 +54,10 @@ describe("SEC-05 user and role hardening", () => {
     const [owner, viewer, ownerEmailRecords] = await t.run(async (ctx) => [
       await ctx.db.get(ownerId),
       await ctx.db.get(viewerId),
-      await ctx.db.query("users").withIndex("email", (q) => q.eq("email", "owner@example.com")).collect(),
+      await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", "owner@example.com"))
+        .collect(),
     ]);
     expect(owner?.role).toBe("business_owner");
     expect(viewer?.role).toBe("viewer");
@@ -60,12 +66,21 @@ describe("SEC-05 user and role hardening", () => {
 
   it("returns NOT_FOUND for missing role-update and removal targets", async () => {
     const t = createConvexTest();
-    const ctoId = await insertUser(t, { email: "cto@example.com", role: "cto" });
-    const deletedId = await insertUser(t, { email: "gone@example.com", role: "viewer" });
+    const ctoId = await insertUser(t, {
+      email: "cto@example.com",
+      role: "cto",
+    });
+    const deletedId = await insertUser(t, {
+      email: "gone@example.com",
+      role: "viewer",
+    });
     await t.run(async (ctx) => await ctx.db.delete(deletedId));
 
     await expect(
-      asUser(t, ctoId).mutation(api.users.updateUserRole, { userId: deletedId, role: "viewer" }),
+      asUser(t, ctoId).mutation(api.users.updateUserRole, {
+        userId: deletedId,
+        role: "viewer",
+      }),
     ).rejects.toMatchObject({ data: { code: "NOT_FOUND" } });
     await expect(
       asUser(t, ctoId).mutation(api.users.removeUser, { userId: deletedId }),
@@ -74,7 +89,10 @@ describe("SEC-05 user and role hardening", () => {
 
   it("blocks self-removal", async () => {
     const t = createConvexTest();
-    const ctoId = await insertUser(t, { email: "cto@example.com", role: "cto" });
+    const ctoId = await insertUser(t, {
+      email: "cto@example.com",
+      role: "cto",
+    });
 
     await expect(
       asUser(t, ctoId).mutation(api.users.removeUser, { userId: ctoId }),
@@ -83,16 +101,25 @@ describe("SEC-05 user and role hardening", () => {
 
   it("blocks demoting the last active CTO", async () => {
     const t = createConvexTest();
-    const ctoId = await insertUser(t, { email: "cto@example.com", role: "cto" });
+    const ctoId = await insertUser(t, {
+      email: "cto@example.com",
+      role: "cto",
+    });
 
     await expect(
-      asUser(t, ctoId).mutation(api.users.updateUserRole, { userId: ctoId, role: "viewer" }),
+      asUser(t, ctoId).mutation(api.users.updateUserRole, {
+        userId: ctoId,
+        role: "viewer",
+      }),
     ).rejects.toMatchObject({ data: { code: "CONFLICT" } });
   });
 
   it("blocks deleting the last active CTO even when a pending CTO invokes it", async () => {
     const t = createConvexTest();
-    const activeCtoId = await insertUser(t, { email: "active@example.com", role: "cto" });
+    const activeCtoId = await insertUser(t, {
+      email: "active@example.com",
+      role: "cto",
+    });
     const pendingCtoId = await insertUser(t, {
       email: "pending@example.com",
       role: "cto",
@@ -100,14 +127,22 @@ describe("SEC-05 user and role hardening", () => {
     });
 
     await expect(
-      asUser(t, pendingCtoId).mutation(api.users.removeUser, { userId: activeCtoId }),
+      asUser(t, pendingCtoId).mutation(api.users.removeUser, {
+        userId: activeCtoId,
+      }),
     ).rejects.toMatchObject({ data: { code: "CONFLICT" } });
   });
 
   it("allows a CTO transition when another active CTO remains", async () => {
     const t = createConvexTest();
-    const firstCtoId = await insertUser(t, { email: "first@example.com", role: "cto" });
-    const secondCtoId = await insertUser(t, { email: "second@example.com", role: "cto" });
+    const firstCtoId = await insertUser(t, {
+      email: "first@example.com",
+      role: "cto",
+    });
+    const secondCtoId = await insertUser(t, {
+      email: "second@example.com",
+      role: "cto",
+    });
 
     await asUser(t, firstCtoId).mutation(api.users.updateUserRole, {
       userId: firstCtoId,

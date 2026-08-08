@@ -18,7 +18,7 @@ describe("LanguageProvider", () => {
     const html = renderToStaticMarkup(
       <LanguageProvider>
         <TestComponent />
-      </LanguageProvider>
+      </LanguageProvider>,
     );
 
     expect(html).toContain("vi");

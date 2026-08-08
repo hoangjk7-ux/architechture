@@ -6,9 +6,9 @@ type RoadmapItem = Doc<"roadmap_items">;
 const STATUS_COLORS: Record<string, { bar: string; text: string }> = {
   not_started: { bar: "#334155", text: "#94a3b8" },
   in_progress: { bar: "#3b82f6", text: "#bfdbfe" },
-  blocked:     { bar: "#ef4444", text: "#fecaca" },
-  done:        { bar: "#22c55e", text: "#bbf7d0" },
-  cancelled:   { bar: "#475569", text: "#94a3b8" },
+  blocked: { bar: "#ef4444", text: "#fecaca" },
+  done: { bar: "#22c55e", text: "#bbf7d0" },
+  cancelled: { bar: "#475569", text: "#94a3b8" },
 };
 
 const LEVEL_INDENT: Record<string, number> = {
@@ -73,7 +73,12 @@ export default function GanttChart({ items }: Props) {
     maxDate.setMonth(maxDate.getMonth() + 1);
     maxDate.setDate(0);
 
-    const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalDays = Math.max(
+      1,
+      Math.round(
+        (maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    );
 
     return { rows: validItems, minDate, maxDate, totalDays };
   }, [items]);
@@ -84,7 +89,9 @@ export default function GanttChart({ items }: Props) {
     const d = new Date(minDate);
     d.setDate(1);
     while (d <= maxDate) {
-      const dayOffset = Math.round((d.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
+      const dayOffset = Math.round(
+        (d.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
       result.push({ label: formatMonth(d), x: dayOffset });
       d.setMonth(d.getMonth() + 1);
     }
@@ -92,7 +99,9 @@ export default function GanttChart({ items }: Props) {
   }, [minDate, maxDate]);
 
   const today = new Date();
-  const todayX = Math.round((today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
+  const todayX = Math.round(
+    (today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   const svgWidth = LABEL_W + CHART_PADDING * 2 + MIN_CHART_W; // base width, scales via viewBox
   const chartW = svgWidth - LABEL_W - CHART_PADDING * 2;
@@ -114,8 +123,21 @@ export default function GanttChart({ items }: Props) {
         style={{ minWidth: svgWidth, minHeight: svgHeight }}
       >
         <defs>
-          <pattern id="gantt-grid" width={chartW / Math.max(1, months.length)} height={ROW_H} patternUnits="userSpaceOnUse" x={LABEL_W + CHART_PADDING}>
-            <line x1="0" y1="0" x2="0" y2={ROW_H * 100} stroke="#1e293b" strokeWidth="1" />
+          <pattern
+            id="gantt-grid"
+            width={chartW / Math.max(1, months.length)}
+            height={ROW_H}
+            patternUnits="userSpaceOnUse"
+            x={LABEL_W + CHART_PADDING}
+          >
+            <line
+              x1="0"
+              y1="0"
+              x2="0"
+              y2={ROW_H * 100}
+              stroke="#1e293b"
+              strokeWidth="1"
+            />
           </pattern>
         </defs>
 
@@ -139,8 +161,23 @@ export default function GanttChart({ items }: Props) {
           const xPos = LABEL_W + CHART_PADDING + (m.x / totalDays) * chartW;
           return (
             <g key={i}>
-              <line x1={xPos} y1={0} x2={xPos} y2={svgHeight} stroke="#1e293b" strokeWidth="1" />
-              <text x={xPos + 4} y={14} fill="#475569" fontSize="9" fontWeight="500">{m.label}</text>
+              <line
+                x1={xPos}
+                y1={0}
+                x2={xPos}
+                y2={svgHeight}
+                stroke="#1e293b"
+                strokeWidth="1"
+              />
+              <text
+                x={xPos + 4}
+                y={14}
+                fill="#475569"
+                fontSize="9"
+                fontWeight="500"
+              >
+                {m.label}
+              </text>
             </g>
           );
         })}
@@ -164,7 +201,9 @@ export default function GanttChart({ items }: Props) {
               fill="#f59e0b"
               fontSize="8"
               fontWeight="600"
-            >TODAY</text>
+            >
+              TODAY
+            </text>
           </g>
         )}
 
@@ -175,26 +214,55 @@ export default function GanttChart({ items }: Props) {
           const start = parseDate(item.startDate);
           const end = parseDate(item.dueDate);
           const indent = LEVEL_INDENT[item.level] ?? 0;
-          const colors = STATUS_COLORS[item.status] ?? STATUS_COLORS.not_started;
+          const colors =
+            STATUS_COLORS[item.status] ?? STATUS_COLORS.not_started;
 
           let barX = 0;
           let barW = 0;
           if (start && end) {
-            const startDay = Math.max(0, Math.round((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)));
-            const endDay = Math.min(totalDays, Math.round((end.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)));
+            const startDay = Math.max(
+              0,
+              Math.round(
+                (start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+              ),
+            );
+            const endDay = Math.min(
+              totalDays,
+              Math.round(
+                (end.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+              ),
+            );
             barX = LABEL_W + CHART_PADDING + (startDay / totalDays) * chartW;
             barW = Math.max(6, ((endDay - startDay) / totalDays) * chartW);
           } else if (start) {
-            const startDay = Math.max(0, Math.round((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)));
+            const startDay = Math.max(
+              0,
+              Math.round(
+                (start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+              ),
+            );
             barX = LABEL_W + CHART_PADDING + (startDay / totalDays) * chartW;
             barW = Math.max(20, chartW * 0.05);
           } else if (end) {
-            const endDay = Math.min(totalDays, Math.round((end.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)));
-            barX = LABEL_W + CHART_PADDING + Math.max(0, (endDay / totalDays) * chartW - 30);
+            const endDay = Math.min(
+              totalDays,
+              Math.round(
+                (end.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24),
+              ),
+            );
+            barX =
+              LABEL_W +
+              CHART_PADDING +
+              Math.max(0, (endDay / totalDays) * chartW - 30);
             barW = 30;
           }
 
-          const barHeight = item.level === "initiative" ? 16 : item.level === "program" ? 14 : 12;
+          const barHeight =
+            item.level === "initiative"
+              ? 16
+              : item.level === "program"
+                ? 14
+                : 12;
           const barY = yMid - barHeight / 2;
 
           return (
@@ -207,7 +275,9 @@ export default function GanttChart({ items }: Props) {
                 fontSize={item.level === "initiative" ? "10" : "9"}
                 fontWeight={item.level === "initiative" ? "700" : "400"}
               >
-                {item.title.length > 32 ? item.title.slice(0, 30) + "…" : item.title}
+                {item.title.length > 32
+                  ? item.title.slice(0, 30) + "…"
+                  : item.title}
               </text>
 
               {/* Level dot */}
@@ -231,7 +301,7 @@ export default function GanttChart({ items }: Props) {
               />
 
               {/* Bar */}
-              {(barW > 0) && (
+              {barW > 0 && (
                 <rect
                   x={barX}
                   y={barY}
@@ -274,12 +344,37 @@ export default function GanttChart({ items }: Props) {
         })}
 
         {/* Divider between label and chart */}
-        <line x1={LABEL_W} y1={0} x2={LABEL_W} y2={svgHeight} stroke="#1e293b" strokeWidth="1.5" />
+        <line
+          x1={LABEL_W}
+          y1={0}
+          x2={LABEL_W}
+          y2={svgHeight}
+          stroke="#1e293b"
+          strokeWidth="1.5"
+        />
 
         {/* Header row */}
         <rect x={0} y={0} width={svgWidth} height={36} fill="#0d1a2e" />
-        <text x={8} y={22} fill="#64748b" fontSize="9" fontWeight="600" letterSpacing="0.5">ROADMAP ITEM</text>
-        <text x={LABEL_W + CHART_PADDING + 4} y={22} fill="#64748b" fontSize="9" fontWeight="600" letterSpacing="0.5">TIMELINE</text>
+        <text
+          x={8}
+          y={22}
+          fill="#64748b"
+          fontSize="9"
+          fontWeight="600"
+          letterSpacing="0.5"
+        >
+          ROADMAP ITEM
+        </text>
+        <text
+          x={LABEL_W + CHART_PADDING + 4}
+          y={22}
+          fill="#64748b"
+          fontSize="9"
+          fontWeight="600"
+          letterSpacing="0.5"
+        >
+          TIMELINE
+        </text>
       </svg>
     </div>
   );

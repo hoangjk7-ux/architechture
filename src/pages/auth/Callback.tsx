@@ -25,7 +25,11 @@ export default function AuthCallback() {
       })
       .catch((caught: unknown) => {
         if (!cancelled) {
-          setError(caught instanceof Error ? caught.message : "Unable to provision user access.");
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Unable to provision user access.",
+          );
         }
       });
     return () => {
@@ -40,7 +44,9 @@ export default function AuthCallback() {
           <p className="font-medium text-destructive">Something went wrong</p>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">{error}</p>
         </div>
-        <Button onClick={() => navigate("/", { replace: true })}>Return home</Button>
+        <Button onClick={() => navigate("/", { replace: true })}>
+          Return home
+        </Button>
       </div>
     );
   }

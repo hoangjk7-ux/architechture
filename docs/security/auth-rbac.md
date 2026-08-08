@@ -85,46 +85,46 @@ Business Owner may not create, update or delete vendors.
 Legend: `R` read, `W` create/update/delete, `A` administrative operation, `-` denied.
 Every listed endpoint also requires a valid session.
 
-| Convex endpoint | CTO | IT Manager | Business Owner | Viewer |
-| --- | ---: | ---: | ---: | ---: |
-| `software_systems.list` | R | R | R | R |
-| `software_systems.get` | R | R | R | R |
-| `software_systems.getStats` | R | R | R | R |
-| `software_systems.create` | W | W | - | - |
-| `software_systems.update` | W | W | - | - |
-| `software_systems.remove` | W | W | - | - |
-| `system_modules.list` | R | R | R | R |
-| `system_modules.listBySystem` | R | R | R | R |
-| `system_modules.create` | W | W | - | - |
-| `system_modules.update` | W | W | - | - |
-| `system_modules.remove` | W | W | - | - |
-| `vendors.list` | R | R | R | R |
-| `vendors.get` | R | R | R | R |
-| `vendors.getExpiringContracts` | R | R | R | R |
-| `vendors.create` | W | W | - | - |
-| `vendors.update` | W | W | - | - |
-| `vendors.remove` | W | W | - | - |
-| `integrations.list` | R | R | - | R |
-| `integrations.getStats` | R | R | - | R |
-| `integrations.create` | W | W | - | - |
-| `integrations.update` | W | W | - | - |
-| `integrations.remove` | W | W | - | - |
-| `roadmap.list` | R | R | R | R |
-| `roadmap.getStats` | R | R | R | R |
-| `roadmap.create` | W | W | - | - |
-| `roadmap.update` | W | W | - | - |
-| `roadmap.remove` | W | W | - | - |
-| `config.listAll` | R | R | R | R |
-| `config.add` | W | W | - | - |
-| `config.update` | W | W | - | - |
-| `config.remove` | W | W | - | - |
-| `system_change_logs.list` | R | R | - | - |
-| `users.getCurrentUser` | R | R | R | R |
-| `users.updateCurrentUser` (provision/sync self) | R | R | R | R |
-| `users.listUsers` | A | - | - | - |
-| `users.inviteUser` | A | - | - | - |
-| `users.removeUser` | A | - | - | - |
-| `users.updateUserRole` | A | - | - | - |
+| Convex endpoint                                 | CTO | IT Manager | Business Owner | Viewer |
+| ----------------------------------------------- | --: | ---------: | -------------: | -----: |
+| `software_systems.list`                         |   R |          R |              R |      R |
+| `software_systems.get`                          |   R |          R |              R |      R |
+| `software_systems.getStats`                     |   R |          R |              R |      R |
+| `software_systems.create`                       |   W |          W |              - |      - |
+| `software_systems.update`                       |   W |          W |              - |      - |
+| `software_systems.remove`                       |   W |          W |              - |      - |
+| `system_modules.list`                           |   R |          R |              R |      R |
+| `system_modules.listBySystem`                   |   R |          R |              R |      R |
+| `system_modules.create`                         |   W |          W |              - |      - |
+| `system_modules.update`                         |   W |          W |              - |      - |
+| `system_modules.remove`                         |   W |          W |              - |      - |
+| `vendors.list`                                  |   R |          R |              R |      R |
+| `vendors.get`                                   |   R |          R |              R |      R |
+| `vendors.getExpiringContracts`                  |   R |          R |              R |      R |
+| `vendors.create`                                |   W |          W |              - |      - |
+| `vendors.update`                                |   W |          W |              - |      - |
+| `vendors.remove`                                |   W |          W |              - |      - |
+| `integrations.list`                             |   R |          R |              - |      R |
+| `integrations.getStats`                         |   R |          R |              - |      R |
+| `integrations.create`                           |   W |          W |              - |      - |
+| `integrations.update`                           |   W |          W |              - |      - |
+| `integrations.remove`                           |   W |          W |              - |      - |
+| `roadmap.list`                                  |   R |          R |              R |      R |
+| `roadmap.getStats`                              |   R |          R |              R |      R |
+| `roadmap.create`                                |   W |          W |              - |      - |
+| `roadmap.update`                                |   W |          W |              - |      - |
+| `roadmap.remove`                                |   W |          W |              - |      - |
+| `config.listAll`                                |   R |          R |              R |      R |
+| `config.add`                                    |   W |          W |              - |      - |
+| `config.update`                                 |   W |          W |              - |      - |
+| `config.remove`                                 |   W |          W |              - |      - |
+| `system_change_logs.list`                       |   R |          R |              - |      - |
+| `users.getCurrentUser`                          |   R |          R |              R |      R |
+| `users.updateCurrentUser` (provision/sync self) |   R |          R |              R |      R |
+| `users.listUsers`                               |   A |          - |              - |      - |
+| `users.inviteUser`                              |   A |          - |              - |      - |
+| `users.removeUser`                              |   A |          - |              - |      - |
+| `users.updateUserRole`                          |   A |          - |              - |      - |
 
 `users.updateCurrentUser` may only synchronize the authenticated identity with an
 existing invitation or assign the default `viewer` role. It must not accept role
@@ -147,17 +147,17 @@ not grounds to weaken an existing backend rule.
 All routes require a valid Convex Auth session. A denied deep link must render a 403
 state and must not mount the protected page or start its data queries.
 
-| Route | CTO | IT Manager | Business Owner | Viewer |
-| --- | ---: | ---: | ---: | ---: |
-| `/` dashboard | Allow | Allow | Allow, role-filtered content | Allow |
-| `/systems` | Allow | Allow | Allow | Allow |
-| `/vendors` | Allow | Allow | Allow | Allow |
-| `/architecture` | Allow | Allow | Allow | Allow |
-| `/integrations` | Allow | Allow | Deny | Allow |
-| `/roadmap` | Allow | Allow | Allow | Allow |
-| `/users` | Allow | Deny | Deny | Deny |
-| `/settings` | Allow | Allow | Deny | Deny |
-| `/flow-diagram` | Same as `/architecture` | Same | Same | Same |
+| Route           |                     CTO | IT Manager |               Business Owner | Viewer |
+| --------------- | ----------------------: | ---------: | ---------------------------: | -----: |
+| `/` dashboard   |                   Allow |      Allow | Allow, role-filtered content |  Allow |
+| `/systems`      |                   Allow |      Allow |                        Allow |  Allow |
+| `/vendors`      |                   Allow |      Allow |                        Allow |  Allow |
+| `/architecture` |                   Allow |      Allow |                        Allow |  Allow |
+| `/integrations` |                   Allow |      Allow |                         Deny |  Allow |
+| `/roadmap`      |                   Allow |      Allow |                        Allow |  Allow |
+| `/users`        |                   Allow |       Deny |                         Deny |   Deny |
+| `/settings`     |                   Allow |      Allow |                         Deny |   Deny |
+| `/flow-diagram` | Same as `/architecture` |       Same |                         Same |   Same |
 
 The authentication callback route is reachable without an application session only
 to complete the provider protocol. It must validate provider state through the auth

@@ -59,10 +59,16 @@ export const updateCurrentUser = mutation({
         .collect();
 
       const invitations = sameEmail.filter(
-        (candidate) => candidate._id !== userId && candidate.isManuallyAdded && candidate.role,
+        (candidate) =>
+          candidate._id !== userId &&
+          candidate.isManuallyAdded &&
+          candidate.role,
       );
       if (invitations.length > 1) {
-        domainError("CONFLICT", "Multiple pending invitations exist for this email");
+        domainError(
+          "CONFLICT",
+          "Multiple pending invitations exist for this email",
+        );
       }
       const invite = invitations[0];
       if (invite) {
@@ -96,7 +102,7 @@ export const inviteUser = mutation({
       v.literal("cto"),
       v.literal("it_manager"),
       v.literal("business_owner"),
-      v.literal("viewer")
+      v.literal("viewer"),
     ),
   },
   handler: async (ctx, args) => {
@@ -129,7 +135,10 @@ export const removeUser = mutation({
   handler: async (ctx, args) => {
     const me = await requireCTO(ctx);
     if (args.userId === me._id) {
-      throw new ConvexError({ message: "Cannot remove yourself", code: "FORBIDDEN" });
+      throw new ConvexError({
+        message: "Cannot remove yourself",
+        code: "FORBIDDEN",
+      });
     }
     const target = await getTargetUser(ctx, args.userId);
     await assertCtoCanBeRemovedOrDemoted(ctx, target);
@@ -144,7 +153,7 @@ export const updateUserRole = mutation({
       v.literal("cto"),
       v.literal("it_manager"),
       v.literal("business_owner"),
-      v.literal("viewer")
+      v.literal("viewer"),
     ),
   },
   handler: async (ctx, args) => {

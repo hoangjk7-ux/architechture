@@ -19,11 +19,18 @@ function isEqual(a: unknown, b: unknown): boolean {
   return a === b;
 }
 
-export function diffFields<T extends Record<string, unknown>>(before: T, after: T): FieldChange[] {
+export function diffFields<T extends Record<string, unknown>>(
+  before: T,
+  after: T,
+): FieldChange[] {
   const changes: FieldChange[] = [];
   for (const field of Object.keys(after)) {
     if (!isEqual(before[field], after[field])) {
-      changes.push({ field, from: stringify(before[field]), to: stringify(after[field]) });
+      changes.push({
+        field,
+        from: stringify(before[field]),
+        to: stringify(after[field]),
+      });
     }
   }
   return changes;
@@ -42,7 +49,7 @@ export async function recordSystemChange(
       | "feature_updated"
       | "feature_deleted";
     changes?: FieldChange[];
-  }
+  },
 ) {
   const user = await requireAuthenticated(ctx);
   await ctx.db.insert("system_change_logs", {
@@ -56,7 +63,10 @@ export async function recordSystemChange(
 }
 
 export const list = query({
-  args: { systemId: v.optional(v.id("software_systems")), limit: v.optional(v.number()) },
+  args: {
+    systemId: v.optional(v.id("software_systems")),
+    limit: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     await requireRole(ctx, ["cto", "it_manager"]);
     const logs = args.systemId
@@ -65,7 +75,10 @@ export const list = query({
           .withIndex("by_system", (q) => q.eq("systemId", args.systemId))
           .order("desc")
           .take(args.limit ?? 100)
-      : await ctx.db.query("system_change_logs").order("desc").take(args.limit ?? 100);
+      : await ctx.db
+          .query("system_change_logs")
+          .order("desc")
+          .take(args.limit ?? 100);
     return logs;
   },
 });
